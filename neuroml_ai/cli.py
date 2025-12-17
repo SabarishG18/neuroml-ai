@@ -9,25 +9,20 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 import asyncio
-import logging
 import subprocess
 from contextlib import chdir
 from pathlib import Path
 
+import requests
 import typer
-
-from neuroml_ai.rag.rag import NML_RAG
 
 nml_ai_app = typer.Typer()
 
 
 @nml_ai_app.command()
 def nml_ai_cli(
-    chat_model: str = "ollama:qwen3:1.7b",
-    embedding_model: str = "ollama:bge-m3",
     gui: bool = False,
     single_query: str = "",
-    regen_vector_stores: bool = False,
 ):
     """NeuroML AI cli wrapper function"""
     print("*** NeuroML AI chat assistant ***")
@@ -38,22 +33,10 @@ def nml_ai_cli(
     print()
 
     if not gui:
+
         async def cli_main():
             """Cli main async"""
             from yaspin import yaspin
-
-            client_url = "http://127.0.0.1:8000/mcp"
-            nml_ai = NML_RAG(
-                client_url,
-                chat_model=chat_model,
-                embedding_model=embedding_model,
-                logging_level=logging.DEBUG,
-            )
-            await nml_ai.setup()
-
-            if regen_vector_stores:
-                nml_ai.stores.remove()
-                nml_ai.stores.load()
 
             if len(single_query):
                 print(f"NeuroML-AI (USER) >>> {single_query}\n\n")
@@ -62,18 +45,29 @@ def nml_ai_cli(
                     pass
                 else:
                     with yaspin(text="Working ..."):
-                        response = await nml_ai.run_graph_invoke(single_query)
-                        print(f"NeuroML-AI (AI) >>> {response}\n\n")
+                        try:
+                            response = requests.post(
+                                "http://127.0.0.1:8005/query",
+                                params={"query": single_query},
+                            )
+                            response_result = response.json().get("result")
+                            print(f"NeuroML-AI (AI) >>> {response_result}\n\n")
+                        except ConnectionError as e:
+                            print(f"Error: {e}")
 
             else:
                 while (query := input("NeuroML-AI (USER) >>> ")) != "quit":
-                    assert nml_ai
-
                     # we use checkpoints, so we don't need to store and reload the
                     # state ourselves
                     with yaspin(text="Working ..."):
-                        response = await nml_ai.run_graph_invoke(query)
-                    print(f"NeuroML-AI (AI) >>> {response}\n\n")
+                        try:
+                            response = requests.post(
+                                "http://127.0.0.1:8005/query", params={"query": query}
+                            )
+                            response_result = response.json().get("result")
+                            print(f"NeuroML-AI (AI) >>> {response_result}\n\n")
+                        except ConnectionError as e:
+                            print(f"Error: {e}")
 
         try:
             print("Running!")
