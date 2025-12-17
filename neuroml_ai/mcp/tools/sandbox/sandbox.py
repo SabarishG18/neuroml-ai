@@ -29,6 +29,13 @@ class RunCommand:
     command: List[str]
 
 
+@dataclass
+class CmdResult:
+    """Result from a command execution"""
+    stdout: str
+    stderr: str
+    returncode: int
+
 class AsyncSandbox(AbstractAsyncContextManager, ABC):
     """Abstract async context manager class"""
 

@@ -13,7 +13,12 @@ import asyncio
 from functools import singledispatchmethod
 from tempfile import NamedTemporaryFile
 
-from neuroml_ai.mcp.tools.sandbox.sandbox import AsyncSandbox, RunCommand, RunPythonCode
+from neuroml_ai.mcp.tools.sandbox.sandbox import (
+    AsyncSandbox,
+    CmdResult,
+    RunCommand,
+    RunPythonCode,
+)
 
 
 class LocalSandbox(AsyncSandbox):
@@ -39,7 +44,7 @@ class LocalSandbox(AsyncSandbox):
         raise NotImplementedError("Not implemented")
 
     @run.register  # type: ignore
-    async def _(self, request: RunPythonCode):
+    async def _(self, request: RunPythonCode) -> CmdResult:
         with NamedTemporaryFile(prefix="nml_ai", mode="w") as f:
             print(request.code, file=f)
 
@@ -51,10 +56,11 @@ class LocalSandbox(AsyncSandbox):
             )
 
             stdout, stderr = await process.communicate()
-            return [stdout, stderr]
+            assert process.returncode is not None
+            return CmdResult(stderr=stderr.decode(), stdout=stdout.decode(), returncode=process.returncode)
 
     @run.register  # type: ignore
-    async def _(self, request: RunCommand):
+    async def _(self, request: RunCommand) -> CmdResult:
         process = await asyncio.create_subprocess_shell(
             " ".join(request.command),
             stdout=asyncio.subprocess.PIPE,
@@ -62,4 +68,5 @@ class LocalSandbox(AsyncSandbox):
         )
 
         stdout, stderr = await process.communicate()
-        return [stdout, stderr]
+        assert process.returncode is not None
+        return CmdResult(stderr=stderr.decode(), stdout=stdout.decode(), returncode=process.returncode)

@@ -8,19 +8,26 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-import os
 import logging
+import os
 import sys
 from textwrap import dedent
 from typing import Optional
 
+from fastmcp import Client
+from fastmcp.client.client import CallToolResult
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
-from typing_extensions import List, Tuple, Dict
+from typing_extensions import Dict, List, Tuple
 
-from .schemas import AgentState, EvaluateAnswerSchema, QueryTypeSchema, ToolCallSchema
+from .schemas import (
+    AgentState,
+    EvaluateAnswerSchema,
+    QueryTypeSchema,
+    ToolCallSchema,
+)
 from .stores import NML_Stores
 from .utils import (
     LoggerInfoFilter,
@@ -28,11 +35,9 @@ from .utils import (
     logger_formatter_info,
     logger_formatter_other,
     parse_output_with_thought,
-    split_thought_and_output,
     setup_llm,
+    split_thought_and_output,
 )
-
-from fastmcp import Client
 
 logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
@@ -342,8 +347,9 @@ class NML_RAG(object):
             conversation history and context into account to identify the
             objective of the query.
 
-            - If the query is related to NeuroML, it can either be a factual question ("neuroml_question"), or it can be related to writing
-              code ("neuroml_code_generation"):
+            - Decide if the query is related to NeuroML.
+
+              If the query is related to NeuroML, it can either be a factual question ("neuroml_question"), or it can be related to writing or running code ("neuroml_code_generation"):
 
                 - If the query asks for some information about NeuroML, respond 'neuroml_question'.
                 - If the query is related to coding tasks: for example, writing code or running commands, respond 'neuroml_code_generation'
@@ -362,6 +368,7 @@ class NML_RAG(object):
                 - "How do I get started with NeuroML?": {{"query_type": "neuroml_question"}}
                 - "How do I define ion channels in NeuroML?": {{"query_type": "neuroml_question"}}
                 - "Generate NeuroML code for a neuron": {{"query_type": "neuroml_code_generation"}}
+                - "Run this code": {{"query_type": "neuroml_code_generation"}}
                 """)
 
         if "neuroml" not in state.query.lower():
@@ -399,7 +406,9 @@ class NML_RAG(object):
                 query_type_result = QueryTypeSchema(**query_type_result)
             else:
                 if not isinstance(query_type_result, QueryTypeSchema):
-                    self.logger.critical(f"Received unexpected query classification: {query_type_result =}")
+                    self.logger.critical(
+                        f"Received unexpected query classification: {query_type_result =}"
+                    )
                     query_type_result = QueryTypeSchema(query_type="undefined")
 
         self.logger.debug(f"{query_type_result =}")
@@ -414,9 +423,65 @@ class NML_RAG(object):
         self.logger.debug(f"{state =}")
 
         system_prompt = dedent("""
-        You are a coding assistant. You are proficient in writing and running
-        code, especially in Python.
+        You are a coding assistant. Reason about the user query to decide what
+        the next action should be.
 
+        """)
+
+        if len(state.code):
+            system_prompt += dedent("""
+            # Provided or generated code/command:
+
+            ## Code:
+
+            ```
+            {current_code}
+            ```
+            """)
+
+        if state.tool_response:
+            tool_call_output = state.tool_response
+        else:
+            tool_call_output = CallToolResult(
+                content=[],
+                structured_content=None,
+                data={},
+                meta=None,
+            )
+
+        if tool_call_output.data.get("returncode", None):
+            system_prompt += dedent("""
+
+            ## Return code
+
+            ```
+            {current_returncode}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stdout", "")):
+            system_prompt += dedent("""
+            ## Output
+
+            ```
+            {current_stdout}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stderr", "")):
+            system_prompt += dedent("""
+
+            ## Errors
+
+            ```
+            {current_stderr}
+            ```
+
+            """)
+
+        system_prompt += dedent("""
         You have access to these tools:
 
         # Tools
@@ -427,8 +492,9 @@ class NML_RAG(object):
 
         {{
             action: "tool_call" if a tool is to be called, "update_code" if the
-            code needs to be updated, "final_answer" if the code or generated
-            output is ready to be returned to the user.
+            the user asked to write code and it needs to be updated, or
+            "give_answer_to_user" otherwise to pass the result back to the
+            user.
             tool: name of the tool to call
             args: arguments to be given to the tool
             reason: a short concise text string explaining your decision
@@ -437,6 +503,7 @@ class NML_RAG(object):
         """)
 
         system_prompt += self._add_memory_to_prompt(state)
+
         prompt_template = ChatPromptTemplate(
             [("system", system_prompt), ("human", "User query: {query}")]
         )
@@ -446,7 +513,14 @@ class NML_RAG(object):
             ToolCallSchema, method="json_schema", include_raw=True
         )
         prompt = prompt_template.invoke(
-            {"query": state.query, "tool_description": self.tool_description}
+            {
+                "query": state.query,
+                "tool_description": self.tool_description,
+                "current_code": state.code,
+                "current_stdout": tool_call_output.data.get("stdout", ""),
+                "current_stderr": tool_call_output.data.get("stderr", ""),
+                "current_returncode": tool_call_output.data.get("returncode", ""),
+            }
         )
 
         self.logger.debug(f"{prompt = }")
@@ -454,6 +528,8 @@ class NML_RAG(object):
         output = query_node_llm.invoke(
             prompt, config={"configurable": {"temperature": 0.3}}
         )
+
+        self.logger.debug(f"{output =}")
 
         if output["parsing_error"]:
             result = parse_output_with_thought(output["raw"], ToolCallSchema)
@@ -478,12 +554,10 @@ class NML_RAG(object):
         tool_args = state.tool_call.args
 
         async with self.mcp_client:
-            result = await self.mcp_client.call_tool(tool, tool_args)
+            tool_response = await self.mcp_client.call_tool(tool, tool_args)
 
-        tool_call = state.tool_call
-        tool_call.output = result
-
-        return {"tool_call": tool_call}
+        self.logger.debug(f"{tool_response =}")
+        return {"tool_response": tool_response}
 
     def _neuroml_code_tool_router(self, state: AgentState) -> str:
         """Tool router"""
@@ -497,12 +571,11 @@ class NML_RAG(object):
         self.logger.debug(f"{state =}")
 
         system_prompt = dedent("""
-        You are a NeuroML code generation assistant. You are proficient in
-        Python, and in developing biophysically detailed computational models
-        of the brain.
+        You are a coding assistant. You are proficient in writing and running
+        Python code.
 
-        Use the existing code and the output from the tool call to generate
-        code to answer the user's query.
+        Use the existing code and the output from the previous tool call to
+        write code based on the user's requirements.
 
         # Existing code:
 
@@ -526,7 +599,7 @@ class NML_RAG(object):
             {
                 "query": state.query,
                 "current_code": state.code,
-                "tool_output": state.tool_call.output,
+                "tool_output": state.tool_response.content if state.tool_response else ""
             }
         )
 

@@ -10,7 +10,8 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 from langchain_core.messages import AnyMessage
 from pydantic import BaseModel, Field
-from typing_extensions import List, Literal, Tuple, Dict
+from typing_extensions import List, Literal, Tuple, Dict, Any
+from fastmcp.client.client import CallToolResult
 
 
 class QueryTypeSchema(BaseModel):
@@ -47,8 +48,6 @@ class ToolCallSchema(BaseModel):
     tool: str = ""
     args: Dict[str, str] = Field(default_factory=dict)
     reason: str = ""
-    output: str = ""
-
 
 class AgentState(BaseModel):
     """The state of the graph"""
@@ -63,6 +62,7 @@ class AgentState(BaseModel):
 
     # tool call response
     tool_call: ToolCallSchema = ToolCallSchema()
+    tool_response: CallToolResult = None
 
     # summarised version of context so far
     context_summary: str = ""
