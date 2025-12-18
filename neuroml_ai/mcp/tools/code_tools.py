@@ -33,13 +33,13 @@ async def dummy_code_tool(astring: str) -> str:
     return f"I got {astring}"
 
 
-async def run_command_tool(command: List[str]) -> Dict[str, Any]:
+async def run_command_tool(command: str) -> Dict[str, Any]:
     """Runs a command in a shell.
 
     Input:
 
-    - command (list of strings): each string is a command or argument
-      Example: ["ls", "-l"]
+    - command (string):
+      Example: "ls -l -A"
 
     Output:
 
@@ -49,8 +49,12 @@ async def run_command_tool(command: List[str]) -> Dict[str, Any]:
     - returncode (int)
     - data (dict): additional metadata
 
+    Examples:
+    - run_command_tool(command="ls")
+    - run_command_tool(command="ls -l"])
+
     """
-    request = RunCommand(command=command)
+    request = RunCommand(command=command.split())
     async with sbox(".") as f:
         result = await f.run(request)
     return asdict(result)
@@ -70,6 +74,9 @@ async def run_python_code_tool(code: str) -> Dict[str, Any]:
     - stderr (str)
     - returncode (int)
     - data (dict): additional metadata
+
+    Example:
+    - run_python_code_tool(code="import numpy")
 
     """
     request = RunPythonCode(code=code)
