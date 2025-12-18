@@ -40,7 +40,6 @@ def nml_ai_cli(
 
             if len(single_query):
                 print(f"NeuroML-AI (USER) >>> {single_query}\n\n")
-
                 if single_query.lower() == "quit":
                     pass
                 else:
