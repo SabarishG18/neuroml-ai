@@ -11,11 +11,13 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 import asyncio
 from functools import singledispatchmethod
-from tempfile import NamedTemporaryFile
+from pathlib import Path
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 from neuroml_ai.mcp.tools.sandbox.sandbox import (
     AsyncSandbox,
     CmdResult,
+    PatchCommand,
     RunCommand,
     RunPythonCode,
 )
@@ -57,7 +59,12 @@ class LocalSandbox(AsyncSandbox):
 
             stdout, stderr = await process.communicate()
             assert process.returncode is not None
-            return CmdResult(stderr=stderr.decode(), stdout=stdout.decode(), returncode=process.returncode)
+            return CmdResult(
+                stderr=stderr.decode(),
+                stdout=stdout.decode(),
+                returncode=process.returncode,
+                data={},
+            )
 
     @run.register  # type: ignore
     async def _(self, request: RunCommand) -> CmdResult:
@@ -69,4 +76,28 @@ class LocalSandbox(AsyncSandbox):
 
         stdout, stderr = await process.communicate()
         assert process.returncode is not None
-        return CmdResult(stderr=stderr.decode(), stdout=stdout.decode(), returncode=process.returncode)
+        return CmdResult(
+            stderr=stderr.decode(),
+            stdout=stdout.decode(),
+            returncode=process.returncode,
+            data={},
+        )
+
+    @run.register  # type: ignore
+    async def _(self, request: PatchCommand) -> CmdResult:
+        with TemporaryDirectory() as tmpdir:
+            cwd = Path(tmpdir)
+            code_file = cwd / "code.py"
+            patch_file = cwd / "patch.diff"
+
+            code_file.write_text(request.base)
+            patch_file.write_text(request.patch)
+
+            cmd = RunCommand(["patch", str(code_file), "-i", str(patch_file)])
+            result = await self.run(cmd)
+
+            success = result.returncode == 0
+            updated_code = code_file.read_text() if success else request.base
+            result.data = {"code": updated_code}
+
+            return result
