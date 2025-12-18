@@ -115,7 +115,7 @@ class NML_RAG(object):
             if "dummy" in t.name:
                 continue
             ctr += 1
-            self.tool_description += f"## {ctr}.  {t.name}\n{t.description}"
+            self.tool_description += f"## {ctr}.  {t.name}\n{t.description}\n"
             # args = t.inputSchema.get("properties", [])
             # if len(args):
             #     self.tool_description += "\n\nInputs:\n"
@@ -505,19 +505,19 @@ class NML_RAG(object):
 
         - call_tool: if a tool call is required to address the query
         - update_code: if the code must be changed before further execution
-        - give_answer_to_user: if the task is complete
+        - final_answer: if the task is complete
 
         Rules:
 
         - choose only ONE action
         - if call_tool is chosen, do not modify the code
         - if update_code is chosen, do not call any tools
-        - only give_answer_to_user if no tool call or code update is needed
+        - only final_answer if no tool call or code update is needed
 
         If you choose call_tool, you must specify:
 
         - tool: name of the tool to call
-        - args: arguments to be given to the tool
+        - args: command and arguments to be given to the tool
         - reason: a short concise text string explaining your decision
 
         """)
@@ -732,7 +732,7 @@ class NML_RAG(object):
 
         return {"tool_response": tool_response, "code": code}
 
-    def _give_neuroml_code_to_user_node(self, state: AgentState) -> dict:
+    def _give_code_to_user_node(self, state: AgentState) -> dict:
         """Return the answer message to the user"""
         self.logger.debug(f"{state =}")
         self.logger.info(f"Returning code to user: {state.code}")
@@ -958,7 +958,7 @@ class NML_RAG(object):
                 metadata_str = f"### Document {ctr}/{len(sorted_refs)}: " + " | ".join(
                     metadata
                 )
-                serialized += "\n\n" + f"{metadata_str}\n\n:{r.page_content}"
+                serialized += "\n" + f"{metadata_str}\n:{r.page_content}"
                 ctr += 1
 
         reference_material_text = serialized.replace("{", "{{").replace("}", "}}")
@@ -1205,7 +1205,7 @@ class NML_RAG(object):
         )
         self.workflow.add_node("apply_code_patch", self._apply_code_patch_node)
         self.workflow.add_node(
-            "give_neuroml_code_to_user", self._give_neuroml_code_to_user_node
+            "give_code_to_user", self._give_code_to_user_node
         )
         self.workflow.add_node(
             "generate_answer_from_context", self._generate_answer_from_context_node
@@ -1246,7 +1246,7 @@ class NML_RAG(object):
             {
                 "call_tool": "neuroml_code_tools",
                 "update_code": "neuroml_code_generator",
-                "give_answer_to_user": "give_neuroml_code_to_user",
+                "final_answer": "give_code_to_user",
             },
         )
         self.workflow.add_edge("neuroml_code_tools", "neuroml_code_tool_decider")
