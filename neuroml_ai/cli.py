@@ -15,6 +15,7 @@ from contextlib import chdir
 from pathlib import Path
 
 import typer
+from fastmcp import Client
 
 from neuroml_ai.rag.rag import NML_RAG
 
@@ -38,13 +39,16 @@ def nml_ai_cli(
     print()
 
     if not gui:
+
         async def cli_main():
             """Cli main async"""
             from yaspin import yaspin
 
-            client_url = "http://127.0.0.1:8000/mcp"
+            client_url = "http://127.0.0.1:8542/mcp"
+            mcp_client = Client(client_url)
+
             nml_ai = NML_RAG(
-                client_url,
+                mcp_client,
                 chat_model=chat_model,
                 embedding_model=embedding_model,
                 logging_level=logging.DEBUG,

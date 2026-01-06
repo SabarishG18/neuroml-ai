@@ -8,31 +8,26 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-import os
 import logging
+import os
 import sys
 from textwrap import dedent
 from typing import Optional
 
+from fastmcp import Client
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
-from typing_extensions import List, Tuple, Dict
+from typing_extensions import Dict, List, Tuple
 
-from .schemas import AgentState, EvaluateAnswerSchema, QueryTypeSchema, ToolCallSchema
+from .schemas import (AgentState, EvaluateAnswerSchema, QueryTypeSchema,
+                      ToolCallSchema)
 from .stores import NML_Stores
-from .utils import (
-    LoggerInfoFilter,
-    LoggerNotInfoFilter,
-    logger_formatter_info,
-    logger_formatter_other,
-    parse_output_with_thought,
-    split_thought_and_output,
-    setup_llm,
-)
-
-from fastmcp import Client
+from .utils import (LoggerInfoFilter, LoggerNotInfoFilter,
+                    logger_formatter_info, logger_formatter_other,
+                    parse_output_with_thought, setup_llm,
+                    split_thought_and_output)
 
 logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
@@ -99,6 +94,10 @@ class NML_RAG(object):
             # Persists because it's only holding the return value
             # To make the call, though, we will need the context again
             self.logger.debug(f"{self.mcp_tools =}")
+        else:
+            self.logger.warning(
+                "No MCP client available. Functions requiring MCP server will fail."
+            )
 
         # Generate tool description
         # Note: we remove the param/type information from the description and
@@ -399,7 +398,9 @@ class NML_RAG(object):
                 query_type_result = QueryTypeSchema(**query_type_result)
             else:
                 if not isinstance(query_type_result, QueryTypeSchema):
-                    self.logger.critical(f"Received unexpected query classification: {query_type_result =}")
+                    self.logger.critical(
+                        f"Received unexpected query classification: {query_type_result =}"
+                    )
                     query_type_result = QueryTypeSchema(query_type="undefined")
 
         self.logger.debug(f"{query_type_result =}")
