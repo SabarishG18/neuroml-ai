@@ -9,18 +9,16 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 import os
-from fastmcp import Client
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from neuroml_ai.rag.rag import NML_RAG
+from fastmcp import Client
 from neuroml_ai.api.chat import router
-# from neuroml_ai.mcp.util import create_mcp_client
-
-app = FastAPI()
+from neuroml_ai.rag.rag import NML_RAG
 
 
-# TODO: use lifespan
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     client_url = "http://127.0.0.1:8542/mcp"
     mcp_client = Client(client_url)
 
@@ -41,5 +39,8 @@ async def startup():
     app.state.rag = nml_rag
     app.state.mcp = Client
 
+    yield
 
+
+app = FastAPI(lifespan=lifespan)
 app.include_router(router)
