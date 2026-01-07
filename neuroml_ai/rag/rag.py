@@ -500,19 +500,12 @@ class NML_RAG(object):
         You are an agent operating in discrete steps. Reason about the user
         query to decide what the next action should be.
 
-        At each step, choose exactly one action.
-        Valid actions (in priority order):
+        Choose exactly one action.
+        Valid actions are (in priority order):
 
         - call_tool: if a tool call is required to address the query
         - update_code: if the code must be changed before further execution
-        - final_answer: if the task is complete
-
-        Rules:
-
-        - choose only ONE action
-        - if call_tool is chosen, do not modify the code
-        - if update_code is chosen, do not call any tools
-        - only final_answer if no tool call or code update is needed
+        - final_answer: if the task is complete and no further steps are required
 
         If you choose call_tool, you must specify:
 
