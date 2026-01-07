@@ -13,8 +13,10 @@ import subprocess
 from contextlib import chdir
 from pathlib import Path
 
-import requests
+import httpx
 import typer
+
+from neuroml_ai.utils import check_api_is_ready
 
 nml_ai_app = typer.Typer()
 
@@ -38,38 +40,39 @@ def nml_ai_cli(
             """Cli main async"""
             from yaspin import yaspin
 
+            # wait for API to be ready
+            with yaspin(text="Waiting for API..."):
+                response = await check_api_is_ready()
+
             if len(single_query):
                 print(f"NeuroML-AI (USER) >>> {single_query}\n\n")
                 if single_query.lower() == "quit":
                     pass
                 else:
                     with yaspin(text="Working ..."):
-                        try:
-                            response = requests.post(
+                        async with httpx.AsyncClient() as client:
+                            response = await client.post(
                                 "http://127.0.0.1:8005/query",
                                 params={"query": single_query},
+                                timeout=None
                             )
                             response_result = response.json().get("result")
                             print(f"NeuroML-AI (AI) >>> {response_result}\n\n")
-                        except ConnectionError as e:
-                            print(f"Error: {e}")
 
             else:
                 while (query := input("NeuroML-AI (USER) >>> ")) != "quit":
                     # we use checkpoints, so we don't need to store and reload the
                     # state ourselves
                     with yaspin(text="Working ..."):
-                        try:
-                            response = requests.post(
-                                "http://127.0.0.1:8005/query", params={"query": query}
+                        async with httpx.AsyncClient() as client:
+                            response = await client.post(
+                                "http://127.0.0.1:8005/query", params={"query": query},
+                                timeout=None
                             )
                             response_result = response.json().get("result")
                             print(f"NeuroML-AI (AI) >>> {response_result}\n\n")
-                        except ConnectionError as e:
-                            print(f"Error: {e}")
 
         try:
-            print("Running!")
             asyncio.run(cli_main())
         except KeyboardInterrupt:
             print("\nInterrupted. Exiting.")
