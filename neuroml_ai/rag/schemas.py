@@ -45,16 +45,18 @@ class EvaluateAnswerSchema(BaseModel):
     summary: str = ""
 
 
+class EvaluateCodeCommandSchema(BaseModel):
+    """Schema for code generation or command call."""
+    next_step: Literal[
+        "continue", "update_code", "call_tool", "undefined"
+    ] = Field(default="undefined")
+    reason: str = ""
+
 class ToolCallSchema(BaseModel):
     """Schema for tool call response."""
-
-    action: Literal["call_tool", "update_code", "final_answer"] = Field(
-        default="final_answer",
-    )
     tool: str = ""
     args: Dict[str, str] = Field(default_factory=dict)
     reason: str = ""
-    response: str = ""
 
 
 class CodeSchema(BaseModel):
@@ -74,6 +76,7 @@ class AgentState(BaseModel):
 
     # code string if any
     code: CodeSchema = CodeSchema()
+    code_eval: EvaluateCodeCommandSchema = EvaluateCodeCommandSchema()
 
     # tool call response
     tool_call: ToolCallSchema = ToolCallSchema()

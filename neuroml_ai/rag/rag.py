@@ -29,6 +29,7 @@ from .schemas import (
     QueryDomainSchema,
     QueryTypeSchema,
     ToolCallSchema,
+    EvaluateCodeCommandSchema
 )
 from .stores import NML_Stores
 from .utils import (
@@ -225,19 +226,16 @@ class NML_RAG(object):
         """
         ret_string = ""
 
-        directive = dedent(
-            """
+        directive = dedent("""
             IMPORTANT:
 
             - Consider both the latest user message AND the conversation history.
             - If the latest query is contextually about NeuroML due to prior discussion, treat it as a NeuroML related query even if the word does not appear.
 
-            """
-        )
+        """)
 
         if len(state.context_summary):
-            ret_string += dedent(
-                f"""
+            ret_string += dedent(f"""
             -----
 
             Here is a concise summary of the previous conversation to maintain
@@ -246,15 +244,13 @@ class NML_RAG(object):
             {state.context_summary}
 
             -----
-            """
-            )
+            """)
 
         conversation, _, _ = self._get_recent_conversation(
             state.messages, (-1 * self.num_recent_messages), None
         )
         if len(conversation):
-            ret_string += dedent(
-                f"""
+            ret_string += dedent(f"""
             -----
 
             Here are the recent messages between the user and the assistant:
@@ -262,12 +258,10 @@ class NML_RAG(object):
             {conversation}
 
             -----
-            """
-            )
+            """)
 
         if len(state.code.code):
-            ret_string += dedent(
-                f"""
+            ret_string += dedent(f"""
             -----
 
             This is the generated code so far:
@@ -491,6 +485,134 @@ class NML_RAG(object):
             "messages": messages,
         }
 
+    def _neuroml_code_command_evaluator_node(self, state: AgentState) -> dict:
+        """Generate code"""
+        assert self.model
+        self.logger.debug(f"{state =}")
+
+        system_prompt = dedent("""
+        You are a coding assistant operating in discrete steps. Reason about
+        the user query and decide what the next action should be. Take the any
+        currently provided code and execution outputs into account.
+
+        Choose exactly one action.
+        Valid actions are (in priority order):
+
+        - call_tool: if a tool call is required to address the query
+        - update_code: if the code must be changed before further execution
+        - continue: otherwise, if the generated code or the command output
+          should be given to the user
+
+        Specify the chosen action in the "next_step" field:
+
+        {{
+            "next_step": "call_tool" or "update_code" or "continue",
+            "reason": a short reason statement
+        }}
+
+        """)
+
+        if len(state.code.code):
+            system_prompt += dedent("""
+            # Code:
+
+            ```
+            {current_code}
+            ```
+            """)
+
+        if state.tool_response:
+            tool_call_output = state.tool_response
+        else:
+            tool_call_output = CallToolResult(
+                content=[],
+                structured_content=None,
+                data={},
+                meta=None,
+            )
+
+        if tool_call_output.data.get("returncode", None):
+            system_prompt += dedent("""
+
+            # Command execution return code
+
+            ```
+            {current_returncode}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stdout", "")):
+            system_prompt += dedent("""
+            # Command execution output (stdout)
+
+            ```
+            {current_stdout}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stderr", "")):
+            system_prompt += dedent("""
+
+            # Command execution error (stderr)
+
+            ```
+            {current_stderr}
+            ```
+
+            """)
+
+        system_prompt += dedent("""
+        You have access to these tools:
+
+        # Tools
+
+        {tool_description}
+
+        """)
+
+        system_prompt += self._add_memory_to_prompt(state)
+
+        prompt_template = ChatPromptTemplate(
+            [("system", system_prompt), ("human", "User query: {query}")]
+        )
+
+        # can use | to merge these lines
+        query_node_llm = self.model.with_structured_output(
+            EvaluateCodeCommandSchema, method="json_schema", include_raw=True
+        )
+        prompt = prompt_template.invoke(
+            {
+                "query": state.query,
+                "tool_description": self.tool_description,
+                "current_code": state.code,
+                "current_stdout": tool_call_output.data.get("stdout", ""),
+                "current_stderr": tool_call_output.data.get("stderr", ""),
+                "current_returncode": tool_call_output.data.get("returncode", ""),
+            }
+        )
+
+        self.logger.debug(f"{prompt = }")
+
+        output = query_node_llm.invoke(
+            prompt, config={"configurable": {"temperature": 0.3}}
+        )
+
+        self.logger.debug(f"{output =}")
+
+        if output["parsing_error"]:
+            result = parse_output_with_thought(output["raw"], EvaluateCodeCommandSchema)
+        else:
+            result = output["parsed"]
+
+        return {
+            "code_eval": EvaluateCodeCommandSchema(
+                next_step=result.next_step,
+                reason=result.reason,
+            ),
+        }
+
     def _neuroml_code_tool_decider_node(self, state: AgentState) -> dict:
         """Generate code"""
         assert self.model
@@ -498,20 +620,21 @@ class NML_RAG(object):
 
         system_prompt = dedent("""
         You are an agent operating in discrete steps. Reason about the user
-        query to decide what the next action should be.
+        query to decide what tool should be called.
 
-        Choose exactly one action.
-        Valid actions are (in priority order):
-
-        - call_tool: if a tool call is required to address the query
-        - update_code: if the code must be changed before further execution
-        - final_answer: if the task is complete and no further steps are required
-
-        If you choose call_tool, you must specify:
+        Specify the following fields:
 
         - tool: name of the tool to call
         - args: command and arguments to be given to the tool
         - reason: a short concise text string explaining your decision
+
+        Eg.:
+
+        {{
+            "tool": "a_tool",
+            "args": {{"arg1": "an argument"}},
+            "reason": "reason why this tool call was chosen",
+        }}
 
         """)
 
@@ -613,7 +736,6 @@ class NML_RAG(object):
 
         return {
             "tool_call": ToolCallSchema(
-                action=result.action,
                 tool=result.tool,
                 args=result.args,
                 reason=result.reason,
@@ -637,8 +759,8 @@ class NML_RAG(object):
     def _neuroml_code_tool_router(self, state: AgentState) -> str:
         """Tool router"""
         self.logger.debug(f"{state =}")
-        tool_call = state.tool_call
-        return tool_call.action
+        tool_call = state.code_eval
+        return tool_call.next_step
 
     def _neuroml_code_generator_node(self, state: AgentState) -> dict:
         """Code generator node"""
@@ -1194,6 +1316,9 @@ class NML_RAG(object):
         )
         self.workflow.add_node("neuroml_code_tools", self._neuroml_code_tools_node)
         self.workflow.add_node(
+            "neuroml_code_command_evaluator", self._neuroml_code_command_evaluator_node
+        )
+        self.workflow.add_node(
             "neuroml_code_generator", self._neuroml_code_generator_node
         )
         self.workflow.add_node("apply_code_patch", self._apply_code_patch_node)
@@ -1220,7 +1345,7 @@ class NML_RAG(object):
             self._route_query_node,
             {
                 "question": "classify_question_domain",
-                "task": "neuroml_code_tool_decider",
+                "task": "neuroml_code_command_evaluator",
                 "undefined": "answer_general_question",
             },
         )
@@ -1234,17 +1359,18 @@ class NML_RAG(object):
             },
         )
         self.workflow.add_conditional_edges(
-            "neuroml_code_tool_decider",
+            "neuroml_code_command_evaluator",
             self._neuroml_code_tool_router,
             {
-                "call_tool": "neuroml_code_tools",
+                "call_tool": "neuroml_code_tool_decider",
                 "update_code": "neuroml_code_generator",
-                "final_answer": "give_code_to_user",
+                "continue": "give_code_to_user",
             },
         )
-        self.workflow.add_edge("neuroml_code_tools", "neuroml_code_tool_decider")
+        self.workflow.add_edge("neuroml_code_tool_decider", "neuroml_code_tools")
+        self.workflow.add_edge("neuroml_code_tools", "neuroml_code_command_evaluator")
         self.workflow.add_edge("neuroml_code_generator", "apply_code_patch")
-        self.workflow.add_edge("apply_code_patch", "neuroml_code_tool_decider")
+        self.workflow.add_edge("apply_code_patch", "neuroml_code_command_evaluator")
 
         self.workflow.add_conditional_edges(
             "evaluate_answer",
