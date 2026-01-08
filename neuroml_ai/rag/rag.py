@@ -319,6 +319,13 @@ class NML_RAG(object):
             "text_response_eval": EvaluateAnswerSchema(),
             "message_for_user": "",
             "reference_material": {},
+            "code_eval": EvaluateCodeCommandSchema(),
+            "tool_response": CallToolResult(
+                content=[],
+                structured_content=None,
+                data={},
+                meta=None,
+            )
         }
 
     def _classify_query_node(self, state: AgentState) -> dict:
@@ -493,15 +500,15 @@ class NML_RAG(object):
         system_prompt = dedent("""
         You are a coding assistant operating in discrete steps. Reason about
         the user query and decide what the next action should be. Take the any
-        currently provided code and execution outputs into account.
+        currently provided code and previous tool call outputs into account.
 
         Choose exactly one action.
         Valid actions are (in priority order):
 
         - call_tool: if a tool call is required to address the query
         - update_code: if the code must be changed before further execution
-        - continue: otherwise, if the generated code or the command output
-          should be given to the user
+        - continue: otherwise, if the generated code or the tool call output is
+          to be given to the user
 
         Specify the chosen action in the "next_step" field:
 
@@ -521,6 +528,15 @@ class NML_RAG(object):
             ```
             """)
 
+        if len(state.tool_call.tool):
+            system_prompt += dedent("""
+            # Tool called:
+
+            ```
+            {current_tool_call}
+            ```
+            """)
+
         if state.tool_response:
             tool_call_output = state.tool_response
         else:
@@ -534,7 +550,7 @@ class NML_RAG(object):
         if tool_call_output.data.get("returncode", None):
             system_prompt += dedent("""
 
-            # Command execution return code
+            ## Tool call returncode
 
             ```
             {current_returncode}
@@ -544,7 +560,7 @@ class NML_RAG(object):
 
         if len(tool_call_output.data.get("stdout", "")):
             system_prompt += dedent("""
-            # Command execution output (stdout)
+            ## Tool call execution output (stdout)
 
             ```
             {current_stdout}
@@ -555,7 +571,7 @@ class NML_RAG(object):
         if len(tool_call_output.data.get("stderr", "")):
             system_prompt += dedent("""
 
-            # Command execution error (stderr)
+            ## Tool call execution error (stderr)
 
             ```
             {current_stderr}
@@ -587,6 +603,7 @@ class NML_RAG(object):
                 "query": state.query,
                 "tool_description": self.tool_description,
                 "current_code": state.code,
+                "current_tool_call": state.tool_call.tool,
                 "current_stdout": tool_call_output.data.get("stdout", ""),
                 "current_stderr": tool_call_output.data.get("stderr", ""),
                 "current_returncode": tool_call_output.data.get("returncode", ""),
@@ -596,7 +613,7 @@ class NML_RAG(object):
         self.logger.debug(f"{prompt = }")
 
         output = query_node_llm.invoke(
-            prompt, config={"configurable": {"temperature": 0.3}}
+            prompt, config={"configurable": {"temperature": 0.0}}
         )
 
         self.logger.debug(f"{output =}")
@@ -646,6 +663,15 @@ class NML_RAG(object):
 
             ```
             {current_code}
+            ```
+            """)
+
+        if len(state.tool_call.tool):
+            system_prompt += dedent("""
+            # Tool called:
+
+            ```
+            {current_tool_call}
             ```
             """)
 
@@ -715,6 +741,7 @@ class NML_RAG(object):
                 "query": state.query,
                 "tool_description": self.tool_description,
                 "current_code": state.code,
+                "current_tool_call": state.tool_call.tool,
                 "current_stdout": tool_call_output.data.get("stdout", ""),
                 "current_stderr": tool_call_output.data.get("stderr", ""),
                 "current_returncode": tool_call_output.data.get("returncode", ""),
@@ -724,7 +751,7 @@ class NML_RAG(object):
         self.logger.debug(f"{prompt = }")
 
         output = query_node_llm.invoke(
-            prompt, config={"configurable": {"temperature": 0.3}}
+            prompt, config={"configurable": {"temperature": 0.0}}
         )
 
         self.logger.debug(f"{output =}")
@@ -754,7 +781,11 @@ class NML_RAG(object):
             tool_response = await self.mcp_client.call_tool(tool, tool_args)
 
         self.logger.debug(f"{tool_response =}")
-        return {"tool_response": tool_response}
+        return {"tool_response": tool_response,
+                "code_eval": EvaluateCodeCommandSchema(
+                    next_step="undefined",
+                    reason="",
+                )}
 
     def _neuroml_code_tool_router(self, state: AgentState) -> str:
         """Tool router"""
@@ -814,7 +845,7 @@ class NML_RAG(object):
             CodeSchema, method="json_schema", include_raw=True
         )
 
-        output = code_node_llm(prompt, config={"configurable": {"temperature": 0.01}})
+        output = code_node_llm.invoke(prompt, config={"configurable": {"temperature": 0.01}})
 
         if output["parsing_error"]:
             result = parse_output_with_thought(output["raw"], CodeSchema)
@@ -845,14 +876,70 @@ class NML_RAG(object):
             code.code = tool_call_output["data"]["code"]
             code.version += 1
 
-        return {"tool_response": tool_response, "code": code}
+        return {"tool_response": tool_response, "code": code,
+                "code_eval": EvaluateCodeCommandSchema(
+                    next_step="undefined",
+                    reason="",
+                )}
 
     def _give_code_to_user_node(self, state: AgentState) -> dict:
         """Return the answer message to the user"""
         self.logger.debug(f"{state =}")
         self.logger.info(f"Returning code to user: {state.code}")
+        user_message = ""
 
-        return {"message_for_user": state.code}
+        if len(state.code.code):
+            user_message += dedent(f"""
+            # Code
+
+            ```
+            {state.code.code}
+            ```
+            """)
+
+        if state.tool_response:
+            tool_call_output = state.tool_response
+        else:
+            tool_call_output = CallToolResult(
+                content=[],
+                structured_content=None,
+                data={},
+                meta=None,
+            )
+
+        if tool_call_output.data.get("returncode", None):
+            user_message += dedent(f"""
+
+            # Command execution return code
+
+            ```
+            {tool_call_output.data.get("returncode")}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stdout", "")):
+            user_message += dedent(f"""
+            # Command execution output (stdout)
+
+            ```
+            {tool_call_output.data.get("stdout")}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stderr", "")):
+            user_message += dedent(f"""
+
+            # Command execution error (stderr)
+
+            ```
+            {tool_call_output.data.get("stderr")}
+            ```
+
+            """)
+
+        return {"message_for_user": user_message}
 
     def _answer_general_question_node(self, state: AgentState) -> dict:
         """Answer a general question"""
