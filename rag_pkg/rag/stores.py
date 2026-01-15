@@ -18,7 +18,7 @@ import chromadb
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 
-from .utils import (
+from neuroml_ai_utils.utils import (
     LoggerInfoFilter,
     LoggerNotInfoFilter,
     logger_formatter_info,

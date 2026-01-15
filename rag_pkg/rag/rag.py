@@ -32,7 +32,7 @@ from .schemas import (
     EvaluateCodeCommandSchema
 )
 from .stores import Vector_Stores
-from .utils import (
+from neuroml_ai_utils.utils import (
     LoggerInfoFilter,
     LoggerNotInfoFilter,
     logger_formatter_info,
