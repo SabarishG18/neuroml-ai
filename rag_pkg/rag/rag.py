@@ -90,6 +90,11 @@ class RAG(object):
 
         await self._create_graph()
 
+    async def get_graph(self):
+        """Setup and get compiled graph"""
+        await self.setup()
+        return self.graph
+
     def _setup_chat_model(self):
         """Set up the LLM chat model"""
         self.model = setup_llm(self.chat_model, self.logger)
