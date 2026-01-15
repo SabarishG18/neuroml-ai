@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from fastmcp import Client
 from neuroml_ai.api.chat import chat_router
 from neuroml_ai.api.health import health_router
-from neuroml_ai.rag.rag import NML_RAG
+from gen_rag.rag import RAG
 
 
 @asynccontextmanager
@@ -34,12 +34,13 @@ async def lifespan(app: FastAPI):
         tools = await mcp_client.list_tools()
         print(f"Available tools: {[tool.name for tool in tools]}")
 
-    nml_rag = NML_RAG(
-        mcp_client, chat_model=chat_model, embedding_model=embedding_model
+    # TODO: update to use main app chain, which will include the RAG
+    rag = RAG(
+        chat_model=chat_model, embedding_model=embedding_model
     )
-    await nml_rag.setup()
+    await rag.setup()
 
-    app.state.rag = nml_rag
+    app.state.rag = rag
     app.state.mcp = Client
     app.state.is_ready = True
 
