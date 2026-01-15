@@ -2,14 +2,14 @@
 """
 MCP server for NeuroML code generation
 
-File: neuroml_ai/mcp/server/main.py
+File: neuroml_mcp/mcp/server/main.py
 
 Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-from neuroml_ai.mcp.utils import register_tools
-from neuroml_ai.mcp.tools import code_tools
+from neuroml_mcp.mcp.utils import register_tools
+from neuroml_mcp.mcp.tools import code_tools
 from textwrap import dedent
 from fastmcp import FastMCP
 from starlette.requests import Request

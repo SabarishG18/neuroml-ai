@@ -3,7 +3,7 @@
 A sans-sandbox executor. Only to be used for development.
 Be VERY careful when using this one.
 
-File: neuroml_ai/mcp/tools/sandbox/nope.py
+File: neuroml_mcp/mcp/tools/sandbox/nope.py
 
 Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
@@ -14,7 +14,7 @@ from functools import singledispatchmethod
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
-from neuroml_ai.mcp.tools.sandbox.sandbox import (
+from neuroml_mcp.mcp.tools.sandbox.sandbox import (
     AsyncSandbox,
     CmdResult,
     PatchCommand,

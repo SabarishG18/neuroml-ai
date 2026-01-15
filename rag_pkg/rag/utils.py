@@ -2,7 +2,7 @@
 """
 Misc utils
 
-File: neuroml_ai/utils.py
+File: gen_rag/utils.py
 
 Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
@@ -119,7 +119,7 @@ def setup_embedding(model_name_full, logger):
         _, model_name, provider = model_name_full.split(":")
         logger.debug(f"Using huggingface model: {model_name}")
 
-        hf_token = os.environ.get("HF_TOKEN_NML_AI", None)
+        hf_token = os.environ.get("HF_TOKEN", None)
         assert hf_token
 
         model_var = HuggingFaceEndpointEmbeddings(
@@ -144,7 +144,7 @@ def setup_llm(model_name_full, logger):
         _, model_name, provider = model_name_full.split(":")
         logger.debug(f"Using huggingface model: {model_name}")
 
-        hf_token = os.environ.get("HF_TOKEN_NML_AI", None)
+        hf_token = os.environ.get("HF_TOKEN", None)
         assert hf_token
 
         llm = HuggingFaceEndpoint(

@@ -2,14 +2,13 @@
 """
 Vector stores
 
-File: neuroml_ai/stores.py
+File: gen_rag/stores.py
 
 Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 import logging
-import shutil
 import sys
 from glob import glob
 from pathlib import Path
@@ -31,7 +30,7 @@ logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
 
 
-class NML_Stores(object):
+class Vector_Stores(object):
     """Vector stores"""
 
     def __init__(

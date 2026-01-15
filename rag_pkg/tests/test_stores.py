@@ -10,7 +10,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 import pytest
 import unittest
-from neuroml_ai.rag.stores import NML_Stores
+from gen_rag.rag.stores import Vector_Stores
 
 
 class TestStores(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestStores(unittest.TestCase):
         model = "bge-m3"
 
         try:
-            stores = NML_Stores(f"ollama:{model}")
+            stores = Vector_Stores(f"ollama:{model}")
             stores.setup()
             stores.load()
             stores.retrieve("NeuroML community")

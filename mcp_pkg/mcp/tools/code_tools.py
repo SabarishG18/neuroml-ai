@@ -4,7 +4,7 @@ General code execution tools.
 
 Note that docstrings here should be written for the LLM to read.
 
-File: neuroml_ai/mcp/tools/code_tools.py
+File: neuroml_mcp/mcp/tools/code_tools.py
 
 Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
@@ -13,8 +13,8 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 from typing import Any, Dict, List
 from dataclasses import asdict
 
-from neuroml_ai.mcp.tools.sandbox import docker, local
-from neuroml_ai.mcp.tools.sandbox.sandbox import RunCommand, RunPythonCode
+from neuroml_mcp.mcp.tools.sandbox import docker, local
+from neuroml_mcp.mcp.tools.sandbox.sandbox import RunCommand, RunPythonCode
 
 # set the implementation for development
 sbox = local.LocalSandbox

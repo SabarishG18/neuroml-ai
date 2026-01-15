@@ -31,7 +31,7 @@ from .schemas import (
     ToolCallSchema,
     EvaluateCodeCommandSchema
 )
-from .stores import NML_Stores
+from .stores import Vector_Stores
 from .utils import (
     LoggerInfoFilter,
     LoggerNotInfoFilter,
@@ -46,7 +46,7 @@ logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
 
 
-class NML_RAG(object):
+class RAG(object):
     """NeuroML RAG implementation"""
 
     checkpointer = InMemorySaver()
@@ -61,7 +61,7 @@ class NML_RAG(object):
         """Initialise"""
         self.chat_model = "ollama:qwen3:1.7b" if chat_model is None else chat_model
         self.model = None
-        self.stores = NML_Stores(
+        self.stores = Vector_Stores(
             "ollama:bge-m3" if embedding_model is None else embedding_model
         )
         # total number of reference documents
@@ -1488,7 +1488,7 @@ class NML_RAG(object):
         if not os.environ.get("RUNNING_IN_DOCKER", 0):
             try:
                 self.graph.get_graph().draw_mermaid_png(
-                    output_file_path="nml-ai-lang-graph.png"
+                    output_file_path="lang-graph.png"
                 )
             except BaseException as e:
                 self.logger.error("Something went wrong generating lang graph png")
