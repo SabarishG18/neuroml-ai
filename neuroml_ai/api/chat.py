@@ -11,9 +11,9 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 from fastapi import APIRouter, Request
 
-router = APIRouter()
+chat_router = APIRouter()
 
-@router.post("/query")
+@chat_router.post("/query")
 async def query(request: Request, query: str):
 
     rag = request.app.state.rag

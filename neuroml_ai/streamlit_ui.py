@@ -9,11 +9,21 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 import streamlit as st
-import requests
+import httpx
+import asyncio
+from neuroml_ai.utils import check_api_is_ready
 
 
 def runner():
     """Main runner for streamlit app"""
+    with st.spinner("Waiting for backend...") as status:
+        try:
+            asyncio.run(check_api_is_ready())
+            status.update(label="System ready!", state="complete", expanded=False)
+        except Exception as e:
+            st.error(f"Could not connect to backend: {e}")
+            st.stop
+
     st.title("NeuroML AI Assistant")
     st.info(
         "The answers are generated using an LLM. They may be inaccurate.  Please check with the documentation at https://docs.neuroml.org."
@@ -36,9 +46,10 @@ def runner():
             # stream = st.session_state.nml_ai.run_graph_stream(query)
             # response = st.write_stream(stream)
             with st.spinner("Working..."):
-                response = requests.post('http://127.0.0.1:8005/query', params={'query': query})
-                response_result = response.json().get("result")
-                st.markdown(response_result)
+                with httpx.Client(timeout=None) as client:
+                    response = client.post('http://127.0.0.1:8005/query', params={'query': query})
+                    response_result = response.json().get("result")
+                    st.markdown(response_result)
         st.session_state.history.append({"role": "assistant", "content": response_result})
 
 

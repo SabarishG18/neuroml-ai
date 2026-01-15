@@ -8,17 +8,24 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
+from fastmcp.client.client import CallToolResult
 from langchain_core.messages import AnyMessage
 from pydantic import BaseModel, Field
-from typing_extensions import List, Literal, Tuple, Dict
+from typing_extensions import Any, Dict, List, Literal, Tuple
 
 
 class QueryTypeSchema(BaseModel):
     """Schema for query type."""
 
-    query_type: Literal[
-        "undefined", "general_question", "neuroml_question", "neuroml_code_generation"
-    ] = Field(
+    query_type: Literal["undefined", "question", "task"] = Field(
+        default="undefined",
+    )
+
+
+class QueryDomainSchema(BaseModel):
+    """Schema for query type."""
+
+    query_domain: Literal["undefined", "neuroml", "general"] = Field(
         default="undefined",
     )
 
@@ -38,16 +45,24 @@ class EvaluateAnswerSchema(BaseModel):
     summary: str = ""
 
 
+class EvaluateCodeCommandSchema(BaseModel):
+    """Schema for code generation or command call."""
+    next_step: Literal[
+        "continue", "update_code", "call_tool", "undefined"
+    ] = Field(default="undefined")
+    reason: str = ""
+
 class ToolCallSchema(BaseModel):
     """Schema for tool call response."""
-
-    action: Literal["tool_call", "update_code", "final_answer"] = Field(
-        default="final_answer",
-    )
     tool: str = ""
     args: Dict[str, str] = Field(default_factory=dict)
     reason: str = ""
-    output: str = ""
+
+
+class CodeSchema(BaseModel):
+    code: str = ""
+    version: int = 0
+    patches: List[str] = []
 
 
 class AgentState(BaseModel):
@@ -55,14 +70,17 @@ class AgentState(BaseModel):
 
     query: str = ""
     query_type: QueryTypeSchema = QueryTypeSchema()
+    query_domain: QueryDomainSchema = QueryDomainSchema()
     text_response_eval: EvaluateAnswerSchema = EvaluateAnswerSchema()
     messages: List[AnyMessage] = Field(default_factory=list)
 
     # code string if any
-    code: str = ""
+    code: CodeSchema = CodeSchema()
+    code_eval: EvaluateCodeCommandSchema = EvaluateCodeCommandSchema()
 
     # tool call response
     tool_call: ToolCallSchema = ToolCallSchema()
+    tool_response: CallToolResult = None
 
     # summarised version of context so far
     context_summary: str = ""

@@ -15,19 +15,32 @@ from textwrap import dedent
 from typing import Optional
 
 from fastmcp import Client
+from fastmcp.client.client import CallToolResult
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from typing_extensions import Dict, List, Tuple
 
-from .schemas import (AgentState, EvaluateAnswerSchema, QueryTypeSchema,
-                      ToolCallSchema)
+from .schemas import (
+    AgentState,
+    CodeSchema,
+    EvaluateAnswerSchema,
+    QueryDomainSchema,
+    QueryTypeSchema,
+    ToolCallSchema,
+    EvaluateCodeCommandSchema
+)
 from .stores import NML_Stores
-from .utils import (LoggerInfoFilter, LoggerNotInfoFilter,
-                    logger_formatter_info, logger_formatter_other,
-                    parse_output_with_thought, setup_llm,
-                    split_thought_and_output)
+from .utils import (
+    LoggerInfoFilter,
+    LoggerNotInfoFilter,
+    logger_formatter_info,
+    logger_formatter_other,
+    parse_output_with_thought,
+    setup_llm,
+    split_thought_and_output,
+)
 
 logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
@@ -107,15 +120,13 @@ class NML_RAG(object):
             if "dummy" in t.name:
                 continue
             ctr += 1
-            self.tool_description += (
-                f"## {ctr}.  {t.name}\n{t.description.split(':param')[0].strip()}"
-            )
-            args = t.inputSchema.get("properties", [])
-            if len(args):
-                self.tool_description += "\n\nInputs:\n"
-                for arg, arginfo in args.items():
-                    self.tool_description += f"- {arg}: {arginfo.get('type')}"
-                self.tool_description += "\n"
+            self.tool_description += f"## {ctr}.  {t.name}\n{t.description}\n"
+            # args = t.inputSchema.get("properties", [])
+            # if len(args):
+            #     self.tool_description += "\n\nInputs:\n"
+            #     for arg, arginfo in args.items():
+            #         self.tool_description += f"- {arg}: {arginfo.get('type')}"
+            #     self.tool_description += "\n"
 
         self.logger.debug(f"{self.tool_description =}")
         await self._create_graph()
@@ -219,19 +230,16 @@ class NML_RAG(object):
         """
         ret_string = ""
 
-        directive = dedent(
-            """
+        directive = dedent("""
             IMPORTANT:
 
             - Consider both the latest user message AND the conversation history.
             - If the latest query is contextually about NeuroML due to prior discussion, treat it as a NeuroML related query even if the word does not appear.
 
-            """
-        )
+        """)
 
         if len(state.context_summary):
-            ret_string += dedent(
-                f"""
+            ret_string += dedent(f"""
             -----
 
             Here is a concise summary of the previous conversation to maintain
@@ -240,15 +248,13 @@ class NML_RAG(object):
             {state.context_summary}
 
             -----
-            """
-            )
+            """)
 
         conversation, _, _ = self._get_recent_conversation(
             state.messages, (-1 * self.num_recent_messages), None
         )
         if len(conversation):
-            ret_string += dedent(
-                f"""
+            ret_string += dedent(f"""
             -----
 
             Here are the recent messages between the user and the assistant:
@@ -256,12 +262,10 @@ class NML_RAG(object):
             {conversation}
 
             -----
-            """
-            )
+            """)
 
-        if len(state.code):
-            ret_string += dedent(
-                f"""
+        if len(state.code.code):
+            ret_string += dedent(f"""
             -----
 
             This is the generated code so far:
@@ -315,9 +319,17 @@ class NML_RAG(object):
         """Initialise, reset state before next iteration"""
         return {
             "query_type": QueryTypeSchema(),
+            "query_domain": QueryDomainSchema(),
             "text_response_eval": EvaluateAnswerSchema(),
             "message_for_user": "",
             "reference_material": {},
+            "code_eval": EvaluateCodeCommandSchema(),
+            "tool_response": CallToolResult(
+                content=[],
+                structured_content=None,
+                data={},
+                meta=None,
+            )
         }
 
     def _classify_query_node(self, state: AgentState) -> dict:
@@ -329,45 +341,42 @@ class NML_RAG(object):
         messages.append(HumanMessage(content=state.query))
 
         system_prompt = dedent("""
-            You are an expert query classifier. Analyse the user's request and
-            determine its intent.
+            You are an expert query classifier.
+            Classify the user input into exactly one category based on its intent
 
-            Provide your answer ONLY as a JSON object matching the requested
-            schema. Do not give any explanations or note your thinking.
+            Valid categories (in order of priority):
 
-            # Classification rules:
+            - question: The query is a request for information about NeuroML.
+            - task: The user is asking you to perform an action. The action will be performed in a later step.
 
-            Reason about the user's request. Go step by step. Take past
-            conversation history and context into account to identify the
-            objective of the query.
+            Rules:
 
-            - If the query is related to NeuroML, it can either be a factual question ("neuroml_question"), or it can be related to writing
-              code ("neuroml_code_generation"):
+            - Choose exactly ONE category
+            - Base your decision on semantic intent
+            - Do not explain your reasoning
+            - Do not include any other additional text
+            - Provide your answer ONLY as a JSON object matching the requested schema.
+            - Take past conversation history and context into account.
 
-                - If the query asks for some information about NeuroML, respond 'neuroml_question'.
-                - If the query is related to coding tasks: for example, writing code or running commands, respond 'neuroml_code_generation'
+            Examples:
+
+            - "How do I get learn NeuroML?": {{"query_type": "question"}}
+            - "How do I get started with NeuroML?": {{"query_type": "question"}}
+            - "How do I define ion channels in NeuroML?": {{"query_type": "question"}}
+            - "Generate NeuroML code for a neuron": {{"query_type": "task"}}
+            - "Run this code": {{"query_type": "task"}}
+            - "Run this command": {{"query_type": "task"}}
+            - "Run this simulation": {{"query_type": "task"}}
+            - "What is the capital of France?": {{"query_type": "general_question"}}
+            - "What are we talking about?": {{"query_type": "general_question"}}
             """)
 
         # only if neuroml is not mentioned, do we even bother with non neuroml
         # classifications
-        if "neuroml" not in state.query.lower():
-            system_prompt += dedent("""
-                - If the query is unrelated to NeuroML, only then respond "general_question".
-                """)
-
-        system_prompt += dedent("""
-                Examples:
-                - "How do I get learn NeuroML?": {{"query_type": "neuroml_question"}}
-                - "How do I get started with NeuroML?": {{"query_type": "neuroml_question"}}
-                - "How do I define ion channels in NeuroML?": {{"query_type": "neuroml_question"}}
-                - "Generate NeuroML code for a neuron": {{"query_type": "neuroml_code_generation"}}
-                """)
-
-        if "neuroml" not in state.query.lower():
-            system_prompt += dedent("""
-                - "What is the capital of France?": {{"query_type": "general_question"}}
-                - "What are we talking about?": {{"query_type": "general_question"}}
-                """)
+        # if "neuroml" not in state.query.lower():
+        #     system_prompt += dedent("""
+        #         - If the query is unrelated to NeuroML, only then respond "general_question".
+        #         """)
 
         system_prompt += self._add_memory_to_prompt(state)
 
@@ -409,35 +418,320 @@ class NML_RAG(object):
             "messages": messages,
         }
 
-    def _neuroml_code_tool_decider_node(self, state: AgentState) -> dict:
+    def _classify_question_domain(self, state: AgentState) -> dict:
+        """LLM decides whether it is a NeuroML question or not"""
+        assert self.model
+        self.logger.debug(f"{state =}")
+
+        messages = state.messages
+        messages.append(HumanMessage(content=state.query))
+
+        system_prompt = dedent("""
+            You are an expert query classifier.
+            Classify the user input into exactly one category based on its intent
+
+            Valid categories (in order of priority):
+
+            - neuroml: The query is a related to NeuroML
+            - general: The query is not related to NeuroML
+
+            Rules:
+
+            - Choose exactly ONE category
+            - Base your decision on semantic intent
+            - Do not explain your reasoning
+            - Do not include any other additional text
+            - Provide your answer ONLY as a JSON object matching the requested schema.
+            - Take past conversation history and context into account.
+
+
+            Examples:
+
+            - "How do I get learn NeuroML?": {{"query_domain": "neuroml"}}
+            - "How do I get started with NeuroML?": {{"query_domain": "neuroml"}}
+            - "How do I define ion channels in NeuroML?": {{"query_domain": "neuroml"}}
+            - "What is the capital of France?": {{"query_domain": "general"}}
+            - "What are we talking about?": {{"query_domain": "general"}}
+            """)
+
+        system_prompt += self._add_memory_to_prompt(state)
+
+        prompt_template = ChatPromptTemplate(
+            [("system", system_prompt), ("human", "User query: {query}")]
+        )
+
+        # can use | to merge these lines
+        query_node_llm = self.model.with_structured_output(
+            QueryDomainSchema, method="json_schema", include_raw=True
+        )
+        prompt = prompt_template.invoke({"query": state.query})
+
+        self.logger.debug(f"{prompt = }")
+
+        output = query_node_llm.invoke(
+            prompt, config={"configurable": {"temperature": 0.3}}
+        )
+        if output["parsing_error"]:
+            query_domain_result = parse_output_with_thought(
+                output["raw"], QueryDomainSchema
+            )
+        else:
+            query_domain_result = output["parsed"]
+            if isinstance(query_domain_result, str):
+                query_domain_result = QueryDomainSchema(
+                    query_domain=query_domain_result
+                )
+            elif isinstance(query_domain_result, dict):
+                query_domain_result = QueryDomainSchema(**query_domain_result)
+            else:
+                if not isinstance(query_domain_result, QueryDomainSchema):
+                    self.logger.critical(
+                        f"Received unexpected query classification: {query_domain_result =}"
+                    )
+                    query_domain_result = QueryDomainSchema(query_domain="undefined")
+
+        self.logger.debug(f"{query_domain_result =}")
+        return {
+            "query_domain": query_domain_result,
+            "messages": messages,
+        }
+
+    def _neuroml_code_command_evaluator_node(self, state: AgentState) -> dict:
         """Generate code"""
         assert self.model
         self.logger.debug(f"{state =}")
 
         system_prompt = dedent("""
-        You are a coding assistant. You are proficient in writing and running
-        code, especially in Python.
+        You are a coding assistant operating in discrete steps. Reason about
+        the user query and decide what the next action should be. Take the any
+        currently provided code and previous tool call outputs into account.
 
+        Choose exactly one action.
+        Valid actions are (in priority order):
+
+        - call_tool: if a tool call is required to address the query
+        - update_code: if the code must be changed before further execution
+        - continue: otherwise, if the generated code or the tool call output is
+          to be given to the user
+
+        Specify the chosen action in the "next_step" field:
+
+        {{
+            "next_step": "call_tool" or "update_code" or "continue",
+            "reason": a short reason statement
+        }}
+
+        """)
+
+        if len(state.code.code):
+            system_prompt += dedent("""
+            # Code:
+
+            ```
+            {current_code}
+            ```
+            """)
+
+        if len(state.tool_call.tool):
+            system_prompt += dedent("""
+            # Tool called:
+
+            ```
+            {current_tool_call}
+            ```
+            """)
+
+        if state.tool_response:
+            tool_call_output = state.tool_response
+        else:
+            tool_call_output = CallToolResult(
+                content=[],
+                structured_content=None,
+                data={},
+                meta=None,
+            )
+
+        if tool_call_output.data.get("returncode", None):
+            system_prompt += dedent("""
+
+            ## Tool call returncode
+
+            ```
+            {current_returncode}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stdout", "")):
+            system_prompt += dedent("""
+            ## Tool call execution output (stdout)
+
+            ```
+            {current_stdout}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stderr", "")):
+            system_prompt += dedent("""
+
+            ## Tool call execution error (stderr)
+
+            ```
+            {current_stderr}
+            ```
+
+            """)
+
+        system_prompt += dedent("""
         You have access to these tools:
 
         # Tools
 
         {tool_description}
 
-        # Output format:
+        """)
+
+        system_prompt += self._add_memory_to_prompt(state)
+
+        prompt_template = ChatPromptTemplate(
+            [("system", system_prompt), ("human", "User query: {query}")]
+        )
+
+        # can use | to merge these lines
+        query_node_llm = self.model.with_structured_output(
+            EvaluateCodeCommandSchema, method="json_schema", include_raw=True
+        )
+        prompt = prompt_template.invoke(
+            {
+                "query": state.query,
+                "tool_description": self.tool_description,
+                "current_code": state.code,
+                "current_tool_call": state.tool_call.tool,
+                "current_stdout": tool_call_output.data.get("stdout", ""),
+                "current_stderr": tool_call_output.data.get("stderr", ""),
+                "current_returncode": tool_call_output.data.get("returncode", ""),
+            }
+        )
+
+        self.logger.debug(f"{prompt = }")
+
+        output = query_node_llm.invoke(
+            prompt, config={"configurable": {"temperature": 0.0}}
+        )
+
+        self.logger.debug(f"{output =}")
+
+        if output["parsing_error"]:
+            result = parse_output_with_thought(output["raw"], EvaluateCodeCommandSchema)
+        else:
+            result = output["parsed"]
+
+        return {
+            "code_eval": EvaluateCodeCommandSchema(
+                next_step=result.next_step,
+                reason=result.reason,
+            ),
+        }
+
+    def _neuroml_code_tool_decider_node(self, state: AgentState) -> dict:
+        """Generate code"""
+        assert self.model
+        self.logger.debug(f"{state =}")
+
+        system_prompt = dedent("""
+        You are an agent operating in discrete steps. Reason about the user
+        query to decide what tool should be called.
+
+        Specify the following fields:
+
+        - tool: name of the tool to call
+        - args: command and arguments to be given to the tool
+        - reason: a short concise text string explaining your decision
+
+        Eg.:
 
         {{
-            action: "tool_call" if a tool is to be called, "update_code" if the
-            code needs to be updated, "final_answer" if the code or generated
-            output is ready to be returned to the user.
-            tool: name of the tool to call
-            args: arguments to be given to the tool
-            reason: a short concise text string explaining your decision
+            "tool": "a_tool",
+            "args": {{"arg1": "an argument"}},
+            "reason": "reason why this tool call was chosen",
         }}
 
         """)
 
+        if len(state.code.code):
+            system_prompt += dedent("""
+            # Provided or generated code/command:
+
+            ## Code:
+
+            ```
+            {current_code}
+            ```
+            """)
+
+        if len(state.tool_call.tool):
+            system_prompt += dedent("""
+            # Tool called:
+
+            ```
+            {current_tool_call}
+            ```
+            """)
+
+        if state.tool_response:
+            tool_call_output = state.tool_response
+        else:
+            tool_call_output = CallToolResult(
+                content=[],
+                structured_content=None,
+                data={},
+                meta=None,
+            )
+
+        if tool_call_output.data.get("returncode", None):
+            system_prompt += dedent("""
+
+            ## Return code
+
+            ```
+            {current_returncode}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stdout", "")):
+            system_prompt += dedent("""
+            ## Output
+
+            ```
+            {current_stdout}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stderr", "")):
+            system_prompt += dedent("""
+
+            ## Errors
+
+            ```
+            {current_stderr}
+            ```
+
+            """)
+
+        system_prompt += dedent("""
+        You have access to these tools:
+
+        # Tools
+
+        {tool_description}
+
+        """)
+
         system_prompt += self._add_memory_to_prompt(state)
+
         prompt_template = ChatPromptTemplate(
             [("system", system_prompt), ("human", "User query: {query}")]
         )
@@ -447,14 +741,24 @@ class NML_RAG(object):
             ToolCallSchema, method="json_schema", include_raw=True
         )
         prompt = prompt_template.invoke(
-            {"query": state.query, "tool_description": self.tool_description}
+            {
+                "query": state.query,
+                "tool_description": self.tool_description,
+                "current_code": state.code,
+                "current_tool_call": state.tool_call.tool,
+                "current_stdout": tool_call_output.data.get("stdout", ""),
+                "current_stderr": tool_call_output.data.get("stderr", ""),
+                "current_returncode": tool_call_output.data.get("returncode", ""),
+            }
         )
 
         self.logger.debug(f"{prompt = }")
 
         output = query_node_llm.invoke(
-            prompt, config={"configurable": {"temperature": 0.3}}
+            prompt, config={"configurable": {"temperature": 0.0}}
         )
+
+        self.logger.debug(f"{output =}")
 
         if output["parsing_error"]:
             result = parse_output_with_thought(output["raw"], ToolCallSchema)
@@ -463,7 +767,6 @@ class NML_RAG(object):
 
         return {
             "tool_call": ToolCallSchema(
-                action=result.action,
                 tool=result.tool,
                 args=result.args,
                 reason=result.reason,
@@ -479,18 +782,20 @@ class NML_RAG(object):
         tool_args = state.tool_call.args
 
         async with self.mcp_client:
-            result = await self.mcp_client.call_tool(tool, tool_args)
+            tool_response = await self.mcp_client.call_tool(tool, tool_args)
 
-        tool_call = state.tool_call
-        tool_call.output = result
-
-        return {"tool_call": tool_call}
+        self.logger.debug(f"{tool_response =}")
+        return {"tool_response": tool_response,
+                "code_eval": EvaluateCodeCommandSchema(
+                    next_step="undefined",
+                    reason="",
+                )}
 
     def _neuroml_code_tool_router(self, state: AgentState) -> str:
         """Tool router"""
         self.logger.debug(f"{state =}")
-        tool_call = state.tool_call
-        return tool_call.action
+        tool_call = state.code_eval
+        return tool_call.next_step
 
     def _neuroml_code_generator_node(self, state: AgentState) -> dict:
         """Code generator node"""
@@ -498,25 +803,31 @@ class NML_RAG(object):
         self.logger.debug(f"{state =}")
 
         system_prompt = dedent("""
-        You are a NeuroML code generation assistant. You are proficient in
-        Python, and in developing biophysically detailed computational models
-        of the brain.
+        You are a coding assistant. You are proficient in writing and running
+        Python code.
 
-        Use the existing code and the output from the tool call to generate
-        code to answer the user's query.
+        Produce a unified diff that applies the requested change.
+
+        You may use any information from the recent tool outputs if relevant.
+
+        Rules:
+
+        - Only modify lines necessary for the instruction
+        - Do not reformat unrelated code
+        - Do not include explanations or comments
+        - If no change is required, output an empty diff
 
         # Existing code:
 
         {current_code}
 
-
-        # Tool output:
+        # Tool output
 
         {tool_output}
 
         """)
 
-        system_prompt += self._add_memory_to_prompt(state)
+        # No memory required here
 
         prompt_template = ChatPromptTemplate(
             [("system", system_prompt), ("human", "User query: {query}")]
@@ -527,27 +838,112 @@ class NML_RAG(object):
             {
                 "query": state.query,
                 "current_code": state.code,
-                "tool_output": state.tool_call.output,
+                "tool_output": state.tool_response.content
+                if state.tool_response
+                else "",
             }
         )
 
         self.logger.debug(f"{prompt = }")
-        output = self.model.invoke(
-            prompt, config={"configurable": {"temperature": 0.3}}
+        code_node_llm = self.model.with_structured_output(
+            CodeSchema, method="json_schema", include_raw=True
         )
 
-        thought, answer = split_thought_and_output(output)
+        output = code_node_llm.invoke(prompt, config={"configurable": {"temperature": 0.01}})
 
-        return {
-            "code": answer,
-        }
+        if output["parsing_error"]:
+            result = parse_output_with_thought(output["raw"], CodeSchema)
+        else:
+            result = output["parsed"]
 
-    def _give_neuroml_code_to_user_node(self, state: AgentState) -> dict:
+        code = state.code
+        code.patches.append(result)
+        code.version += 1
+
+        return {"code": code}
+
+    async def _apply_code_patch_node(self, state: AgentState):
+        """Use a tool call to apply a patch"""
+        assert self.mcp_client
+        self.logger.debug(f"{state =}")
+
+        async with self.mcp_client:
+            tool_response = await self.mcp_client.call_tool(
+                "run_command_tool",
+                {"base": state.code.code, "patch": state.code.patches[-1]},
+            )
+        self.logger.debug(f"{tool_response =}")
+
+        code = state.code
+        tool_call_output = tool_response.data
+        if tool_call_output.returncode == 0:
+            code.code = tool_call_output["data"]["code"]
+            code.version += 1
+
+        return {"tool_response": tool_response, "code": code,
+                "code_eval": EvaluateCodeCommandSchema(
+                    next_step="undefined",
+                    reason="",
+                )}
+
+    def _give_code_to_user_node(self, state: AgentState) -> dict:
         """Return the answer message to the user"""
         self.logger.debug(f"{state =}")
         self.logger.info(f"Returning code to user: {state.code}")
+        user_message = ""
 
-        return {"message_for_user": state.code}
+        if len(state.code.code):
+            user_message += dedent(f"""
+            # Code
+
+            ```
+            {state.code.code}
+            ```
+            """)
+
+        if state.tool_response:
+            tool_call_output = state.tool_response
+        else:
+            tool_call_output = CallToolResult(
+                content=[],
+                structured_content=None,
+                data={},
+                meta=None,
+            )
+
+        if tool_call_output.data.get("returncode", None):
+            user_message += dedent(f"""
+
+            # Command execution return code
+
+            ```
+            {tool_call_output.data.get("returncode")}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stdout", "")):
+            user_message += dedent(f"""
+            # Command execution output (stdout)
+
+            ```
+            {tool_call_output.data.get("stdout")}
+            ```
+
+            """)
+
+        if len(tool_call_output.data.get("stderr", "")):
+            user_message += dedent(f"""
+
+            # Command execution error (stderr)
+
+            ```
+            {tool_call_output.data.get("stderr")}
+            ```
+
+            """)
+
+        return {"message_for_user": user_message}
 
     def _answer_general_question_node(self, state: AgentState) -> dict:
         """Answer a general question"""
@@ -556,7 +952,6 @@ class NML_RAG(object):
 
         system_prompt = dedent("""
         You are a warm, easy-going conversational assistant.
-        The user has asked something unrelated to NeuroML.
         Engage with the user and answer questions to the best of your ability.
         Reflect their tone, acknowledge what they say, and continue the conversation naturally.
 
@@ -769,7 +1164,7 @@ class NML_RAG(object):
                 metadata_str = f"### Document {ctr}/{len(sorted_refs)}: " + " | ".join(
                     metadata
                 )
-                serialized += "\n\n" + f"{metadata_str}\n\n:{r.page_content}"
+                serialized += "\n" + f"{metadata_str}\n:{r.page_content}"
                 ctr += 1
 
         reference_material_text = serialized.replace("{", "{{").replace("}", "}}")
@@ -962,6 +1357,13 @@ class NML_RAG(object):
 
         return query_type
 
+    def _route_query_domain_node(self, state: AgentState) -> str:
+        """Route the query depending on LLM's result"""
+        self.logger.debug(f"{state =}")
+        query_domain = state.query_domain.query_domain
+
+        return query_domain
+
     def _give_neuroml_answer_to_user_node(self, state: AgentState) -> dict:
         """Return the answer message to the user"""
         self.logger.debug(f"{state =}")
@@ -990,6 +1392,9 @@ class NML_RAG(object):
         self.workflow = StateGraph(AgentState)
         self.workflow.add_node("init_rag_state", self._init_rag_state_node)
         self.workflow.add_node("classify_query", self._classify_query_node)
+        self.workflow.add_node(
+            "classify_question_domain", self._classify_question_domain
+        )
 
         self.workflow.add_node(
             "generate_retrieval_query", self._generate_retrieval_query_node
@@ -1002,10 +1407,14 @@ class NML_RAG(object):
         )
         self.workflow.add_node("neuroml_code_tools", self._neuroml_code_tools_node)
         self.workflow.add_node(
-            "neuroml_code_generator", self._neuroml_code_generator_node
+            "neuroml_code_command_evaluator", self._neuroml_code_command_evaluator_node
         )
         self.workflow.add_node(
-            "give_neuroml_code_to_user", self._give_neuroml_code_to_user_node
+            "neuroml_code_generator", self._neuroml_code_generator_node
+        )
+        self.workflow.add_node("apply_code_patch", self._apply_code_patch_node)
+        self.workflow.add_node(
+            "give_code_to_user", self._give_code_to_user_node
         )
         self.workflow.add_node(
             "generate_answer_from_context", self._generate_answer_from_context_node
@@ -1026,25 +1435,33 @@ class NML_RAG(object):
             "classify_query",
             self._route_query_node,
             {
-                "general_question": "answer_general_question",
-                "neuroml_question": "generate_retrieval_query",
-                "neuroml_code_generation": "neuroml_code_tool_decider",
-                # for completeness: the classifier should rarely return
-                # undefined
+                "question": "classify_question_domain",
+                "task": "neuroml_code_command_evaluator",
                 "undefined": "answer_general_question",
             },
         )
         self.workflow.add_conditional_edges(
-            "neuroml_code_tool_decider",
-            self._neuroml_code_tool_router,
+            "classify_question_domain",
+            self._route_query_domain_node,
             {
-                "tool_call": "neuroml_code_tools",
-                "update_code": "neuroml_code_generator",
-                "give_answer_to_user": "give_neuroml_code_to_user",
+                "neuroml": "generate_retrieval_query",
+                "general": "answer_general_question",
+                "undefined": "answer_general_question",
             },
         )
-        self.workflow.add_edge("neuroml_code_tools", "neuroml_code_tool_decider")
-        self.workflow.add_edge("neuroml_code_generator", "neuroml_code_tool_decider")
+        self.workflow.add_conditional_edges(
+            "neuroml_code_command_evaluator",
+            self._neuroml_code_tool_router,
+            {
+                "call_tool": "neuroml_code_tool_decider",
+                "update_code": "neuroml_code_generator",
+                "continue": "give_code_to_user",
+            },
+        )
+        self.workflow.add_edge("neuroml_code_tool_decider", "neuroml_code_tools")
+        self.workflow.add_edge("neuroml_code_tools", "neuroml_code_command_evaluator")
+        self.workflow.add_edge("neuroml_code_generator", "apply_code_patch")
+        self.workflow.add_edge("apply_code_patch", "neuroml_code_command_evaluator")
 
         self.workflow.add_conditional_edges(
             "evaluate_answer",

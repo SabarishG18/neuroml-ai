@@ -10,7 +10,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 from abc import ABC, abstractmethod
 from contextlib import AbstractAsyncContextManager
-from typing import List
+from typing import Any, List
 
 from pydantic.dataclasses import dataclass
 
@@ -24,9 +24,27 @@ class RunPythonCode:
 
 @dataclass
 class RunCommand:
-    """Run a command"""
+    """Run a command provided as a list of strings"""
 
     command: List[str]
+
+
+@dataclass
+class PatchCommand:
+    """Patch the base file with the given patch"""
+
+    base: str
+    patch: str
+
+
+@dataclass
+class CmdResult:
+    """Result from a command execution"""
+
+    stdout: str
+    stderr: str
+    returncode: int
+    data: dict[Any, Any]
 
 
 class AsyncSandbox(AbstractAsyncContextManager, ABC):

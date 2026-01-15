@@ -9,26 +9,23 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 import asyncio
-import logging
 import subprocess
 from contextlib import chdir
 from pathlib import Path
 
+import httpx
 import typer
 from fastmcp import Client
 
-from neuroml_ai.rag.rag import NML_RAG
+from neuroml_ai.utils import check_api_is_ready
 
 nml_ai_app = typer.Typer()
 
 
 @nml_ai_app.command()
 def nml_ai_cli(
-    chat_model: str = "ollama:qwen3:1.7b",
-    embedding_model: str = "ollama:bge-m3",
     gui: bool = False,
     single_query: str = "",
-    regen_vector_stores: bool = False,
 ):
     """NeuroML AI cli wrapper function"""
     print("*** NeuroML AI chat assistant ***")
@@ -44,43 +41,39 @@ def nml_ai_cli(
             """Cli main async"""
             from yaspin import yaspin
 
-            client_url = "http://127.0.0.1:8542/mcp"
-            mcp_client = Client(client_url)
-
-            nml_ai = NML_RAG(
-                mcp_client,
-                chat_model=chat_model,
-                embedding_model=embedding_model,
-                logging_level=logging.DEBUG,
-            )
-            await nml_ai.setup()
-
-            if regen_vector_stores:
-                nml_ai.stores.remove()
-                nml_ai.stores.load()
+            # wait for API to be ready
+            with yaspin(text="Waiting for API..."):
+                response = await check_api_is_ready()
 
             if len(single_query):
                 print(f"NeuroML-AI (USER) >>> {single_query}\n\n")
-
                 if single_query.lower() == "quit":
                     pass
                 else:
                     with yaspin(text="Working ..."):
-                        response = await nml_ai.run_graph_invoke(single_query)
-                        print(f"NeuroML-AI (AI) >>> {response}\n\n")
+                        async with httpx.AsyncClient() as client:
+                            response = await client.post(
+                                "http://127.0.0.1:8005/query",
+                                params={"query": single_query},
+                                timeout=None
+                            )
+                            response_result = response.json().get("result")
+                            print(f"NeuroML-AI (AI) >>> {response_result}\n\n")
 
             else:
                 while (query := input("NeuroML-AI (USER) >>> ")) != "quit":
-                    assert nml_ai
-
                     # we use checkpoints, so we don't need to store and reload the
                     # state ourselves
                     with yaspin(text="Working ..."):
-                        response = await nml_ai.run_graph_invoke(query)
-                    print(f"NeuroML-AI (AI) >>> {response}\n\n")
+                        async with httpx.AsyncClient() as client:
+                            response = await client.post(
+                                "http://127.0.0.1:8005/query", params={"query": query},
+                                timeout=None
+                            )
+                            response_result = response.json().get("result")
+                            print(f"NeuroML-AI (AI) >>> {response_result}\n\n")
 
         try:
-            print("Running!")
             asyncio.run(cli_main())
         except KeyboardInterrupt:
             print("\nInterrupted. Exiting.")

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-General code execution tools
+General code execution tools.
+
+Note that docstrings here should be written for the LLM to read.
 
 File: neuroml_ai/mcp/tools/code_tools.py
 
@@ -9,6 +11,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 from typing import Any, Dict, List
+from dataclasses import asdict
 
 from neuroml_ai.mcp.tools.sandbox import docker, local
 from neuroml_ai.mcp.tools.sandbox.sandbox import RunCommand, RunPythonCode
@@ -30,17 +33,53 @@ async def dummy_code_tool(astring: str) -> str:
     return f"I got {astring}"
 
 
-async def run_command_tool(command: List[str]) -> Dict[str, Any]:
-    """Run a command in a shell"""
-    request = RunCommand(command=command)
+async def run_command_tool(command: str) -> Dict[str, Any]:
+    """Runs a command in a shell.
+
+    Input:
+
+    - command (string):
+      Example: "ls -l -A"
+
+    Output:
+
+    Dictionary with keys:
+    - stdout (str)
+    - stderr (str)
+    - returncode (int)
+    - data (dict): additional metadata
+
+    Examples:
+    - run_command_tool(command="ls")
+    - run_command_tool(command="ls -l"])
+
+    """
+    request = RunCommand(command=command.split())
     async with sbox(".") as f:
-        stdout, stderr = await f.run(request)
-    return {"stdout": stdout, "stderr": stderr}
+        result = await f.run(request)
+    return asdict(result)
 
 
 async def run_python_code_tool(code: str) -> Dict[str, Any]:
-    """Run given python code"""
+    """Run given Python code
+
+    Input:
+
+    - code (strings): Python code as a string
+
+    Output:
+
+    Dictionary with keys:
+    - stdout (str)
+    - stderr (str)
+    - returncode (int)
+    - data (dict): additional metadata
+
+    Example:
+    - run_python_code_tool(code="import numpy")
+
+    """
     request = RunPythonCode(code=code)
     async with sbox(".") as f:
-        stdout, stderr = await f.run(request)
-    return {"stdout": stdout, "stderr": stderr}
+        result = await f.run(request)
+    return asdict(result)
