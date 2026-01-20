@@ -8,9 +8,10 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-import pytest
 import unittest
-from gen_rag.rag.stores import Vector_Stores
+
+import pytest
+from gen_rag.stores import Vector_Stores
 
 
 class TestStores(unittest.TestCase):
@@ -18,14 +19,16 @@ class TestStores(unittest.TestCase):
 
     def test_retrieval(self):
         """Test retrieval"""
-        model = "bge-m3"
+        model = "bge-m3:latest"
 
         try:
-            stores = Vector_Stores(f"ollama:{model}")
+            stores = Vector_Stores(
+                embedding_model=f"ollama:{model}", domains_file="domains.json"
+            )
             stores.setup()
-            stores.load()
-            stores.retrieve("NeuroML community")
-        except:  # noqa
+            stores.retrieve("NeuroML", "NeuroML community")
+        except Exception as e:  # noqa
+            # TODO: handle different exceptions separately
             pytest.skip("Ollama model not found")
 
 

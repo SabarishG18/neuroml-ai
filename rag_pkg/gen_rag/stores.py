@@ -8,26 +8,46 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
+import json
 import logging
 import sys
-from glob import glob
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, Optional
 
 import chromadb
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-
-from neuroml_ai_utils.utils import (
-    LoggerInfoFilter,
-    LoggerNotInfoFilter,
-    logger_formatter_info,
-    logger_formatter_other,
-    setup_embedding,
-)
+from neuroml_ai_utils.utils import (LoggerInfoFilter, LoggerNotInfoFilter,
+                                    logger_formatter_info,
+                                    logger_formatter_other, setup_embedding)
+from pydantic import BaseModel, RootModel
 
 logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
+
+
+class VectorStoreInfo(BaseModel):
+    name: str
+    path: str
+    loaded_object: Optional[Any] = None
+
+
+class PerDomainConfig(BaseModel):
+    description: str
+    vector_stores: list[VectorStoreInfo]
+
+
+class VectorStoresConfig(RootModel):
+    root: Dict[str, PerDomainConfig]
+
+    def __iter__(self):
+        return iter(self.root)
+
+    def __getitem__(self, item):
+        return self.root[item]
+
+    def get(self, item, default):
+        return self.root.get(item, default)
 
 
 class Vector_Stores(object):
@@ -37,7 +57,7 @@ class Vector_Stores(object):
         self,
         embedding_model: str,
         logging_level: int = logging.DEBUG,
-        domains: list[str] = ["nml"],
+        domains_file: str = "",
     ):
         """Init"""
         # per store
@@ -47,6 +67,8 @@ class Vector_Stores(object):
         self.sim_thresh = 0.15
         self.embedding_model = embedding_model
         self.embeddings = None
+        self.domains_file = domains_file
+        self.vector_stores_config: VectorStoresConfig
 
         # we prefer markdown because the one page PDF that is available for the
         # documentation does not work too well with embeddings
@@ -54,7 +76,6 @@ class Vector_Stores(object):
         self.data_dir = f"{my_path}/data/"
         self.stores_path = f"{self.data_dir}/vector-stores"
 
-        self.text_vector_stores: dict[str, dict[str, Chroma]] = {}
         self.image_vector_stores: dict[str, Any] = {}
 
         self.logger = logging.getLogger("NeuroML-AI")
@@ -91,6 +112,15 @@ class Vector_Stores(object):
             # strip prefix
             self.embedding_model = self.embedding_model.replace("ollama:", "")
 
+        assert len(self.domains_file)
+        self.load_domains()
+
+    def load_domains(self):
+        """Load domains this RAG is going to answer for from config file"""
+        with open(self.domains_file) as f:
+            domain_info = json.load(f)
+            self.vector_stores_config = VectorStoresConfig(domain_info)
+
     def inc_k(self, inc: int = 1):
         """Increase k by inc
 
@@ -110,59 +140,80 @@ class Vector_Stores(object):
         self.k = self.default_k
         self.logger.debug(f"k reset to {self.k =}")
 
-    def load(self, domain: str):
+    def load_all_stores(self):
+        """Load all vector stores"""
+        for domain_name in self.vector_stores_config.keys():
+            self.load(domain_name)
+
+    def load(self, domain_name: str):
         """Create/load the vector store"""
         assert self.embeddings
 
-        self.logger.debug("Setting up/loading Chroma vector store")
+        domain = self.vector_stores_config.get(domain_name, None)
+        assert domain
 
-        self.logger.debug(f"{self.stores_path =}")
-        vector_stores = glob(f"{self.stores_path}/{domain}-*", recursive=False)
-        self.logger.debug(f"{vector_stores =}")
+        stores = domain.vector_stores
+        assert stores
 
-        assert len(vector_stores)
+        for store in stores:
+            store_name = store.name
+            store_path = Path(store.path)
 
-        self.text_vector_stores[domain] = {}
-
-        for store in vector_stores:
-            store_path = Path(store)
-
+            # if not absolute, it must be in a data folder in the location of
+            # this file
+            if not store_path.is_absolute():
+                store_path = (
+                    Path(__file__).parent / Path("data/vector-stores/") / store_path
+                )
             assert store_path.is_dir()
 
-            vs_persist_dir = (
-                f"{store_path.name}_{self.embedding_model.replace(':', '_')}.db"
+            # check that it is a pre-existing DB
+            store_db = store_path / Path("chroma.sqlite3")
+            assert store_db.is_file()
+
+            self.logger.debug(
+                f"Loading Chroma vector store '{store_name}' from path {store_path.absolute()}"
             )
-            self.logger.debug(f"{vs_persist_dir =}")
 
             chroma_client_settings_text = chromadb.config.Settings(
                 is_persistent=True,
-                persist_directory=vs_persist_dir,
+                persist_directory=str(store_path.absolute()),
                 anonymized_telemetry=False,
             )
-            store = Chroma(
-                collection_name=store_path.name,
+            # NOTE:
+            # Must match the values set when the store was created
+            loaded_store = Chroma(
+                collection_name=store_name,
                 embedding_function=self.embeddings,
                 client_settings=chroma_client_settings_text,
             )
+            # save it as the loaded object
+            store.loaded_object = loaded_store
 
-            self.text_vector_stores[domain][store_path.name] = store
+            self.logger.debug(
+                f"Finished loading Chroma vector store '{store_name}' from path {store_path.absolute()}"
+            )
 
-    def retrieve(self, domain: str, query: str) -> list[tuple[Document, float]]:
+    def retrieve(self, domain_name: str, query: str) -> list[tuple[Document, float]]:
         """Retrieve embeddings from documentation to answer a query
 
+        :param domain_name: name of domain
+        :type domain_name: str
         :param query: user query
+        :type query: str
         :returns: list of tuples (document, score)
 
         """
-        self.load(domain)
+        self.load(domain_name)
 
-        assert len(self.text_vector_stores[domain])
-        stores = self.text_vector_stores[domain]
+        domain = self.vector_stores_config.get(domain_name, None)
+        stores = domain.vector_stores
+        assert stores
 
         res = []
 
-        for sname, store in stores.items():
-            data = store.similarity_search_with_relevance_scores(
+        for store in stores:
+            data = store.loaded_object.similarity_search_with_relevance_scores(
                 query, k=self.k, score_threshold=self.sim_thresh
             )
             self.logger.debug(f"{data =}")
