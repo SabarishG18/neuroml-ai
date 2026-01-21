@@ -12,7 +12,6 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastmcp import Client
 from gen_rag.api.chat import chat_router
 from gen_rag.api.health import health_router
 from gen_rag.rag import RAG
@@ -32,7 +31,6 @@ async def lifespan(app: FastAPI):
     await rag.setup()
 
     app.state.rag = rag
-    app.state.mcp = Client
     app.state.is_ready = True
 
     yield
