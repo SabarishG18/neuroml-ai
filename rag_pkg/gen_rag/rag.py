@@ -835,6 +835,10 @@ class RAG(object):
         self.workflow.add_conditional_edges(
             "classify_question_domain",
             self._route_query_domain_node,
+            {
+                "generate_retrieval_query": "generate_retrieval_query",
+                "answer_general_question": "answer_general_question"
+            },
         )
         self.workflow.add_conditional_edges(
             "evaluate_answer",
