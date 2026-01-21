@@ -52,7 +52,7 @@ class Vector_Stores(object):
     def __init__(
         self,
         logging_level: int = logging.DEBUG,
-        vc_config_file: str = "",
+        vs_config_file: str = "",
     ):
         """Init"""
         # per store
@@ -62,7 +62,7 @@ class Vector_Stores(object):
         self.sim_thresh = 0.15
         # set a default
         self.embeddings = None
-        self.vc_config_file = vc_config_file
+        self.vs_config_file = vs_config_file
         self.vs_config: VectorStoresConfig
 
         self.logger = logging.getLogger("NeuroML-AI")
@@ -102,8 +102,8 @@ class Vector_Stores(object):
 
     def load_config(self):
         """Load domains this RAG is going to answer for from config file"""
-        assert len(self.vc_config_file)
-        with open(self.vc_config_file) as f:
+        assert len(self.vs_config_file)
+        with open(self.vs_config_file) as f:
             domain_info = json.load(f)
             self.vs_config = VectorStoresConfig(**domain_info)
         self.embedding_model = self.vs_config.embedding_model
