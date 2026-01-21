@@ -28,7 +28,7 @@ class EvaluateAnswerSchema(BaseModel):
     summary: str = ""
 
 
-class AgentState(BaseModel):
+class RAGState(BaseModel):
     """The state of the graph"""
 
     query: str = ""

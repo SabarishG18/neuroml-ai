@@ -30,7 +30,7 @@ from neuroml_ai_utils.utils import (
 from pydantic import create_model
 from typing_extensions import Dict, List, Literal, Tuple
 
-from .schemas import AgentState, EvaluateAnswerSchema
+from .schemas import RAGState, EvaluateAnswerSchema
 from .stores import Vector_Stores
 
 logging.basicConfig()
@@ -110,7 +110,7 @@ class RAG(object):
         """Set up the LLM chat model"""
         self.model = setup_llm(self.chat_model, self.logger)
 
-    def _summarise_history_node(self, state: AgentState) -> dict:
+    def _summarise_history_node(self, state: RAGState) -> dict:
         """Clean ups after every round of conversation"""
         assert self.model
 
@@ -194,7 +194,7 @@ class RAG(object):
             "summarised_till": len(state.messages),
         }
 
-    def _add_memory_to_prompt(self, state: AgentState) -> str:
+    def _add_memory_to_prompt(self, state: RAGState) -> str:
         # TODO: needs reimplementation in higher level
         """Add memory to system prompt.
 
@@ -281,7 +281,7 @@ class RAG(object):
             ai_messages,
         )
 
-    def _init_rag_state_node(self, state: AgentState) -> dict:
+    def _init_rag_state_node(self, state: RAGState) -> dict:
         """Initialise, reset state before next iteration"""
         return {
             "query_domain": "undefined",
@@ -290,7 +290,7 @@ class RAG(object):
             "reference_material": {},
         }
 
-    def _classify_question_domain(self, state: AgentState) -> dict:
+    def _classify_question_domain(self, state: RAGState) -> dict:
         """Ask LLM to figure out the domain of the query"""
         assert self.model
         self.logger.debug(f"{state =}")
@@ -371,7 +371,7 @@ class RAG(object):
             "messages": messages,
         }
 
-    def _answer_general_question_node(self, state: AgentState) -> dict:
+    def _answer_general_question_node(self, state: RAGState) -> dict:
         """Answer a general question"""
         assert self.model
         self.logger.debug(f"{state =}")
@@ -418,7 +418,7 @@ class RAG(object):
 
         return {"messages": messages, "message_for_user": output.content}
 
-    def _generate_retrieval_query_node(self, state: AgentState) -> dict:
+    def _generate_retrieval_query_node(self, state: RAGState) -> dict:
         """Generate a retrieval query"""
         assert self.model
         self.logger.debug(f"{state =}")
@@ -478,7 +478,7 @@ class RAG(object):
 
         return {"messages": messages}
 
-    def _generate_answer_from_context_node(self, state: AgentState) -> dict:
+    def _generate_answer_from_context_node(self, state: RAGState) -> dict:
         """Generate the answer"""
         assert self.model
         self.logger.debug(f"{state =}")
@@ -592,7 +592,7 @@ class RAG(object):
 
         return reference_material_text
 
-    def _evaluate_answer_node(self, state: AgentState) -> dict:
+    def _evaluate_answer_node(self, state: RAGState) -> dict:
         """Evaluate the answer"""
         assert self.model
 
@@ -725,7 +725,7 @@ class RAG(object):
         # do not store the evaluation message in state
         return {"text_response_eval": result, "messages": state.messages}
 
-    def _route_answer_evaluator_node(self, state: AgentState) -> str:
+    def _route_answer_evaluator_node(self, state: RAGState) -> str:
         """Route depending on evaluation of answer"""
         self.logger.debug(f"{state =}")
         resp = state.text_response_eval
@@ -770,7 +770,7 @@ class RAG(object):
         else:
             return "undefined"
 
-    def _route_query_domain_node(self, state: AgentState) -> str:
+    def _route_query_domain_node(self, state: RAGState) -> str:
         """Route the query depending on LLM's result"""
         self.logger.debug(f"{state =}")
         query_domain = state.query_domain
@@ -780,7 +780,7 @@ class RAG(object):
 
         return "answer_general_question"
 
-    def _give_domain_answer_to_user_node(self, state: AgentState) -> dict:
+    def _give_domain_answer_to_user_node(self, state: RAGState) -> dict:
         """Return the answer message to the user"""
         self.logger.debug(f"{state =}")
 
@@ -791,7 +791,7 @@ class RAG(object):
 
         return {"message_for_user": answer.content}
 
-    def _ask_user_for_clarification_node(self, state: AgentState) -> dict:
+    def _ask_user_for_clarification_node(self, state: RAGState) -> dict:
         """Ask the user for clarification or a different question"""
         self.logger.debug(f"{state =}")
 
@@ -805,7 +805,7 @@ class RAG(object):
 
     async def _create_graph(self):
         """Create the LangGraph"""
-        self.workflow = StateGraph(AgentState)
+        self.workflow = StateGraph(RAGState)
         self.workflow.add_node("init_rag_state", self._init_rag_state_node)
         self.workflow.add_node(
             "classify_question_domain", self._classify_question_domain
