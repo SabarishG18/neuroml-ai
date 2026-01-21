@@ -17,10 +17,14 @@ from typing import Any, Dict, Optional
 import chromadb
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from neuroml_ai_utils.utils import (LoggerInfoFilter, LoggerNotInfoFilter,
-                                    logger_formatter_info,
-                                    logger_formatter_other, setup_embedding)
-from pydantic import BaseModel, RootModel
+from neuroml_ai_utils.utils import (
+    LoggerInfoFilter,
+    LoggerNotInfoFilter,
+    logger_formatter_info,
+    logger_formatter_other,
+    setup_embedding,
+)
+from pydantic import BaseModel
 
 logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
@@ -37,17 +41,9 @@ class PerDomainConfig(BaseModel):
     vector_stores: list[VectorStoreInfo]
 
 
-class VectorStoresConfig(RootModel):
-    root: Dict[str, PerDomainConfig]
-
-    def __iter__(self):
-        return iter(self.root)
-
-    def __getitem__(self, item):
-        return self.root[item]
-
-    def get(self, item, default):
-        return self.root.get(item, default)
+class VectorStoresConfig(BaseModel):
+    embedding_model: str  #  = "ollama:bge-m3"
+    domains: Dict[str, PerDomainConfig]
 
 
 class Vector_Stores(object):
@@ -55,7 +51,6 @@ class Vector_Stores(object):
 
     def __init__(
         self,
-        embedding_model: str,
         logging_level: int = logging.DEBUG,
         domains_file: str = "",
     ):
@@ -65,18 +60,10 @@ class Vector_Stores(object):
         self.k_max = 10
         self.k = self.default_k
         self.sim_thresh = 0.15
-        self.embedding_model = embedding_model
+        # set a default
         self.embeddings = None
         self.domains_file = domains_file
-        self.vector_stores_config: VectorStoresConfig
-
-        # we prefer markdown because the one page PDF that is available for the
-        # documentation does not work too well with embeddings
-        my_path = Path(__file__).parent
-        self.data_dir = f"{my_path}/data/"
-        self.stores_path = f"{self.data_dir}/vector-stores"
-
-        self.image_vector_stores: dict[str, Any] = {}
+        self.vs_config: VectorStoresConfig
 
         self.logger = logging.getLogger("NeuroML-AI")
         self.logger.setLevel(logging_level)
@@ -96,6 +83,7 @@ class Vector_Stores(object):
 
     def setup(self):
         """Setup embeddings"""
+        self.load_config()
         self.embeddings = setup_embedding(self.embedding_model, self.logger)
         # extract model name
         if self.embedding_model.lower().startswith("huggingface:"):
@@ -113,13 +101,13 @@ class Vector_Stores(object):
             self.embedding_model = self.embedding_model.replace("ollama:", "")
 
         assert len(self.domains_file)
-        self.load_domains()
 
-    def load_domains(self):
+    def load_config(self):
         """Load domains this RAG is going to answer for from config file"""
         with open(self.domains_file) as f:
             domain_info = json.load(f)
-            self.vector_stores_config = VectorStoresConfig(domain_info)
+            self.vs_config = VectorStoresConfig(**domain_info)
+        self.embedding_model = self.vs_config.embedding_model
 
     def inc_k(self, inc: int = 1):
         """Increase k by inc
@@ -142,14 +130,14 @@ class Vector_Stores(object):
 
     def load_all_stores(self):
         """Load all vector stores"""
-        for domain_name in self.vector_stores_config.keys():
+        for domain_name in self.vs_config.domains.keys():
             self.load(domain_name)
 
     def load(self, domain_name: str):
         """Create/load the vector store"""
         assert self.embeddings
 
-        domain = self.vector_stores_config.get(domain_name, None)
+        domain = self.vs_config.domains.get(domain_name, None)
         assert domain
 
         stores = domain.vector_stores
@@ -206,13 +194,15 @@ class Vector_Stores(object):
         """
         self.load(domain_name)
 
-        domain = self.vector_stores_config.get(domain_name, None)
+        domain = self.vs_config.domains.get(domain_name, None)
+        assert domain
         stores = domain.vector_stores
         assert stores
 
         res = []
 
         for store in stores:
+            assert store.loaded_object
             data = store.loaded_object.similarity_search_with_relevance_scores(
                 query, k=self.k, score_threshold=self.sim_thresh
             )

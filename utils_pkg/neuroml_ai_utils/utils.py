@@ -43,7 +43,7 @@ logger_formatter_other = logging.Formatter(
 )
 
 
-def check_ollama_model(logger, model, exit=True):
+def check_ollama_model(logger, model, exit=False):
     """Check if ollama model is available
 
     :param logger: logger instance

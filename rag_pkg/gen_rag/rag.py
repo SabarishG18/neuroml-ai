@@ -39,16 +39,13 @@ class RAG(object):
     def __init__(
         self,
         chat_model: Optional[str] = None,
-        embedding_model: Optional[str] = None,
         logging_level: int = logging.DEBUG,
         memory: bool = True,
     ):
         """Initialise"""
         self.chat_model = "ollama:qwen3:1.7b" if chat_model is None else chat_model
         self.model = None
-        self.stores = Vector_Stores(
-            "ollama:bge-m3" if embedding_model is None else embedding_model
-        )
+        self.stores = Vector_Stores()
         # total number of reference documents
         self.num_refs_max = 10
 
