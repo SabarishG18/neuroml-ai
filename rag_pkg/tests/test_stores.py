@@ -21,7 +21,7 @@ class TestStores(unittest.TestCase):
     def test_retrieval(self):
         """Test retrieval"""
         try:
-            stores = Vector_Stores(domains_file="vector-stores.json")
+            stores = Vector_Stores(vc_config_file="vector-stores.json")
             stores.setup()
             stores.retrieve("NeuroML", "NeuroML community")
         except ResponseError as e:
