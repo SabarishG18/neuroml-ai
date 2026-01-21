@@ -1,24 +1,26 @@
 #!/usr/bin/env python3
 """
-Streamlit chat app interface
+Streamlit chat app interface for RAG
 
-File: neuroml_ai/streamlit_ui.py
+File: gen_rag/ui/streamlit_ui.py
 
 Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-import streamlit as st
-import httpx
 import asyncio
+
+import httpx
+import streamlit as st
 from neuroml_ai_utils.utils import check_api_is_ready
 
 
 def runner():
     """Main runner for streamlit app"""
+    url = "http://127.0.0.1:8005"
     with st.spinner("Waiting for backend..."):
         try:
-            asyncio.run(check_api_is_ready("http://127.0.0.1:8005/health/ready"))
+            asyncio.run(check_api_is_ready(f"{url}/health/ready"))
         except Exception as e:
             st.error(f"Could not connect to backend: {e}")
             st.stop
@@ -46,10 +48,12 @@ def runner():
             # response = st.write_stream(stream)
             with st.spinner("Working..."):
                 with httpx.Client(timeout=None) as client:
-                    response = client.post('http://127.0.0.1:8005/query', params={'query': query})
+                    response = client.post(f"{url}/query", params={"query": query})
                     response_result = response.json().get("result")
                     st.markdown(response_result)
-        st.session_state.history.append({"role": "assistant", "content": response_result})
+        st.session_state.history.append(
+            {"role": "assistant", "content": response_result}
+        )
 
 
 if __name__ == "__main__":
