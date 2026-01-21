@@ -12,6 +12,7 @@ import unittest
 
 import pytest
 from gen_rag.stores import Vector_Stores
+from ollama import ResponseError
 
 
 class TestStores(unittest.TestCase):
@@ -19,17 +20,14 @@ class TestStores(unittest.TestCase):
 
     def test_retrieval(self):
         """Test retrieval"""
-        model = "bge-m3:latest"
-
         try:
-            stores = Vector_Stores(
-                embedding_model=f"ollama:{model}", domains_file="domains.json"
-            )
+            stores = Vector_Stores(domains_file="vector-stores.json")
             stores.setup()
             stores.retrieve("NeuroML", "NeuroML community")
-        except Exception as e:  # noqa
-            # TODO: handle different exceptions separately
-            pytest.skip("Ollama model not found")
+        except ResponseError as e:
+            pytest.skip(str(e))
+        except ConnectionError as e:
+            pytest.skip(str(e))
 
 
 if __name__ == "__main__":
