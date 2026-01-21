@@ -2,7 +2,7 @@
 """
 Chat end points
 
-File: rag_pkg/api/chat.py
+File: rag_pkg/gen_rag/api/chat.py
 
 Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>

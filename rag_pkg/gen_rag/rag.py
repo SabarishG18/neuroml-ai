@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NeuroML RAG implementation
+General RAG implementation
 
 File: rag.py
 
@@ -18,15 +18,19 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
-from neuroml_ai_utils.utils import (LoggerInfoFilter, LoggerNotInfoFilter,
-                                    logger_formatter_info,
-                                    logger_formatter_other,
-                                    parse_output_with_thought, setup_llm,
-                                    split_thought_and_output)
-from typing_extensions import Dict, List, Tuple
+from neuroml_ai_utils.utils import (
+    LoggerInfoFilter,
+    LoggerNotInfoFilter,
+    logger_formatter_info,
+    logger_formatter_other,
+    parse_output_with_thought,
+    setup_llm,
+    split_thought_and_output,
+)
+from pydantic import create_model
+from typing_extensions import Dict, List, Literal, Tuple
 
-from .schemas import (AgentState, EvaluateAnswerSchema, QueryDomainSchema,
-                      QueryTypeSchema)
+from .schemas import AgentState, EvaluateAnswerSchema
 from .stores import Vector_Stores
 
 logging.basicConfig()
@@ -38,14 +42,16 @@ class RAG(object):
 
     def __init__(
         self,
-        chat_model: Optional[str] = None,
+        vs_config_file: str,
+        chat_model: str,
         logging_level: int = logging.DEBUG,
         memory: bool = True,
     ):
         """Initialise"""
-        self.chat_model = "ollama:qwen3:1.7b" if chat_model is None else chat_model
+        self.chat_model = chat_model
         self.model = None
-        self.stores = Vector_Stores()
+        self.stores = Vector_Stores(vs_config_file=vs_config_file)
+
         # total number of reference documents
         self.num_refs_max = 10
 
@@ -63,7 +69,7 @@ class RAG(object):
         # 5 rounds: 10 messages
         self.num_recent_messages = 10
 
-        self.logger = logging.getLogger("NeuroML-AI")
+        self.logger = logging.getLogger("RAG")
         self.logger.setLevel(logging_level)
         self.logger.propagate = False
 
@@ -84,6 +90,14 @@ class RAG(object):
 
         self._setup_chat_model()
         self.stores.setup()
+
+        # dynamically generate schema for domains
+        all_domains = self.stores.domains.copy()
+        all_domains.append("undefined")
+
+        self.QueryDomainSchema = create_model(
+            "QueryDomainSchema", query_domain=(Literal[tuple(all_domains)], "undefined")
+        )
 
         await self._create_graph()
 
@@ -199,7 +213,6 @@ class RAG(object):
             IMPORTANT:
 
             - Consider both the latest user message AND the conversation history.
-            - If the latest query is contextually about NeuroML due to prior discussion, treat it as a NeuroML related query even if the word does not appear.
 
         """)
 
@@ -271,117 +284,38 @@ class RAG(object):
     def _init_rag_state_node(self, state: AgentState) -> dict:
         """Initialise, reset state before next iteration"""
         return {
-            "query_type": QueryTypeSchema(),
-            "query_domain": QueryDomainSchema(),
+            "query_domain": "undefined",
             "text_response_eval": EvaluateAnswerSchema(),
             "message_for_user": "",
             "reference_material": {},
         }
 
-    def _classify_query_node(self, state: AgentState) -> dict:
-        # TODO: remove, move to higher level package
-        """LLM decides what type the user query is"""
-        assert self.model
-        self.logger.debug(f"{state =}")
-
-        messages = state.messages
-        messages.append(HumanMessage(content=state.query))
-
-        system_prompt = dedent("""
-            You are an expert query classifier.
-            Classify the user input into exactly one category based on its intent
-
-            Valid categories (in order of priority):
-
-            - question: The query is a request for information about NeuroML.
-            - task: The user is asking you to perform an action. The action will be performed in a later step.
-
-            Rules:
-
-            - Choose exactly ONE category
-            - Base your decision on semantic intent
-            - Do not explain your reasoning
-            - Do not include any other additional text
-            - Provide your answer ONLY as a JSON object matching the requested schema.
-            - Take past conversation history and context into account.
-
-            Examples:
-
-            - "How do I get learn NeuroML?": {{"query_type": "question"}}
-            - "How do I get started with NeuroML?": {{"query_type": "question"}}
-            - "How do I define ion channels in NeuroML?": {{"query_type": "question"}}
-            - "Generate NeuroML code for a neuron": {{"query_type": "task"}}
-            - "Run this code": {{"query_type": "task"}}
-            - "Run this command": {{"query_type": "task"}}
-            - "Run this simulation": {{"query_type": "task"}}
-            - "What is the capital of France?": {{"query_type": "general_question"}}
-            - "What are we talking about?": {{"query_type": "general_question"}}
-            """)
-
-        # only if neuroml is not mentioned, do we even bother with non neuroml
-        # classifications
-        # if "neuroml" not in state.query.lower():
-        #     system_prompt += dedent("""
-        #         - If the query is unrelated to NeuroML, only then respond "general_question".
-        #         """)
-
-        system_prompt += self._add_memory_to_prompt(state)
-
-        prompt_template = ChatPromptTemplate(
-            [("system", system_prompt), ("human", "User query: {query}")]
-        )
-
-        # can use | to merge these lines
-        query_node_llm = self.model.with_structured_output(
-            QueryTypeSchema, method="json_schema", include_raw=True
-        )
-        prompt = prompt_template.invoke({"query": state.query})
-
-        self.logger.debug(f"{prompt = }")
-
-        output = query_node_llm.invoke(
-            prompt, config={"configurable": {"temperature": 0.3}}
-        )
-        if output["parsing_error"]:
-            query_type_result = parse_output_with_thought(
-                output["raw"], QueryTypeSchema
-            )
-        else:
-            query_type_result = output["parsed"]
-            if isinstance(query_type_result, str):
-                query_type_result = QueryTypeSchema(query_type=query_type_result)
-            elif isinstance(query_type_result, dict):
-                query_type_result = QueryTypeSchema(**query_type_result)
-            else:
-                if not isinstance(query_type_result, QueryTypeSchema):
-                    self.logger.critical(
-                        f"Received unexpected query classification: {query_type_result =}"
-                    )
-                    query_type_result = QueryTypeSchema(query_type="undefined")
-
-        self.logger.debug(f"{query_type_result =}")
-        return {
-            "query_type": query_type_result,
-            "messages": messages,
-        }
-
     def _classify_question_domain(self, state: AgentState) -> dict:
-        """LLM decides whether it is a NeuroML question or not"""
+        """Ask LLM to figure out the domain of the query"""
         assert self.model
         self.logger.debug(f"{state =}")
 
         messages = state.messages
         messages.append(HumanMessage(content=state.query))
 
+        domains = self.stores.domains
+
+        domain_str = ""
+
+        for d in domains:
+            domain_str += f"\n- {d}"
+
         system_prompt = dedent("""
             You are an expert query classifier.
-            Classify the user input into exactly one category based on its intent
+            Classify the user input into exactly one category based on its intent.
 
             Valid categories (in order of priority):
-
-            - neuroml: The query is a related to NeuroML
-            - general: The query is not related to NeuroML
-
+            """)
+        system_prompt += (
+            domain_str
+            + "\n- undefined: if the query doesn't fit into another category\n"
+        )
+        system_prompt += dedent("""
             Rules:
 
             - Choose exactly ONE category
@@ -391,15 +325,7 @@ class RAG(object):
             - Provide your answer ONLY as a JSON object matching the requested schema.
             - Take past conversation history and context into account.
 
-
-            Examples:
-
-            - "How do I get learn NeuroML?": {{"query_domain": "neuroml"}}
-            - "How do I get started with NeuroML?": {{"query_domain": "neuroml"}}
-            - "How do I define ion channels in NeuroML?": {{"query_domain": "neuroml"}}
-            - "What is the capital of France?": {{"query_domain": "general"}}
-            - "What are we talking about?": {{"query_domain": "general"}}
-            """)
+        """)
 
         system_prompt += self._add_memory_to_prompt(state)
 
@@ -409,7 +335,7 @@ class RAG(object):
 
         # can use | to merge these lines
         query_node_llm = self.model.with_structured_output(
-            QueryDomainSchema, method="json_schema", include_raw=True
+            self.QueryDomainSchema, method="json_schema", include_raw=True
         )
         prompt = prompt_template.invoke({"query": state.query})
 
@@ -420,26 +346,28 @@ class RAG(object):
         )
         if output["parsing_error"]:
             query_domain_result = parse_output_with_thought(
-                output["raw"], QueryDomainSchema
+                output["raw"], self.QueryDomainSchema
             )
         else:
             query_domain_result = output["parsed"]
             if isinstance(query_domain_result, str):
-                query_domain_result = QueryDomainSchema(
+                query_domain_result = self.QueryDomainSchema(
                     query_domain=query_domain_result
                 )
             elif isinstance(query_domain_result, dict):
-                query_domain_result = QueryDomainSchema(**query_domain_result)
+                query_domain_result = self.QueryDomainSchema(**query_domain_result)
             else:
-                if not isinstance(query_domain_result, QueryDomainSchema):
+                if not isinstance(query_domain_result, self.QueryDomainSchema):
                     self.logger.critical(
                         f"Received unexpected query classification: {query_domain_result =}"
                     )
-                    query_domain_result = QueryDomainSchema(query_domain="undefined")
+                    query_domain_result = self.QueryDomainSchema(
+                        query_domain="undefined"
+                    )
 
         self.logger.debug(f"{query_domain_result =}")
         return {
-            "query_domain": query_domain_result,
+            "query_domain": query_domain_result.query_domain,
             "messages": messages,
         }
 
@@ -455,12 +383,11 @@ class RAG(object):
 
         ## Core directives
 
-        - Do not assume this question is related to NeuroML or other technical domains.
+        - Do not assume this question is related to any particular domain.
         - Only provide information you are confident about. If you are unsuare, clearly say so.
         - Avoid inventing facts. If a fact is not known or uncertain, respond with "I was unable to find factual information about this query".
         - Keep answers clear, concise, and user-friendly.
         - Respond in a formal, academic style.
-        - Note that you can only provide certain information or carry out certain tasks if the user is asking about NeuroML, or about generating NeuroML code.
 
         Examples:
         User: Thank you.
@@ -557,13 +484,8 @@ class RAG(object):
         self.logger.debug(f"{state =}")
 
         system_prompt = dedent("""
-        You are a NeuroML expert and experienced modeller in computational
-        neuroscience. You specialise in NeuroML, LEMS, and data-driven
-        modelling of detailed neurons, neuronal circuits and its
-        components: ion channels, active and passive conductances, detailed
-        cells with morphologies, synapse models, networks including these
-        components. Your goal is to provide clear, accurate guidance to users
-        based strictly on the information provided in the retrieved context.
+        You are a query assistant. Your goal is to use the provided context to
+        answer the user's query.
 
         If the context is missing some information to answer the question,
         say so.
@@ -611,13 +533,13 @@ class RAG(object):
 
         # new references, or more references for an existing query from all
         # stores
-        res = self.stores.retrieve(cleaned_query)
+        res = self.stores.retrieve(domain_name=state.query_domain, query=cleaned_query)
         # rank info from all stores, keep top N
         # remember that when asking for more ks from the vector store, they'll
         # still return the initial ones, so we don't need to do any manual
         # merging here for more refs for a particular query
         sorted_res = sorted(res, key=lambda tup: tup[1], reverse=True)
-        new_ref = {cleaned_query: sorted_res[: self.num_refs_max]}
+        new_ref = {state.query_domain: sorted_res[: self.num_refs_max]}
 
         reference_material.update(new_ref)
         self.logger.debug(f"{reference_material =}")
@@ -848,21 +770,17 @@ class RAG(object):
         else:
             return "undefined"
 
-    def _route_query_node(self, state: AgentState) -> str:
-        """Route the query depending on LLM's result"""
-        self.logger.debug(f"{state =}")
-        query_type = state.query_type.query_type
-
-        return query_type
-
     def _route_query_domain_node(self, state: AgentState) -> str:
         """Route the query depending on LLM's result"""
         self.logger.debug(f"{state =}")
-        query_domain = state.query_domain.query_domain
+        query_domain = state.query_domain
 
-        return query_domain
+        if query_domain in self.stores.domains:
+            return "generate_retrieval_query"
 
-    def _give_neuroml_answer_to_user_node(self, state: AgentState) -> dict:
+        return "answer_general_question"
+
+    def _give_domain_answer_to_user_node(self, state: AgentState) -> dict:
         """Return the answer message to the user"""
         self.logger.debug(f"{state =}")
 
@@ -889,7 +807,6 @@ class RAG(object):
         """Create the LangGraph"""
         self.workflow = StateGraph(AgentState)
         self.workflow.add_node("init_rag_state", self._init_rag_state_node)
-        self.workflow.add_node("classify_query", self._classify_query_node)
         self.workflow.add_node(
             "classify_question_domain", self._classify_question_domain
         )
@@ -905,7 +822,7 @@ class RAG(object):
         )
         self.workflow.add_node("evaluate_answer", self._evaluate_answer_node)
         self.workflow.add_node(
-            "give_neuroml_answer_to_user", self._give_neuroml_answer_to_user_node
+            "give_domain_answer_to_user", self._give_domain_answer_to_user_node
         )
         self.workflow.add_node(
             "ask_user_for_clarification", self._ask_user_for_clarification_node
@@ -913,30 +830,17 @@ class RAG(object):
         self.workflow.add_node("summarise_history", self._summarise_history_node)
 
         self.workflow.add_edge(START, "init_rag_state")
-        self.workflow.add_edge("init_rag_state", "classify_query")
+        self.workflow.add_edge("init_rag_state", "classify_question_domain")
 
-        self.workflow.add_conditional_edges(
-            "classify_query",
-            self._route_query_node,
-            {
-                "question": "classify_question_domain",
-                "undefined": "answer_general_question",
-            },
-        )
         self.workflow.add_conditional_edges(
             "classify_question_domain",
             self._route_query_domain_node,
-            {
-                "neuroml": "generate_retrieval_query",
-                "general": "answer_general_question",
-                "undefined": "answer_general_question",
-            },
         )
         self.workflow.add_conditional_edges(
             "evaluate_answer",
             self._route_answer_evaluator_node,
             {
-                "continue": "give_neuroml_answer_to_user",
+                "continue": "give_domain_answer_to_user",
                 "retrieve_more_info": "generate_answer_from_context",
                 "rewrite_answer": "generate_answer_from_context",
                 "modify_query": "generate_retrieval_query",
@@ -948,7 +852,7 @@ class RAG(object):
             "generate_retrieval_query", "generate_answer_from_context"
         )
         self.workflow.add_edge("generate_answer_from_context", "evaluate_answer")
-        self.workflow.add_edge("give_neuroml_answer_to_user", "summarise_history")
+        self.workflow.add_edge("give_domain_answer_to_user", "summarise_history")
         self.workflow.add_edge("ask_user_for_clarification", "summarise_history")
         self.workflow.add_edge("answer_general_question", "summarise_history")
         self.workflow.add_edge("summarise_history", END)

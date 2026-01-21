@@ -13,22 +13,6 @@ from pydantic import BaseModel, Field
 from typing_extensions import Dict, List, Literal, Tuple
 
 
-class QueryTypeSchema(BaseModel):
-    """Schema for query type."""
-
-    query_type: Literal["undefined", "question", "task"] = Field(
-        default="undefined",
-    )
-
-
-class QueryDomainSchema(BaseModel):
-    """Schema for query type."""
-
-    query_domain: Literal["undefined", "neuroml", "general"] = Field(
-        default="undefined",
-    )
-
-
 class EvaluateAnswerSchema(BaseModel):
     """Evaluation of LLM generated answer. Descriptions given in the main prompt"""
 
@@ -48,8 +32,7 @@ class AgentState(BaseModel):
     """The state of the graph"""
 
     query: str = ""
-    query_type: QueryTypeSchema = QueryTypeSchema()
-    query_domain: QueryDomainSchema = QueryDomainSchema()
+    query_domain: str = "undefined"
     text_response_eval: EvaluateAnswerSchema = EvaluateAnswerSchema()
     messages: List[AnyMessage] = Field(default_factory=list)
 

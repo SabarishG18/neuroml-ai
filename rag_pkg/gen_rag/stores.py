@@ -51,8 +51,8 @@ class Vector_Stores(object):
 
     def __init__(
         self,
+        vs_config_file: str,
         logging_level: int = logging.DEBUG,
-        vs_config_file: str = "",
     ):
         """Init"""
         # per store
@@ -102,11 +102,11 @@ class Vector_Stores(object):
 
     def load_config(self):
         """Load domains this RAG is going to answer for from config file"""
-        assert len(self.vs_config_file)
         with open(self.vs_config_file) as f:
             domain_info = json.load(f)
             self.vs_config = VectorStoresConfig(**domain_info)
         self.embedding_model = self.vs_config.embedding_model
+        self.logger.debug(f"{self.vs_config =}")
 
     def inc_k(self, inc: int = 1):
         """Increase k by inc
@@ -129,8 +129,13 @@ class Vector_Stores(object):
 
     def load_all_stores(self):
         """Load all vector stores"""
-        for domain_name in self.vs_config.domains.keys():
+        for domain_name in self.domains():
             self.load(domain_name)
+
+    @property
+    def domains(self):
+        """Get a list of all domains"""
+        return list(self.vs_config.domains.keys())
 
     def load(self, domain_name: str):
         """Create/load the vector store"""

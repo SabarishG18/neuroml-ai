@@ -2,7 +2,7 @@
     "embedding_model": "ollama:bge-m3:latest",
     "domains": {
         "NeuroML": {
-            "description": "",
+            "description": "The NeuroML standard for computational modelling in neuroscience and the associated software ecosystem",
             "vector_stores": [
                 {
                     "name": "nml-docs",
