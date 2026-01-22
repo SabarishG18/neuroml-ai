@@ -17,55 +17,29 @@ AI assistant for helping with NeuroML queries and model generation.
 [![Gitter](https://badges.gitter.im/NeuroML/community.svg)](https://gitter.im/NeuroML/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
-![Langchain schematic](neuroml_ai/nml-ai-lang-graph.png "Langchain schematic")
+![Langchain schematic](neuroml_ai/nml-ai-assistant-lang-graph.png "Langchain schematic")
 
 Please note that this project is under active development and does not currently provide a stable release/API/ABI.
 
-## Set up
+## Usage
 
-The package consists of three services:
-
-- the AI assistant backend: this includes the RAG and LLM/agentic logic. This is exposed to users via a FastAPI based REST API.
-- the MCP server: this is where we define various "tools" that the LLM can use in its agents.
-- the frontend: currently, there's a streamlit UI, but one can use anything to communicate with the REST API---even just the swagger interface.
-
-So, before using the frontend, one must start the MCP server and the FastAPI server.
-The `devstack.sh` script in the `scripts` folder does this for now.
-Please take a look at it and feel free to modify it for your own deployments.
-
-Please note that the ports are currently hard-coded in the code.
-
-### Models
-
-The following models are currently being used for testing:
-
-#### Ollama for local deployments
-
-Currently, Ollama is used for local deployments.
-Please see the code to see what models are currently used.
-You can modify these to use different models to suit your hardware.
-However, do note that picking smaller models will most certainly affect the correctness/performance of the RAG.
-To install Ollama and pull the models, please follow the official documentation: https://ollama.com/download
-
-#### HuggingFace
-
-Models via inference providers on [HuggingFace](https://huggingface.co/models) are also supported.
-Before using these, please ensure that you have a token on HuggingFace and are logged in:
+Install the package and dependencies using `pip` or `uv pip` from the GitHub repository:
 
 ```
-hf auth login
+# in the `utils_pkg` folder:
+pip install .
+
+# in the `neuroml_ai` folder:
+pip install .
 ```
 
-#### Other services
+Start the API server:
 
-Since this project uses LangChain, you can use any model that is supported by LangChain.
-In most cases, you will need to declare some environment variables that will contain your API keys.
-Please see the LangChain documentation for more information:
+```
+fastapi dev neuroml_ai/api/main.py --port 8005
+```
 
-https://docs.langchain.com/oss/python/integrations/providers/overview
+The following environment variables need to be set:
 
-
-## License
-
-This code is licensed under the MIT license.
-Please refer to the licenses of the various LLM models for information on their licensing and usage terms.
+- `NML_AI_CHAT_MODEL`: the name of the chat model to use. See below.
+- `NML_AI_VS_CONFIG`: the path to the configuration file for the vector stores.

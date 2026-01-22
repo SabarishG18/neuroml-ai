@@ -12,7 +12,3 @@ The packages included, one in each folder are:
 - utils_pkg: common utility functions used by other packages
 
 Please see the individual Readme files for more information.
-
-## LangGraph schematic
-
-![LangGraph schematic](nml-assistant-lang-graph.png "LangGraph schematic")

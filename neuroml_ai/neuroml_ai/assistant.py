@@ -224,7 +224,7 @@ class NML_Assistant(object):
         if not os.environ.get("RUNNING_IN_DOCKER", 0):
             try:
                 self.graph.get_graph().draw_mermaid_png(
-                    output_file_path="nml-assistant-lang-graph.png"
+                    output_file_path="nml-ai-assistant-lang-graph.png"
                 )
             except BaseException as e:
                 self.logger.error("Something went wrong generating lang graph png")
