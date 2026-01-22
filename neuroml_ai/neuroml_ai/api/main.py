@@ -13,20 +13,45 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastmcp import Client
+
 from neuroml_ai.api.chat import chat_router
 from neuroml_ai.api.health import health_router
-from gen_rag.rag import RAG
+from neuroml_ai.assistant import NML_Assistant
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.is_ready = False
 
+    chat_model = os.environ.get("NML_AI_CHAT_MODEL", "ollama:qwen3:0.6b")
+    vs_config_file = os.environ.get(
+        "NML_AI_VS_CONFIG",
+        "/home/asinha/Documents/02_Code/00_mine/NeuroML/software/neuroml-ai/rag_pkg/vector-stores.json",
+    )
+
+    assistant = NML_Assistant(vs_config_file=vs_config_file, chat_model=chat_model)
+    await assistant.setup()
+
+    app.state.assistant = assistant
+    app.state.is_ready = True
+
+    yield
+
+    app.state.is_ready = False
+
+
+# Currently NO-OP
+async def lifespan1(app: FastAPI):
+    app.state.is_ready = False
+
     client_url = "http://127.0.0.1:8542/mcp"
     mcp_client = Client(client_url)
 
-    chat_model = os.environ.get("NML_AI_CHAT_MODEL", None)
-    embedding_model = os.environ.get("NML_AI_EMBEDDING_MODEL", None)
+    chat_model = os.environ.get("NML_AI_CHAT_MODEL", "ollama:qwen3:1.7b")
+    vs_config_file = os.environ.get(
+        "NML_AI_VS_CONFIG",
+        "/home/asinha/Documents/02_Code/00_mine/NeuroML/software/neuroml-ai/rag_pkg/vector-stores.json",
+    )
 
     # check that client is up
     async with mcp_client:
@@ -34,13 +59,10 @@ async def lifespan(app: FastAPI):
         tools = await mcp_client.list_tools()
         print(f"Available tools: {[tool.name for tool in tools]}")
 
-    # TODO: update to use main app chain, which will include the RAG
-    rag = RAG(
-        chat_model=chat_model, embedding_model=embedding_model
-    )
-    await rag.setup()
+    assistant = NML_Assistant(vs_config_file=vs_config_file, chat_model=chat_model)
+    await assistant.setup()
 
-    app.state.rag = rag
+    app.state.assistant = assistant
     app.state.mcp = Client
     app.state.is_ready = True
 

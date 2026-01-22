@@ -8,35 +8,34 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-
 import logging
 import os
 import sys
 from textwrap import dedent
-from typing import Optional
 
-from langchain_core.messages import AIMessage, HumanMessage
+from gen_rag.rag import RAG
+from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
-from neuroml_ai_utils.utils import (
+from neuroml_ai_utils.llm import (
+    add_memory_to_prompt,
+    parse_output_with_thought,
+    setup_llm,
+)
+from neuroml_ai_utils.logging import (
     LoggerInfoFilter,
     LoggerNotInfoFilter,
     logger_formatter_info,
     logger_formatter_other,
-    parse_output_with_thought,
-    setup_llm,
-    split_thought_and_output,
 )
-from pydantic import create_model
-from typing_extensions import Dict, List, Literal, Tuple
 
-from .schemas import (AssistantState, QueryTypeSchema)
+from .schemas import AssistantState, QueryTypeSchema
 
 
 class NML_Assistant(object):
-
     """NeuroML Assistant class"""
+
     def __init__(
         self,
         vs_config_file: str,
@@ -45,6 +44,8 @@ class NML_Assistant(object):
     ):
         self.chat_model = chat_model
         self.model = None
+
+        self.vs_config_file = vs_config_file
 
         self.checkpointer = InMemorySaver()
 
@@ -69,12 +70,13 @@ class NML_Assistant(object):
         stderr_handler.setFormatter(logger_formatter_other)
         self.logger.addHandler(stderr_handler)
 
-    def _route_query_node(self, state: AssistantState) -> str:
-        """Route the query depending on LLM's result"""
-        self.logger.debug(f"{state =}")
-        query_type = state.query_type.query_type
-
-        return query_type
+    def _init_rag_state_node(self, state: AssistantState) -> dict:
+        """Initialise, reset state before next iteration"""
+        return {
+            "query_type": QueryTypeSchema(),
+            "message_for_user": "",
+            "reference_material": {},
+        }
 
     def _classify_query_node(self, state: AssistantState) -> dict:
         """LLM decides what type the user query is"""
@@ -122,7 +124,11 @@ class NML_Assistant(object):
         #         - If the query is unrelated to NeuroML, only then respond "general_question".
         #         """)
 
-        system_prompt += self._add_memory_to_prompt(state)
+        system_prompt += add_memory_to_prompt(
+            messages=state.messages,
+            context_summary=state.context_summary,
+            num_recent_messages=self.num_recent_messages,
+        )
 
         prompt_template = ChatPromptTemplate(
             [("system", system_prompt), ("human", "User query: {query}")]
@@ -162,3 +168,113 @@ class NML_Assistant(object):
             "messages": messages,
         }
 
+    def _route_query_node(self, state: AssistantState) -> str:
+        """Route the query depending on LLM's result"""
+        self.logger.debug(f"{state =}")
+        query_type = state.query_type.query_type
+
+        return query_type
+
+    def _code_node(self, state: AssistantState):
+        """Dummy code node
+
+        :param state: TODO
+        :returns: TODO
+
+        """
+        return {"message_for_user": "Coding support is a work in progress"}
+
+    def _setup_chat_model(self):
+        """Set up the LLM chat model"""
+        self.model = setup_llm(self.chat_model, self.logger)
+
+    async def setup(self):
+        """Set up basics."""
+        self._setup_chat_model()
+        await self._create_graph()
+
+    async def _create_graph(self):
+        """Create the LangGraph"""
+        self.workflow = StateGraph(AssistantState)
+        self.workflow.add_node("init_state", self._init_rag_state_node)
+        self.workflow.add_node("classify_query", self._classify_query_node)
+
+        self._rag_node = RAG(
+            vs_config_file=self.vs_config_file, chat_model=self.chat_model, memory=False
+        )
+        self._rag_node_graph = await self._rag_node.get_graph()
+        self.workflow.add_node("rag_graph", self._rag_node_graph)
+        self.workflow.add_node("code_graph", self._code_node)
+
+        self.workflow.add_edge(START, "init_state")
+        self.workflow.add_edge("init_state", "classify_query")
+
+        self.workflow.add_conditional_edges(
+            "classify_query",
+            self._route_query_node,
+            {
+                "undefined": "rag_graph",
+                "question": "rag_graph",
+                "task": "code_graph",
+            },
+        )
+        self.workflow.add_edge("code_graph", END)
+
+        self.graph = self.workflow.compile(checkpointer=self.checkpointer)
+        if not os.environ.get("RUNNING_IN_DOCKER", 0):
+            try:
+                self.graph.get_graph().draw_mermaid_png(
+                    output_file_path="nml-assistant-lang-graph.png"
+                )
+            except BaseException as e:
+                self.logger.error("Something went wrong generating lang graph png")
+                self.logger.error(e)
+
+    async def run_graph_invoke_state(
+        self, state: dict, thread_id: str = "default_thread"
+    ):
+        """Run the graph but accept and return states"""
+
+        config = {"configurable": {"thread_id": thread_id}}
+
+        if "query" not in state:
+            self.logger.error(f"Provided state should include the key 'query': {state}")
+            sys.exit(-1)
+
+        final_state = await self.graph.ainvoke(state, config=config)
+        self.logger.debug(final_state)
+        return final_state
+
+    async def run_graph_invoke(self, query: str, thread_id: str = "default_thread"):
+        """Run the graph by using and returning string input"""
+
+        config = {"configurable": {"thread_id": thread_id}}
+
+        final_state = await self.graph.ainvoke({"query": query}, config=config)
+
+        self.logger.debug(f"{final_state =}")
+        if message := final_state.get("message_for_user", None):
+            return message
+        else:
+            return "I was unable to answer"
+
+    async def run_graph_stream(self, query: str, thread_id: str = "default_thread"):
+        """Run the graph but return the stream"""
+        config = {"configurable": {"thread_id": thread_id}}
+
+        for chunk in self.graph.astream({"query": query}, config=config):
+            for node, state in chunk.items():
+                self.logger.debug(f"{node}: {repr(state)}")
+                # all nodes must return dicts
+                if message := state.get("message_for_user", None):
+                    self.logger.info(f"User message: {message}")
+                    yield message
+                else:
+                    self.logger.debug(f"Working in node: {node}")
+
+    async def graph_stream(self, query: str, thread_id: str = "default_threaD"):
+        """Run the graph but return the stream"""
+        config = {"configurable": {"thread_id": thread_id}}
+
+        res = await self.graph.astream({"query": query}, config=config)
+        return res

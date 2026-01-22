@@ -15,5 +15,5 @@ chat_router = APIRouter()
 
 @chat_router.post("/query")
 async def query(request: Request, query: str):
-    rag = request.app.state.rag
-    return {"result": await rag.run_graph_invoke(query)}
+    assistant = request.app.state.assistant
+    return {"result": await assistant.run_graph_invoke(query)}

@@ -24,7 +24,7 @@ class QueryTypeSchema(BaseModel):
 # Note that a few of these are shared with the subgraphs
 class AssistantState(BaseModel):
     query: str = ""
-    query_type: QueryTypeSchema
+    query_type: QueryTypeSchema = QueryTypeSchema()
     messages: List[AnyMessage] = Field(default_factory=list)
 
     # summarised version of context so far
