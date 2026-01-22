@@ -12,13 +12,14 @@ import logging
 import os
 import sys
 from textwrap import dedent
-from typing import Optional
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from neuroml_ai_utils.llm import (
+    get_history_summary_prompt,
+    get_last_n_conversations,
     parse_output_with_thought,
     setup_llm,
     split_thought_and_output,
@@ -57,6 +58,9 @@ class RAG(object):
         # total number of reference documents
         self.num_refs_max = 10
 
+        # Whether this graph should manage it's own memory/checkpoints
+        # Can be turned off when this RAG is being included in another
+        # graph/app
         self.memory = memory
         if self.memory:
             self.checkpointer = InMemorySaver()
@@ -115,8 +119,7 @@ class RAG(object):
     def _summarise_history_node(self, state: RAGState) -> dict:
         """Clean ups after every round of conversation"""
         assert self.model
-
-        conversation, human_messages, ai_messages = self._get_recent_conversation(
+        conversation, human_messages, ai_messages = get_last_n_conversations(
             state.messages, state.summarised_till, None
         )
         conversations_num = len(human_messages) + len(ai_messages)
@@ -127,66 +130,13 @@ class RAG(object):
             )
             return {}
 
-        # Summarise history
-        system_prompt = dedent("""You are a memory/conversation summarisation
-        assistant. Your job is to maintain a concise, factual memory of an
-        ongoing conversation between a user and an AI assistant. This history
-        will help the AI assistant in future conversations with the user.
-
-        Guidelines:
-
-        1. Preserve key facts, user intentions, user requirements, and user
-        constraints.
-        2. Remove filler, greetings, and irrelevant small talk.
-        3. Keep the summary coherent and readable as a standalone record.
-        4. Exclude reasoning steps, or internal thought processes. Do not add
-        explanations or commentary. Exclude requests to summarise the
-        conversation in the summary.
-        5. Limit the summary to 5-10 sentences
-        unless the conversation is very complex.
-        6. Make it self-contained. Clearly note what the user said, and what the assistant's reply was.
-
-        """)
-
-        user_prompt = dedent("""
-        Please create a summary of the conversation between the user and the AI
-        assistant.
-
-        ------
-
-        Here is the current summary of the conversation so far:
-
-        {old_summary}
-
-        ------
-
-        Here are the exchanges between the user and the assistant since the
-        last summarisation:
-
-        {conversation}
-
-        """)
-
-        prompt_template = ChatPromptTemplate(
-            [("system", system_prompt), ("human", user_prompt)]
+        prompt = get_history_summary_prompt(
+            conversation, self.logger, state.context_summary
         )
-
-        self.logger.debug(f"{conversation =}")
-
-        prompt = prompt_template.invoke(
-            {
-                "old_summary": state.context_summary,
-                "conversation": conversation,
-            }
-        )
-
-        self.logger.debug(f"{prompt =}")
-
         output = self.model.invoke(
             prompt, config={"configurable": {"temperature": 0.3}}
         )
         self.logger.debug(f"Current history summary is:\n{output.content}")
-
         thought, answer = split_thought_and_output(output)
 
         # Do not update messages here, since we don't want this to be noted as
@@ -230,7 +180,7 @@ class RAG(object):
             -----
             """)
 
-        conversation, _, _ = self._get_recent_conversation(
+        conversation, _, _ = get_last_n_conversations(
             state.messages, (-1 * self.num_recent_messages), None
         )
         if len(conversation):
@@ -248,40 +198,6 @@ class RAG(object):
             ret_string += directive
 
         return ret_string
-
-    def _get_recent_conversation(
-        self, all_messages, start: int = 0, stop: Optional[int] = None
-    ) -> tuple[str, list[HumanMessage], list[AIMessage]]:
-        """Get recent converstations between start and stop indices
-
-        :param all_messages: all the messages
-        :param start: start index
-        :param stop: stop index
-        :returns: (conversation, list of human messages, list of ai messages)
-
-        """
-        conv_messages = list(
-            filter(
-                lambda x: isinstance(x, (HumanMessage, AIMessage)),
-                all_messages[start:stop],
-            )
-        )
-        human_messages = []
-        ai_messages = []
-        conversation = ""
-        for msg in conv_messages:
-            if isinstance(msg, HumanMessage):
-                conversation += f"{msg.pretty_repr()}"
-                human_messages.append(msg)
-            else:
-                conversation += f": {msg.pretty_repr()}"
-                ai_messages.append(msg)
-
-        return (
-            conversation.replace("{", "{{").replace("}", "}}"),
-            human_messages,
-            ai_messages,
-        )
 
     def _init_rag_state_node(self, state: RAGState) -> dict:
         """Initialise, reset state before next iteration"""
@@ -829,7 +745,8 @@ class RAG(object):
         self.workflow.add_node(
             "ask_user_for_clarification", self._ask_user_for_clarification_node
         )
-        self.workflow.add_node("summarise_history", self._summarise_history_node)
+        if self.memory:
+            self.workflow.add_node("summarise_history", self._summarise_history_node)
 
         self.workflow.add_edge(START, "init_rag_state")
         self.workflow.add_edge("init_rag_state", "classify_question_domain")
@@ -858,10 +775,16 @@ class RAG(object):
             "generate_retrieval_query", "generate_answer_from_context"
         )
         self.workflow.add_edge("generate_answer_from_context", "evaluate_answer")
-        self.workflow.add_edge("give_domain_answer_to_user", "summarise_history")
-        self.workflow.add_edge("ask_user_for_clarification", "summarise_history")
-        self.workflow.add_edge("answer_general_question", "summarise_history")
-        self.workflow.add_edge("summarise_history", END)
+
+        if self.memory:
+            self.workflow.add_edge("give_domain_answer_to_user", "summarise_history")
+            self.workflow.add_edge("ask_user_for_clarification", "summarise_history")
+            self.workflow.add_edge("answer_general_question", "summarise_history")
+            self.workflow.add_edge("summarise_history", END)
+        else:
+            self.workflow.add_edge("give_domain_answer_to_user", END)
+            self.workflow.add_edge("ask_user_for_clarification", END)
+            self.workflow.add_edge("answer_general_question", END)
 
         if self.checkpointer:
             self.graph = self.workflow.compile(checkpointer=self.checkpointer)

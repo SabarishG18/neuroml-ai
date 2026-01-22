@@ -8,15 +8,19 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
+import logging
 import os
 import sys
 import time
+from textwrap import dedent
+from typing import Optional
 
 import ollama
 from langchain.chat_models import init_chat_model
 from langchain.embeddings import init_embeddings
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint, HuggingFaceEndpointEmbeddings
 
 
@@ -153,3 +157,106 @@ def setup_llm(model_name_full, logger):
     logger.info(f"Using chat model: {model_name_full}")
 
     return model_var
+
+
+def get_last_n_conversations(
+    self, all_messages, start: int = 0, stop: Optional[int] = None
+) -> tuple[str, list[HumanMessage], list[AIMessage]]:
+    """Get recent converstations between start and stop indices
+
+    :param all_messages: all the messages
+    :param start: start index
+    :param stop: stop index
+    :returns: (conversation, list of human messages, list of ai messages)
+
+    """
+    conv_messages = list(
+        filter(
+            lambda x: isinstance(x, (HumanMessage, AIMessage)),
+            all_messages[start:stop],
+        )
+    )
+    human_messages = []
+    ai_messages = []
+    conversation = ""
+    for msg in conv_messages:
+        if isinstance(msg, HumanMessage):
+            conversation += f"{msg.pretty_repr()}"
+            human_messages.append(msg)
+        else:
+            conversation += f": {msg.pretty_repr()}"
+            ai_messages.append(msg)
+
+    return (
+        conversation.replace("{", "{{").replace("}", "}}"),
+        human_messages,
+        ai_messages,
+    )
+
+
+def get_history_summary_prompt(
+    conversation: str, current_summary: str, logger: logging.Logger
+):
+    """Get a prompt for a history summary
+
+    :param conversation: conversation to summarise
+    :param current_summary: summary so far
+    :param logger: logger object
+    :returns: prompt to pass to LLM
+
+    """
+    # Summarise history
+    system_prompt = dedent("""You are a memory/conversation summarisation
+    assistant. Your job is to maintain a concise, factual memory of an
+    ongoing conversation between a user and an AI assistant. This history
+    will help the AI assistant in future conversations with the user.
+
+    Guidelines:
+
+    1. Preserve key facts, user intentions, user requirements, and user
+    constraints.
+    2. Remove filler, greetings, and irrelevant small talk.
+    3. Keep the summary coherent and readable as a standalone record.
+    4. Exclude reasoning steps, or internal thought processes. Do not add
+    explanations or commentary. Exclude requests to summarise the
+    conversation in the summary.
+    5. Limit the summary to 5-10 sentences
+    unless the conversation is very complex.
+    6. Make it self-contained. Clearly note what the user said, and what the assistant's reply was.
+
+    """)
+
+    user_prompt = dedent("""
+    Please create a summary of the conversation between the user and the AI
+    assistant.
+
+    ------
+
+    Here is the current summary of the conversation so far:
+
+    {old_summary}
+
+    ------
+
+    Here are the exchanges between the user and the assistant since the
+    last summarisation:
+
+    {conversation}
+
+    """)
+
+    prompt_template = ChatPromptTemplate(
+        [("system", system_prompt), ("human", user_prompt)]
+    )
+
+    logger.debug(f"{conversation =}")
+
+    prompt = prompt_template.invoke(
+        {
+            "old_summary": current_summary,
+            "conversation": conversation,
+        }
+    )
+    logger.debug(f"{prompt =}")
+
+    return prompt
