@@ -17,12 +17,12 @@ from typing import Any, Dict, Optional
 import chromadb
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from neuroml_ai_utils.utils import (
+from neuroml_ai_utils.llm import setup_embedding
+from neuroml_ai_utils.logging import (
     LoggerInfoFilter,
     LoggerNotInfoFilter,
     logger_formatter_info,
     logger_formatter_other,
-    setup_embedding,
 )
 from pydantic import BaseModel
 
