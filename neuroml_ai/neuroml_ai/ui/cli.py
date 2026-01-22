@@ -15,9 +15,7 @@ from pathlib import Path
 
 import httpx
 import typer
-from fastmcp import Client
-
-from neuroml_ai.utils import check_api_is_ready
+from neuroml_ai_utils.api import check_api_is_ready
 
 nml_ai_app = typer.Typer()
 
@@ -34,6 +32,8 @@ def nml_ai_cli(
     print("Type 'quit' to exit.")
     print()
     print()
+
+    url = "http://127.0.0.1:8005"
 
     if not gui:
 
@@ -53,9 +53,9 @@ def nml_ai_cli(
                     with yaspin(text="Working ..."):
                         async with httpx.AsyncClient() as client:
                             response = await client.post(
-                                "http://127.0.0.1:8005/query",
+                                f"{url}/query",
                                 params={"query": single_query},
-                                timeout=None
+                                timeout=None,
                             )
                             response_result = response.json().get("result")
                             print(f"NeuroML-AI (AI) >>> {response_result}\n\n")
@@ -67,8 +67,7 @@ def nml_ai_cli(
                     with yaspin(text="Working ..."):
                         async with httpx.AsyncClient() as client:
                             response = await client.post(
-                                "http://127.0.0.1:8005/query", params={"query": query},
-                                timeout=None
+                                f"{url}/query", params={"query": query}, timeout=None
                             )
                             response_result = response.json().get("result")
                             print(f"NeuroML-AI (AI) >>> {response_result}\n\n")
