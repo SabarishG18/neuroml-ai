@@ -1,53 +1,23 @@
 #!/usr/bin/env python3
 """
-Misc utils
+LLM related utils
 
-File: gen_rag/utils.py
+File: gen_rag/llm.py
 
 Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-import logging
 import os
 import sys
 import time
 
-import httpx
 import ollama
 from langchain.chat_models import init_chat_model
 from langchain.embeddings import init_embeddings
 from langchain_core.messages import AIMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_huggingface import HuggingFaceEndpoint, HuggingFaceEndpointEmbeddings
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_random_exponential,
-)
-
-
-class LoggerNotInfoFilter(logging.Filter):
-    """Allow only non INFO messages"""
-
-    def filter(self, record):
-        return record.levelno != logging.INFO
-
-
-class LoggerInfoFilter(logging.Filter):
-    """Allow only INFO messages"""
-
-    def filter(self, record):
-        return record.levelno == logging.INFO
-
-
-logger_formatter_info = logging.Formatter(
-    "%(name)s (%(levelname)s) >>> %(message)s\n\n"
-)
-logger_formatter_other = logging.Formatter(
-    "%(name)s (%(levelname)s) in '%(funcName)s' >>> %(message)s\n\n"
-)
 
 
 def check_ollama_model(logger, model, exit=False):
@@ -183,25 +153,3 @@ def setup_llm(model_name_full, logger):
     logger.info(f"Using chat model: {model_name_full}")
 
     return model_var
-
-
-@retry(
-    wait=wait_random_exponential(multiplier=1, max=10),
-    stop=stop_after_attempt(10),
-    retry=retry_if_exception_type(
-        (httpx.ConnectError, httpx.HTTPStatusError, httpx.ReadError, httpx.ReadTimeout)
-    ),
-    reraise=True,
-)
-async def check_api_is_ready(url: str):
-    """Exponentially drop off checking that API is ready
-
-    :param url: url of health end point
-    :type url: str
-
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url)
-        response.raise_for_status()
-
-        return response.json()

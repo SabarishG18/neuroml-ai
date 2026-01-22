@@ -12,7 +12,7 @@ import asyncio
 
 import httpx
 import streamlit as st
-from neuroml_ai_utils.utils import check_api_is_ready
+from neuroml_ai_utils.api import check_api_is_ready
 
 
 def runner():

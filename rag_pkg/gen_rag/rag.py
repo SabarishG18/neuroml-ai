@@ -18,19 +18,21 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
-from neuroml_ai_utils.utils import (
-    LoggerInfoFilter,
-    LoggerNotInfoFilter,
-    logger_formatter_info,
-    logger_formatter_other,
+from neuroml_ai_utils.llm import (
     parse_output_with_thought,
     setup_llm,
     split_thought_and_output,
 )
+from neuroml_ai_utils.logging import (
+    LoggerInfoFilter,
+    LoggerNotInfoFilter,
+    logger_formatter_info,
+    logger_formatter_other,
+)
 from pydantic import create_model
 from typing_extensions import Dict, List, Literal, Tuple
 
-from .schemas import RAGState, EvaluateAnswerSchema
+from .schemas import EvaluateAnswerSchema, RAGState
 from .stores import Vector_Stores
 
 logging.basicConfig()
@@ -837,7 +839,7 @@ class RAG(object):
             self._route_query_domain_node,
             {
                 "generate_retrieval_query": "generate_retrieval_query",
-                "answer_general_question": "answer_general_question"
+                "answer_general_question": "answer_general_question",
             },
         )
         self.workflow.add_conditional_edges(

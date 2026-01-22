@@ -15,7 +15,7 @@ from pathlib import Path
 
 import httpx
 import typer
-from neuroml_ai_utils.utils import check_api_is_ready
+from neuroml_ai_utils.api import check_api_is_ready
 
 rag_app = typer.Typer()
 
