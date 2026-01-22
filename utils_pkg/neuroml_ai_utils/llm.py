@@ -160,7 +160,7 @@ def setup_llm(model_name_full, logger):
 
 
 def get_last_n_conversations(
-    self, all_messages, start: int = 0, stop: Optional[int] = None
+    all_messages, start: int = 0, stop: Optional[int] = None
 ) -> tuple[str, list[HumanMessage], list[AIMessage]]:
     """Get recent converstations between start and stop indices
 
@@ -186,6 +186,8 @@ def get_last_n_conversations(
         else:
             conversation += f": {msg.pretty_repr()}"
             ai_messages.append(msg)
+
+    print(f"{conversation = }")
 
     return (
         conversation.replace("{", "{{").replace("}", "}}"),
@@ -249,8 +251,6 @@ def get_history_summary_prompt(
         [("system", system_prompt), ("human", user_prompt)]
     )
 
-    logger.debug(f"{conversation =}")
-
     prompt = prompt_template.invoke(
         {
             "old_summary": current_summary,
@@ -260,3 +260,53 @@ def get_history_summary_prompt(
     logger.debug(f"{prompt =}")
 
     return prompt
+
+
+def add_memory_to_prompt(context_summary: str, messages, num_recent_messages) -> str:
+    """Add memory to system prompt.
+
+    Adds the context summary and recent conversation
+
+    :param state: agent state
+    :returns: "memory" string to add to the system prompt
+
+    """
+    ret_string = ""
+
+    directive = dedent("""
+        IMPORTANT:
+
+        - Consider both the latest user message AND the conversation history.
+
+    """)
+
+    if len(context_summary):
+        ret_string += dedent(f"""
+        -----
+
+        Here is a concise summary of the previous conversation to maintain
+        continuity:
+
+        {context_summary}
+
+        -----
+        """)
+
+    conversation, _, _ = get_last_n_conversations(
+        messages, (-1 * num_recent_messages), None
+    )
+    if len(conversation):
+        ret_string += dedent(f"""
+        -----
+
+        Here are the recent messages between the user and the assistant:
+
+        {conversation}
+
+        -----
+        """)
+
+    if len(ret_string):
+        ret_string += directive
+
+    return ret_string

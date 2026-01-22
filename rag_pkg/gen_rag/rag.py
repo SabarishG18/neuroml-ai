@@ -18,6 +18,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from neuroml_ai_utils.llm import (
+    add_memory_to_prompt,
     get_history_summary_prompt,
     get_last_n_conversations,
     parse_output_with_thought,
@@ -146,59 +147,6 @@ class RAG(object):
             "summarised_till": len(state.messages),
         }
 
-    def _add_memory_to_prompt(self, state: RAGState) -> str:
-        # TODO: needs reimplementation in higher level
-        """Add memory to system prompt.
-
-        Adds the context summary and recent conversation
-
-        :param state: agent state
-        :returns: "memory" string to add to the system prompt
-
-        """
-        if not self.memory:
-            return ""
-
-        ret_string = ""
-
-        directive = dedent("""
-            IMPORTANT:
-
-            - Consider both the latest user message AND the conversation history.
-
-        """)
-
-        if len(state.context_summary):
-            ret_string += dedent(f"""
-            -----
-
-            Here is a concise summary of the previous conversation to maintain
-            continuity:
-
-            {state.context_summary}
-
-            -----
-            """)
-
-        conversation, _, _ = get_last_n_conversations(
-            state.messages, (-1 * self.num_recent_messages), None
-        )
-        if len(conversation):
-            ret_string += dedent(f"""
-            -----
-
-            Here are the recent messages between the user and the assistant:
-
-            {conversation}
-
-            -----
-            """)
-
-        if len(ret_string):
-            ret_string += directive
-
-        return ret_string
-
     def _init_rag_state_node(self, state: RAGState) -> dict:
         """Initialise, reset state before next iteration"""
         return {
@@ -245,7 +193,14 @@ class RAG(object):
 
         """)
 
-        system_prompt += self._add_memory_to_prompt(state)
+        if self.memory:
+            system_prompt += add_memory_to_prompt(
+                messages=state.messages,
+                context_summary=state.context_summary,
+                num_recent_messages=self.num_recent_messages,
+            )
+
+        self.logger.debug(f"{system_prompt = }")
 
         prompt_template = ChatPromptTemplate(
             [("system", system_prompt), ("human", "User query: {query}")]
@@ -314,8 +269,12 @@ class RAG(object):
         Assistant: That's great, I like cats too. I also like dogs.
 
         """)
-
-        system_prompt += self._add_memory_to_prompt(state)
+        if self.memory:
+            system_prompt += add_memory_to_prompt(
+                messages=state.messages,
+                context_summary=state.context_summary,
+                num_recent_messages=self.num_recent_messages,
+            )
 
         question_prompt_template = ChatPromptTemplate(
             [("system", system_prompt), ("human", "User query: {query}")]
@@ -363,7 +322,12 @@ class RAG(object):
         Only return the rewritten query.
         """)
 
-        system_prompt += self._add_memory_to_prompt(state)
+        if self.memory:
+            system_prompt += add_memory_to_prompt(
+                messages=state.messages,
+                context_summary=state.context_summary,
+                num_recent_messages=self.num_recent_messages,
+            )
 
         if self.modify_query:
             # toggle off
@@ -429,7 +393,12 @@ class RAG(object):
 
         """)
 
-        system_prompt += self._add_memory_to_prompt(state)
+        if self.memory:
+            system_prompt += add_memory_to_prompt(
+                messages=state.messages,
+                context_summary=state.context_summary,
+                num_recent_messages=self.num_recent_messages,
+            )
 
         generate_answer_template = ChatPromptTemplate(
             [
