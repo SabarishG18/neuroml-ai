@@ -143,7 +143,7 @@ def setup_llm(model_name_full, logger):
         hf_token = os.environ.get("HF_TOKEN", None)
         assert hf_token
 
-        llm = HuggingFaceEndpoint(
+        model_var = HuggingFaceEndpoint(
             repo_id=f"{model_name}",
             provider="auto",
             max_new_tokens=512,
@@ -153,6 +153,8 @@ def setup_llm(model_name_full, logger):
             huggingfacehub_api_token=hf_token,
         )
 
+        """
+
         model_var = init_chat_model(
             model_name,
             model_provider="huggingface",
@@ -160,10 +162,11 @@ def setup_llm(model_name_full, logger):
             configurable_fields=("temperature"),
             backend="endpoint",
         )
+        """
         assert model_var
 
-        # state, msg = check_model_works(model_var, timeout=0)
-        # assert state
+        state, msg = check_model_works(model_var, timeout=0)
+        assert state
     else:
         if model_name_full.lower().startswith("ollama:"):
             check_ollama_model(logger, model_name_full.lower().replace("ollama:", ""))
