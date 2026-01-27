@@ -78,7 +78,7 @@ def split_thought_and_output(message: AIMessage):
     return thoughts, answer
 
 
-def check_model_works(model, timeout=30, retries=3):
+def check_model_works(model, timeout=30, retries=20):
     """Check if a model works since it is not tested when loaded"""
     for attempt in range(retries):
         try:
