@@ -44,7 +44,7 @@ jobs:
 
     - name: Install package
       run: |
-        uv pip install .[dev]
+        uv pip install -r ./requirements.txt
 
     - name: List packages so far
       run: |
