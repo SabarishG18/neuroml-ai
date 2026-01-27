@@ -149,6 +149,7 @@ def setup_llm(model_name_full, logger):
             max_new_tokens=512,
             do_sample=False,
             repetition_penalty=1.03,
+            task="text-generation",
             huggingfacehub_api_token=hf_token,
         )
 
@@ -157,6 +158,7 @@ def setup_llm(model_name_full, logger):
             model_provider="huggingface",
             llm=llm,
             configurable_fields=("temperature"),
+            backend="endpoint",
         )
         assert model_var
 
