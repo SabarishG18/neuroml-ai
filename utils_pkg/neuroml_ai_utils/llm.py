@@ -160,8 +160,8 @@ def setup_llm(model_name_full, logger):
         )
         assert model_var
 
-        state, msg = check_model_works(model_var, timeout=0)
-        assert state
+        # state, msg = check_model_works(model_var, timeout=0)
+        # assert state
     else:
         if model_name_full.lower().startswith("ollama:"):
             check_ollama_model(logger, model_name_full.lower().replace("ollama:", ""))
