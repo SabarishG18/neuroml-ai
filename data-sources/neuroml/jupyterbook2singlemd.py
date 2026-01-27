@@ -8,11 +8,9 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-
 import re
 import sys
 from pathlib import Path
-
 
 
 def runner(source: str):
@@ -24,7 +22,7 @@ def runner(source: str):
     """
     toc = f"{source}/_toc.yml"
     filelist = []
-    with open(toc, 'r') as toc_f:
+    with open(toc, "r") as toc_f:
         for line in toc_f.readlines():
             if "file:" in line:
                 source_file = Path(line.split("file:")[1].strip())
@@ -55,7 +53,7 @@ def runner(source: str):
         ":widths: ",
         ":width: ",
         ":delim: ",
-        "%"
+        "%",
     )
 
     # note that the order in which these are listed is important, since the
@@ -80,7 +78,7 @@ def runner(source: str):
         r"{(code|code-block|download|grid-item-card|grid|tab-set|csv-table)}": r"",
         # misc
         r"(schema:|units:|<i>|</i>|&emsp;|`{5}|`{4})": r"",
-        r"(`{4})": r"\n"
+        r"(`{4})": r"\n",
     }
 
     for srcfile in filelist:
@@ -88,7 +86,7 @@ def runner(source: str):
         print(f"Processing {srcfilepath}")
         adding_text_to = ""
 
-        with open(srcfilepath, 'r') as srcfile_f:
+        with open(srcfilepath, "r") as srcfile_f:
             in_block = False
             section_ref = ""
             for line in srcfile_f.readlines():
@@ -102,13 +100,17 @@ def runner(source: str):
                     continue
 
                 if len(section_ref) > 0:
-                    refs[section_ref] = "(see section: " + line.replace("#", "").strip() + ")"
+                    refs[section_ref] = (
+                        "(see section: " + line.replace("#", "").strip() + ")"
+                    )
                     section_ref = ""
 
                 if "{literalinclude}" in line:
                     in_block = True
                     file_to_include = line.split("{literalinclude}")[1].strip()
-                    with open(f"{srcfilepath.parent}/{file_to_include}", 'r') as incfile_f:
+                    with open(
+                        f"{srcfilepath.parent}/{file_to_include}", "r"
+                    ) as incfile_f:
                         included_cont = incfile_f.read()
                         adding_text_to += f"```\n\n{included_cont}\n\n```\n"
                 # exit the block
@@ -133,10 +135,10 @@ def runner(source: str):
     for pat, rep in refs.items():
         schema_text = re.sub(pat, rep, schema_text, count=0)
 
-    with open("single-page-markdown.md", 'w') as out:
+    with open("single-page-markdown.md", "w") as out:
         print(text, file=out)
 
-    with open("single-page-markdown-schema.md", 'w') as out:
+    with open("single-page-markdown-schema.md", "w") as out:
         print(schema_text, file=out)
 
     # print(refs)

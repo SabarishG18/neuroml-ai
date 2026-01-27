@@ -621,17 +621,17 @@ flowchart TD
     D --> E[Model simulation]
     E --> F[OMV checks]
     E --> G[Behavioral checks SciUnit]
-    
+
     B1["Does the model include all required model elements?<br/>Are all model elements correctly ordered?<br/>Are all necessary model element attributes/parameters set?<br/>Do all parameters use correct physiological units?"]
-    
+
     C1["Do model elements correctly reference each other?<br/>Are synapses/connections/projections correctly defined?<br/>Are multi-compartmental cell morphologies valid?"]
-    
+
     D1["Are all model elements mappable to simulation back-ends?<br/>Are all of the units and dimensions consistent?"]
-    
+
     F1["Does the model produce the same results on all simulators?"]
-    
+
     G1["Do the simulation results match experimental data?"]
-    
+
     B -.-> B1
     C -.-> C1
     D -.-> D1
@@ -1079,13 +1079,13 @@ Sinha, Gleeson et al. eLife 2024;13:RP95135. DOI: https://doi.org/10.7554/eLife.
 eLife Tools and resources                                                                                        Neuroscience
 
 ```xml
-<xs:simpleType name="Nml2Quantity_none"> 
+<xs:simpleType name="Nml2Quantity_none">
  <xs:restriction base="xs:string">
   <xs:pattern value="–?([0–9]*(\.[0–9]+)?)([eE]–?[0–9]+)?"/>
  </xs:restriction>
 </xs:simpleType>
 
-<xs:simpleType name="Nml2Quantity_voltage"> 
+<xs:simpleType name="Nml2Quantity_voltage">
  <xs:restriction base="xs:string">
   <xs:pattern value="–?([0–9]*(\.[0–9]+)?)([eE]–?[0–9]+)?[\s]*(V|mV)"/>
  </xs:restriction>
@@ -1250,7 +1250,7 @@ $$z = z0$$ (10)
 
 and define conditional expressions to set the spiking state of the cell:
 
-$$spiking = \begin{cases} 
+$$spiking = \begin{cases}
 1 & \text{if } (v > 0) \land (spiking < 0.5) \\
 0 & \text{if } (v < 0)
 \end{cases}$$ (11)
@@ -1356,7 +1356,7 @@ pynml.run_lems_with_jneuroml(lems_simulation_file, max_memory="2G", nogui=True, 
 
 ```xml
 <Lems>
- 
+
  <Target component="example-single-hindmarshrose1984cell-sim"/>
 
 <Include file="Cells.xml"/>
@@ -1366,7 +1366,7 @@ pynml.run_lems_with_jneuroml(lems_simulation_file, max_memory="2G", nogui=True, 
 <Include file="hindmarshrose1984_single_cell_network.nml"/>
 
 <Simulation id="example-single-hindmarshrose1984cell-sim" length="1400.0ms" step="0.0025ms"
-       target="HRNet" seed="123">  
+       target="HRNet" seed="123">
        <OutputFile id="output0" fileName="example-single-hindmarshrose1984cell-sim.v.dat">
           <OutputColumn id="HRPop0[0]" quantity="HRPop0[0]/v"/>
        </OutputFile>

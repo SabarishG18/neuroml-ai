@@ -215,7 +215,7 @@ Please file any issues or questions at the [issue tracker here](https://github.c
 
 
  Dimensions
-L^2 
+L^2
 
 
  Units
@@ -238,7 +238,7 @@ L^2
 
 
  Dimensions
-M^-1 L^-2 T^4 I^2 
+M^-1 L^-2 T^4 I^2
 
 
  Units
@@ -273,7 +273,7 @@ M^-1 L^-2 T^4 I^2
 
 
  Dimensions
-T^1 I^1 
+T^1 I^1
 
 
  Units
@@ -294,7 +294,7 @@ T^1 I^1
 
 
  Dimensions
-T^1 I^1 N^-1 
+T^1 I^1 N^-1
 
 
  Units
@@ -317,7 +317,7 @@ T^1 I^1 N^-1
 
 
  Dimensions
-L^-3 N^1 
+L^-3 N^1
 
 
  Units
@@ -352,7 +352,7 @@ L^-3 N^1
 
 
  Dimensions
-M^-1 L^-2 T^3 I^2 
+M^-1 L^-2 T^3 I^2
 
 
  Units
@@ -389,7 +389,7 @@ M^-1 L^-2 T^3 I^2
 
 
  Dimensions
-M^-1 L^-4 T^3 I^2 
+M^-1 L^-4 T^3 I^2
 
 
  Units
@@ -414,7 +414,7 @@ M^-1 L^-4 T^3 I^2
 
 
  Dimensions
-M^-2 L^-4 T^6 I^3 
+M^-2 L^-4 T^6 I^3
 
 
  Units
@@ -445,7 +445,7 @@ M^-2 L^-4 T^6 I^3
 
 
  Dimensions
-I^1 
+I^1
 
 
  Units
@@ -480,7 +480,7 @@ I^1
 
 
  Dimensions
-L^-2 I^1 
+L^-2 I^1
 
 
  Units
@@ -503,7 +503,7 @@ L^-2 I^1
 
 
  Dimensions
-M^1 L^2 T^-2 K^-1 N^-1 
+M^1 L^2 T^-2 K^-1 N^-1
 
 
  Units
@@ -524,7 +524,7 @@ M^1 L^2 T^-2 K^-1 N^-1
 
 
  Dimensions
-L^1 
+L^1
 
 
  Units
@@ -557,7 +557,7 @@ L^1
 
 
  Dimensions
-T^-1 
+T^-1
 
 
  Units
@@ -594,7 +594,7 @@ T^-1
 
 
  Dimensions
-M^-1 L^-2 T^3 I^1 
+M^-1 L^-2 T^3 I^1
 
 
  Units
@@ -615,7 +615,7 @@ M^-1 L^-2 T^3 I^1
 
 
  Dimensions
-L^1 T^-1 
+L^1 T^-1
 
 
  Units
@@ -650,7 +650,7 @@ L^1 T^-1
 
 
  Dimensions
-M^1 L^2 T^-3 I^-2 
+M^1 L^2 T^-3 I^-2
 
 
  Units
@@ -683,7 +683,7 @@ M^1 L^2 T^-3 I^-2
 
 
  Dimensions
-M^2 L^2 T^-3 I^-2 
+M^2 L^2 T^-3 I^-2
 
 
  Units
@@ -719,7 +719,7 @@ M^2 L^2 T^-3 I^-2
 
 
  Dimensions
-L^-1 T^-1 I^-1 N^1 
+L^-1 T^-1 I^-1 N^1
 
 
  Units
@@ -752,7 +752,7 @@ L^-1 T^-1 I^-1 N^1
 
 
  Dimensions
-M^-1 L^-4 T^4 I^2 
+M^-1 L^-4 T^4 I^2
 
 
  Units
@@ -773,7 +773,7 @@ M^-1 L^-4 T^4 I^2
 
 
  Dimensions
-N^1 
+N^1
 
 
  Units
@@ -792,7 +792,7 @@ N^1
 
 
  Dimensions
-K^1 
+K^1
 
 
  Units
@@ -823,7 +823,7 @@ K^1
 
 
  Dimensions
-T^1 
+T^1
 
 
  Units
@@ -858,7 +858,7 @@ T^1
 
 
  Dimensions
-M^1 L^2 T^-3 I^-1 
+M^1 L^2 T^-3 I^-1
 
 
  Units
@@ -889,7 +889,7 @@ M^1 L^2 T^-3 I^-1
 
 
  Dimensions
-L^3 
+L^3
 
 
  Units
@@ -2669,7 +2669,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**xmlns:rdf**$ 
+**xmlns:rdf**$
 
 
 
@@ -2697,7 +2697,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**rdf:about**$ 
+**rdf:about**$
 
 
 
@@ -2904,7 +2904,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**xmlns:bqbiol**$ 
+**xmlns:bqbiol**$
 
 
 
@@ -2969,7 +2969,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**xmlns:bqmodel**$ 
+**xmlns:bqmodel**$
 
 
 
@@ -3022,7 +3022,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**rdf:resource**$ 
+**rdf:resource**$
 
 
 
@@ -3385,7 +3385,7 @@ Dynamics
     : **channelg** =&nbsp;ionChannel->g
     : **geff** =&nbsp;channelg * number
     : **i** =&nbsp;geff * (erev - v)(exposed as **i**)
-    
+
 
 
 
@@ -3526,7 +3526,7 @@ Dynamics
     : **totalConductance** =&nbsp;singleChannelConductance * number
     : **erev** =&nbsp;(R * temperature / (zCa * F)) * log(caConcExt / caConc)(exposed as **erev**)
     : **i** =&nbsp;totalConductance * (erev - v)(exposed as **i**)
-    
+
 
 
 
@@ -3630,8 +3630,8 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**parameter**$ 
-**segmentGroup**$ 
+**parameter**$
+**segmentGroup**$
 
 
 
@@ -3694,8 +3694,8 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**inhomogeneousParameter**$ 
-**value**$ 
+**inhomogeneousParameter**$
+**value**$
 
 
 
@@ -3769,7 +3769,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**segmentGroup**$ 
+**segmentGroup**$
 **ion**$ Which ion flows through the channel. Note: ideally this needs to be a property of ionChannel only, but it's here as it makes it easier to select channelPopulations transmitting specific ions.
 
 
@@ -3816,7 +3816,7 @@ Dynamics
 
 **Derived Variables**
     : **iDensity** =&nbsp;ZERO_CURR_DENS(exposed as **iDensity**)
-    
+
 
 
 
@@ -3899,7 +3899,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**segmentGroup**$ 
+**segmentGroup**$
 **ion**$ Which ion flows through the channel. Note: ideally this needs to be a property of ionChannel only, but it's here as it makes it easier to select channelPopulations transmitting specific ions.
 
 
@@ -3946,7 +3946,7 @@ Dynamics
 
 **Derived Variables**
     : **iDensity** =&nbsp;ZERO_CURR_DENS(exposed as **iDensity**)
-    
+
 
 
 
@@ -4018,7 +4018,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**segmentGroup**$ 
+**segmentGroup**$
 **ion**$ Which ion flows through the channel. Note: ideally this needs to be a property of ionChannel only, but it's here as it makes it easier to select channelPopulations transmitting specific ions.
 
 
@@ -4065,7 +4065,7 @@ Dynamics
 
 **Derived Variables**
     : **iDensity** =&nbsp;ZERO_CURR_DENS(exposed as **iDensity**)
-    
+
 
 
 
@@ -4188,7 +4188,7 @@ Dynamics
     : **channelf** =&nbsp;ionChannel->fopen
     : **gDensity** =&nbsp;condDensity * channelf(exposed as **gDensity**)
     : **iDensity** =&nbsp;gDensity * (erev - v)(exposed as **iDensity**)
-    
+
 
 
 
@@ -4422,12 +4422,12 @@ Dynamics
 
 **Derived Variables**
     : **channelf** =&nbsp;ionChannel->fopen
-    
+
 
 
 
 **Conditional Derived Variables**
-    
+
 : IF caConcExt &gt; 0 THEN
 :  **gDensity** = condDensity \* channelf (exposed as **gDensity**)
 : IF caConcExt &lt;= 0 THEN
@@ -4569,12 +4569,12 @@ Dynamics
 
 **Derived Variables**
     : **channelf** =&nbsp;ionChannel->fopen
-    
+
 
 
 
 **Conditional Derived Variables**
-    
+
 : IF caConcExt2 &gt; 0 THEN
 :  **gDensity** = condDensity \* channelf (exposed as **gDensity**)
 : IF caConcExt2 &lt;= 0 THEN
@@ -4704,12 +4704,12 @@ Dynamics
     : **K** =&nbsp;(zCa * F) / (R * temperature)
     : **expKv** =&nbsp;exp(-1 * K * v)
     : **channelf** =&nbsp;ionChannel->fopen
-    
+
 
 
 
 **Conditional Derived Variables**
-    
+
 : IF caConcExt &gt; 0 THEN
 :  **iDensity** = -1 \* channelf \* permeability \* zCa \* F \* K \* v \* ( caConc - (caConcExt \* expKv) ) / (1 - expKv) (exposed as **iDensity**)
 : IF caConcExt &lt;= 0 THEN
@@ -4843,16 +4843,16 @@ Dynamics
     : **channelf** =&nbsp;ionChannel->fopen
     : **gDensity** =&nbsp;condDensity * channelf(exposed as **gDensity**)
     : **tmp** =&nbsp;(25 * T) / (293.15 * 2)
-    
+
 
 
 
 **Conditional Derived Variables**
-    
+
 : IF V/tmp = 0. THEN
-:  **pOpen** = tmp \* 1e-3 \* (1 - ((ca_conc_i/ca_conc_ext) \* exp(V/tmp))) \* (1 - (V/tmp)/2) 
+:  **pOpen** = tmp \* 1e-3 \* (1 - ((ca_conc_i/ca_conc_ext) \* exp(V/tmp))) \* (1 - (V/tmp)/2)
 : IF V/tmp != 0. THEN
-:  **pOpen** = tmp \* 1e-3 \* (1 - ((ca_conc_i/ca_conc_ext) \* exp(V/tmp))) \* ((V/tmp) / (exp(V/tmp) - 1)) 
+:  **pOpen** = tmp \* 1e-3 \* (1 - ((ca_conc_i/ca_conc_ext) \* exp(V/tmp))) \* ((V/tmp) / (exp(V/tmp) - 1))
 : IF ca_conc_ext &gt; 0 THEN
 :  **iDensity** = gDensity \* pOpen (exposed as **iDensity**)
 : IF ca_conc_ext &lt;= 0 THEN
@@ -4969,7 +4969,7 @@ Dynamics
 
 **State Variables**
 : **v**: dimensions:voltage (exposed as **v**)
-: **spiking**: Dimensionless 
+: **spiking**: Dimensionless
 
 
 
@@ -5002,7 +5002,7 @@ Dynamics
     : **iChannels** =&nbsp;populations[*]->i(reduce method: add)
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
     : **iMemb** =&nbsp;iChannels + iSyn(exposed as **iMemb**)
-    
+
 
 
 
@@ -5010,7 +5010,7 @@ Dynamics
 
 **Time Derivatives**
     : d **v** /dt = iMemb / C
-    
+
 
 
 
@@ -5087,7 +5087,7 @@ Dynamics
 
 **State Variables**
 : **v**: dimensions:voltage (exposed as **v**)
-: **spiking**: Dimensionless 
+: **spiking**: Dimensionless
 
 
 
@@ -5122,7 +5122,7 @@ Dynamics
     : **caConc** =&nbsp;concentrationModels[species='ca']->concentration(reduce method: add)(exposed as **caConc**)
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
     : **iMemb** =&nbsp;iChannels + iSyn(exposed as **iMemb**)
-    
+
 
 
 
@@ -5130,7 +5130,7 @@ Dynamics
 
 **Time Derivatives**
     : d **v** /dt = iMemb / C
-    
+
 
 
 
@@ -5379,12 +5379,12 @@ Dynamics
     : **py** =&nbsp;proximal->yLength
     : **pz** =&nbsp;proximal->zLength
     : **length** =&nbsp;sqrt(((dx - px) * (dx - px) + (dy - py) * (dy - py) + (dz - pz) * (dz - pz))/(LEN * LEN)) * LEN(exposed as **length**)
-    
+
 
 
 
 **Conditional Derived Variables**
-    
+
 : IF length = 0 * LEN THEN
 :  **surfaceArea** = 4 \* radDist \* radDist \* 3.14159265 (exposed as **surfaceArea**)
 : IF length &gt; 0 * LEN THEN
@@ -5573,7 +5573,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**segment**$ 
+**segment**$
 
 
 
@@ -5629,7 +5629,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**segment**$ 
+**segment**$
 
 
 
@@ -5671,7 +5671,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**segment**$ 
+**segment**$
 
 
 
@@ -5710,8 +5710,8 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**href**$ 
-**segmentGroup**$ 
+**href**$
+**segmentGroup**$
 
 
 
@@ -5883,8 +5883,8 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**variable**$ 
-**metric**$ 
+**variable**$
+**metric**$
 
 
 
@@ -5959,7 +5959,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**translationStart**$ 
+**translationStart**$
 
 
 
@@ -6004,7 +6004,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**normalizationEnd**$ 
+**normalizationEnd**$
 
 
 
@@ -6185,7 +6185,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**segmentGroup**$ 
+**segmentGroup**$
 
 
 
@@ -6209,7 +6209,7 @@ Dynamics
 
 **Derived Variables**
     : **specCap** =&nbsp;value(exposed as **specCap**)
-    
+
 
 
 
@@ -6437,7 +6437,7 @@ Dynamics
     : **totChanPopCurrentCa** =&nbsp;populations[ion='ca']->i(reduce method: add)
     : **totChanDensCurrentDensityCa** =&nbsp;channelDensities[ion='ca']->iDensity(reduce method: add)
     : **iCa** =&nbsp;totChanPopCurrentCa + (totChanDensCurrentDensityCa * surfaceArea)(exposed as **iCa**)
-    
+
 
 
 
@@ -6508,7 +6508,7 @@ Usage: XML
 ``` xml
 <membraneProperties>
     <channelDensity id="naChans" ionChannel="HH_Na" segmentGroup="soma_group" condDensity="120.0 mS_per_cm2" ion="na" erev="50mV"/>
-    <!-- Ions present inside the cell. Note: a fixed reversal potential is specified here  
+    <!-- Ions present inside the cell. Note: a fixed reversal potential is specified here
             <reversalPotential species="na" value="50mV"/>
             <reversalPotential species="k" value="-77mV"/>-->
 </membraneProperties>
@@ -6603,7 +6603,7 @@ Dynamics
     : **totChanPopCurrentCa2** =&nbsp;populations[ion='ca2']->i(reduce method: add)
     : **totChanDensCurrentDensityCa2** =&nbsp;channelDensities[ion='ca2']->iDensity(reduce method: add)
     : **iCa2** =&nbsp;totChanPopCurrentCa2 + (totChanDensCurrentDensityCa2 * surfaceArea)(exposed as **iCa2**)
-    
+
 
 
 
@@ -6692,7 +6692,7 @@ Dynamics
 
 **Derived Variables**
     : **totSpecCap** =&nbsp;membraneProperties->totSpecCap(exposed as **totSpecCap**)
-    
+
 
 
 
@@ -6755,7 +6755,7 @@ Usage: XML
 <biophysicalProperties id="PyrCellChanDist">
     <membraneProperties>
         <channelDensity id="naChans" ionChannel="HH_Na" segmentGroup="soma_group" condDensity="120.0 mS_per_cm2" ion="na" erev="50mV"/>
-        <!-- Ions present inside the cell. Note: a fixed reversal potential is specified here  
+        <!-- Ions present inside the cell. Note: a fixed reversal potential is specified here
             <reversalPotential species="na" value="50mV"/>
             <reversalPotential species="k" value="-77mV"/>-->
     </membraneProperties>
@@ -6824,7 +6824,7 @@ Dynamics
 
 **Derived Variables**
     : **totSpecCap** =&nbsp;membraneProperties2CaPools->totSpecCap(exposed as **totSpecCap**)
-    
+
 
 
 
@@ -6912,7 +6912,7 @@ Dynamics
 **Derived Variables**
     : **caConc** =&nbsp;speciesList[ion='ca']->concentration(reduce method: add)(exposed as **caConc**)
     : **caConcExt** =&nbsp;speciesList[ion='ca']->extConcentration(reduce method: add)(exposed as **caConcExt**)
-    
+
 
 
 
@@ -7021,7 +7021,7 @@ Dynamics
     : **caConcExt2** =&nbsp;speciesList[ion='ca2']->extConcentration(reduce method: add)(exposed as **caConcExt2**)
     : **caConc** =&nbsp;speciesList[ion='ca']->concentration(reduce method: add)(exposed as **caConc**)
     : **caConcExt** =&nbsp;speciesList[ion='ca']->extConcentration(reduce method: add)(exposed as **caConcExt**)
-    
+
 
 
 
@@ -7079,7 +7079,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**segmentGroup**$ 
+**segmentGroup**$
 
 
 
@@ -7137,7 +7137,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**ion**$ 
+**ion**$
 
 
 
@@ -7232,7 +7232,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**ion**$ 
+**ion**$
 
 
 
@@ -7293,7 +7293,7 @@ Dynamics
     : **effectiveRadius** =&nbsp;LENGTH_SCALE * sqrt(surfaceArea/(AREA_SCALE * (4 * 3.14159)))
     : **innerRadius** =&nbsp;effectiveRadius - shellThickness
     : **shellVolume** =&nbsp;(4 * (effectiveRadius * effectiveRadius * effectiveRadius) * 3.14159 / 3) - (4 * (innerRadius * innerRadius * innerRadius) * 3.14159 / 3)
-    
+
 
 
 
@@ -7301,7 +7301,7 @@ Dynamics
 
 **Time Derivatives**
     : d **concentration** /dt = iCa / (2 * Faraday * shellVolume) - ((concentration - restingConc) / decayConstant)
-    
+
 
 
 
@@ -7376,7 +7376,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**ion**$ 
+**ion**$
 
 
 
@@ -7439,7 +7439,7 @@ Dynamics
 
 **Time Derivatives**
     : d **concentration** /dt = (iCa/surfaceArea) * rho - ((concentration - restingConc) / decayConstant)
-    
+
 
 
 
@@ -7513,7 +7513,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**species**$ 
+**species**$
 
 
 
@@ -7576,7 +7576,7 @@ Dynamics
 
 **Time Derivatives**
     : d **concentration** /dt = (iCa/surfaceArea) * 1e-9 * phi - ((concentration - restingConc) * beta)
-    
+
 
 
 
@@ -7605,8 +7605,8 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**ion**$ 
-**segmentGroup**$ 
+**ion**$
+**segmentGroup**$
 
 
 
@@ -7645,7 +7645,7 @@ Dynamics
 **Derived Variables**
     : **concentration** =&nbsp;concentrationModel->concentration(exposed as **concentration**)
     : **extConcentration** =&nbsp;concentrationModel->extConcentration(exposed as **extConcentration**)
-    
+
 
 
 
@@ -7710,7 +7710,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**neuroLexId**$ 
+**neuroLexId**$
 
 
 
@@ -7799,13 +7799,13 @@ Dynamics
     : **thresh** =&nbsp;biophysicalProperties->membraneProperties->spikeThresh->value
     : **surfaceArea** =&nbsp;morphology->segments[*]->surfaceArea(reduce method: add)(exposed as **surfaceArea**)
     : **totSpecCap** =&nbsp;biophysicalProperties->totSpecCap(exposed as **totSpecCap**)
-    : **totCap** =&nbsp;totSpecCap * surfaceArea 
+    : **totCap** =&nbsp;totSpecCap * surfaceArea
     : **iChannels** =&nbsp;biophysicalProperties->membraneProperties->totChanCurrent(exposed as **iChannels**)
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
     : **iCa** =&nbsp;biophysicalProperties->membraneProperties->iCa(exposed as **iCa**)
     : **caConc** =&nbsp;biophysicalProperties->intracellularProperties->caConc(exposed as **caConc**)
     : **caConcExt** =&nbsp;biophysicalProperties->intracellularProperties->caConcExt(exposed as **caConcExt**)
-    
+
 
 
 
@@ -7813,7 +7813,7 @@ Dynamics
 
 **Time Derivatives**
     : d **v** /dt = (iChannels + iSyn) / totCap
-    
+
 
 
 
@@ -7990,7 +7990,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**neuroLexId**$ 
+**neuroLexId**$
 
 
 
@@ -8081,7 +8081,7 @@ Dynamics
     : **thresh** =&nbsp;biophysicalProperties2CaPools->membraneProperties2CaPools->spikeThresh->value
     : **surfaceArea** =&nbsp;morphology->segments[*]->surfaceArea(reduce method: add)(exposed as **surfaceArea**)
     : **totSpecCap** =&nbsp;biophysicalProperties2CaPools->totSpecCap(exposed as **totSpecCap**)
-    : **totCap** =&nbsp;totSpecCap * surfaceArea 
+    : **totCap** =&nbsp;totSpecCap * surfaceArea
     : **iChannels** =&nbsp;biophysicalProperties2CaPools->membraneProperties2CaPools->totChanCurrent(exposed as **iChannels**)
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
     : **iCa** =&nbsp;biophysicalProperties2CaPools->membraneProperties2CaPools->iCa(exposed as **iCa**)
@@ -8090,7 +8090,7 @@ Dynamics
     : **iCa2** =&nbsp;biophysicalProperties2CaPools->membraneProperties2CaPools->iCa2(exposed as **iCa2**)
     : **caConc2** =&nbsp;biophysicalProperties2CaPools->intracellularProperties2CaPools->caConc2(exposed as **caConc2**)
     : **caConcExt2** =&nbsp;biophysicalProperties2CaPools->intracellularProperties2CaPools->caConcExt2(exposed as **caConcExt2**)
-    
+
 
 
 
@@ -8098,7 +8098,7 @@ Dynamics
 
 **Time Derivatives**
     : d **v** /dt = (iChannels + iSyn) / totCap
-    
+
 
 
 
@@ -8346,7 +8346,7 @@ Dynamics
 
 **Time Derivatives**
     : d **v** /dt = (leakReversal - v) / tau
-    
+
 
 
 
@@ -8446,7 +8446,7 @@ Dynamics
 
 **State Variables**
 : **v**: dimensions:voltage (exposed as **v**)
-: **lastSpikeTime**: dimensions:time 
+: **lastSpikeTime**: dimensions:time
 
 
 
@@ -8661,7 +8661,7 @@ Dynamics
 **Derived Variables**
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
     : **iMemb** =&nbsp;leakConductance * (leakReversal - v) + iSyn(exposed as **iMemb**)
-    
+
 
 
 
@@ -8669,7 +8669,7 @@ Dynamics
 
 **Time Derivatives**
     : d **v** /dt = iMemb / C
-    
+
 
 
 
@@ -8789,7 +8789,7 @@ Dynamics
 
 **State Variables**
 : **v**: dimensions:voltage (exposed as **v**)
-: **lastSpikeTime**: dimensions:time 
+: **lastSpikeTime**: dimensions:time
 
 
 
@@ -8809,7 +8809,7 @@ Dynamics
 **Derived Variables**
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
     : **iMemb** =&nbsp;leakConductance * (leakReversal - v) + iSyn(exposed as **iMemb**)
-    
+
 
 
 
@@ -8977,7 +8977,7 @@ Dynamics
 
 **Derived Variables**
     : **ISyn** =&nbsp;synapses[*]->I(reduce method: add)
-    
+
 
 
 
@@ -8986,7 +8986,7 @@ Dynamics
 **Time Derivatives**
     : d **v** /dt = (0.04 * v^2 / MVOLT + 5 * v + (140.0 - U + ISyn) * MVOLT)/MSEC
     : d **U** /dt = a * (b * v / MVOLT - U) / MSEC
-    
+
 
 
 
@@ -9136,7 +9136,7 @@ Dynamics
 **Derived Variables**
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
     : **iMemb** =&nbsp;k * (v-vr) * (v-vt) + iSyn - u(exposed as **iMemb**)
-    
+
 
 
 
@@ -9145,7 +9145,7 @@ Dynamics
 **Time Derivatives**
     : d **v** /dt = iMemb / C
     : d **u** /dt = a * (b * (v-vr) - u)
-    
+
 
 
 
@@ -9274,7 +9274,7 @@ Dynamics
 **State Variables**
 : **v**: dimensions:voltage (exposed as **v**)
 : **w**: dimensions:current (exposed as **w**)
-: **lastSpikeTime**: dimensions:time 
+: **lastSpikeTime**: dimensions:time
 
 
 
@@ -9295,7 +9295,7 @@ Dynamics
 **Derived Variables**
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
     : **iMemb** =&nbsp;-1 * gL * (v - EL) + gL * delT * exp((v - VT) / delT) - w + iSyn(exposed as **iMemb**)
-    
+
 
 
 
@@ -9451,7 +9451,7 @@ Dynamics
 **Time Derivatives**
     : d **V** /dt = ( (V - ((V^3) / 3)) - W + I) / SEC
     : d **W** /dt = (0.08 * (V + 0.7 - 0.8 * W)) / SEC
-    
+
 
 
 
@@ -9594,7 +9594,7 @@ Dynamics
 : **qd**: Dimensionless (exposed as **qd**)
 : **Si**: Dimensionless (exposed as **Si**)
 : **Wi**: Dimensionless (exposed as **Wi**)
-: **Sisat**: Dimensionless 
+: **Sisat**: Dimensionless
 
 
 
@@ -9628,32 +9628,32 @@ Dynamics
     : **Iampa** =&nbsp;gAmpa*Wi*(Vd-Vsyn)
     : **Inmda** =&nbsp;gNmda*Sisat*(Vd-Vsyn)/(1.0+0.28*exp(-0.062*(Vd/MVOLT-60.0)))
     : **Isyn** =&nbsp;Iampa+Inmda
-    
+
 
 
 
 **Conditional Derived Variables**
-    
+
 : IF 0.00002*Cad &gt; 0.01 THEN
-:  **alphaqd** = 0.01 
+:  **alphaqd** = 0.01
 : OTHERWISE
-:  **alphaqd** = 0.00002\*Cad 
+:  **alphaqd** = 0.00002\*Cad
 : IF Cad/250 &gt; 1 THEN
-:  **chid** = 1 
+:  **chid** = 1
 : OTHERWISE
-:  **chid** = Cad/250 
+:  **chid** = Cad/250
 : IF Vd &lt; -10*MVOLT THEN
-:  **alphacd_Vd** = exp((Vd/MVOLT+50.0)/11-(Vd/MVOLT+53.5)/27)/18.975 
+:  **alphacd_Vd** = exp((Vd/MVOLT+50.0)/11-(Vd/MVOLT+53.5)/27)/18.975
 : OTHERWISE
-:  **alphacd_Vd** = 2.0\*exp((-53.5-Vd/MVOLT)/27.0) 
+:  **alphacd_Vd** = 2.0\*exp((-53.5-Vd/MVOLT)/27.0)
 : IF Vd &lt; -10*MVOLT THEN
-:  **betacd_Vd** = (2.0\*exp((-53.5-Vd/MVOLT)/27.0)-alphacd_Vd) 
+:  **betacd_Vd** = (2.0\*exp((-53.5-Vd/MVOLT)/27.0)-alphacd_Vd)
 : OTHERWISE
-:  **betacd_Vd** = 0 
+:  **betacd_Vd** = 0
 : IF Si &gt; Smax THEN
-:  **Sisat** = Smax 
+:  **Sisat** = Smax
 : OTHERWISE
-:  **Sisat** = Si 
+:  **Sisat** = Si
 
 
 **Time Derivatives**
@@ -9667,7 +9667,7 @@ Dynamics
     : d **qd** /dt = (alphaqd-(alphaqd+betaqd)*qd) / MSEC
     : d **Si** /dt = -Si/150.0
     : d **Wi** /dt = -Wi/2.0
-    
+
 
 
 
@@ -9873,7 +9873,7 @@ Dynamics
     : **chi** =&nbsp;c - d * x^2 - y(exposed as **chi**)
     : **rho** =&nbsp;s * ( x - x1 ) - z(exposed as **rho**)
     : **iMemb** =&nbsp;(C * (v_scaling * (phi - z) / MSEC)) + iSyn(exposed as **iMemb**)
-    
+
 
 
 
@@ -9883,7 +9883,7 @@ Dynamics
     : d **v** /dt = iMemb/C
     : d **y** /dt = chi / MSEC
     : d **z** /dt = r * rho / MSEC
-    
+
 
 
 
@@ -10132,7 +10132,7 @@ Dynamics
 
 **Derived Variables**
     : **r** =&nbsp;rate * exp((v - midpoint)/scale)(exposed as **r**)
-    
+
 
 
 
@@ -10211,7 +10211,7 @@ Dynamics
 
 **Derived Variables**
     : **r** =&nbsp;rate / (1 + exp(0 - (v - midpoint)/scale))(exposed as **r**)
-    
+
 
 
 
@@ -10290,12 +10290,12 @@ Dynamics
 
 **Derived Variables**
     : **x** =&nbsp;(v - midpoint) / scale
-    
+
 
 
 
 **Conditional Derived Variables**
-    
+
 : IF x != 0 THEN
 :  **r** = rate \* x / (1 - exp(0 - x)) (exposed as **r**)
 : IF x = 0 THEN
@@ -10498,7 +10498,7 @@ Dynamics
 
 **Derived Variables**
     : **x** =&nbsp;rate * exp((v - midpoint)/scale)(exposed as **x**)
-    
+
 
 
 
@@ -10577,7 +10577,7 @@ Dynamics
 
 **Derived Variables**
     : **x** =&nbsp;rate / (1 + exp(0 - (v - midpoint)/scale))(exposed as **x**)
-    
+
 
 
 
@@ -10657,7 +10657,7 @@ Dynamics
 **Derived Variables**
     : **a** =&nbsp;(v - midpoint) / scale
     : **x** =&nbsp;rate * a / (1 - exp(0 - a))(exposed as **x**)
-    
+
 
 
 
@@ -10797,7 +10797,7 @@ Dynamics
 
 **Derived Variables**
     : **t** =&nbsp;tau(exposed as **t**)
-    
+
 
 
 
@@ -10899,7 +10899,7 @@ Dynamics
 
 **Derived Variables**
     : **q10** =&nbsp;fixedQ10(exposed as **q10**)
-    
+
 
 
 
@@ -10970,7 +10970,7 @@ Dynamics
 
 **Derived Variables**
     : **q10** =&nbsp;q10Factor^((temperature - experimentalTemp)/TENDEGREES)(exposed as **q10**)
-    
+
 
 
 
@@ -11070,7 +11070,7 @@ Dynamics
 
 **Derived Variables**
     : **factor** =&nbsp;q10Factor^((temperature - experimentalTemp)/TENDEGREES)(exposed as **factor**)
-    
+
 
 
 
@@ -11368,7 +11368,7 @@ Dynamics
     : **fcond** =&nbsp;q^instances(exposed as **fcond**)
     : **inf** =&nbsp;alpha/(alpha+beta)(exposed as **inf**)
     : **tau** =&nbsp;1/((alpha+beta) * rateScale)(exposed as **tau**)
-    
+
 
 
 
@@ -11376,7 +11376,7 @@ Dynamics
 
 **Time Derivatives**
     : d **q** /dt = (inf - q) / tau
-    
+
 
 
 
@@ -11521,7 +11521,7 @@ Dynamics
     : **inf** =&nbsp;steadyState->x(exposed as **inf**)
     : **tauUnscaled** =&nbsp;timeCourse->t
     : **tau** =&nbsp;tauUnscaled / rateScale(exposed as **tau**)
-    
+
 
 
 
@@ -11529,7 +11529,7 @@ Dynamics
 
 **Time Derivatives**
     : d **q** /dt = (inf - q) / tau
-    
+
 
 
 
@@ -11638,7 +11638,7 @@ Dynamics
     : **tau** =&nbsp;0 * SEC(exposed as **tau**)
     : **q** =&nbsp;inf(exposed as **q**)
     : **fcond** =&nbsp;q^instances(exposed as **fcond**)
-    
+
 
 
 
@@ -11768,7 +11768,7 @@ Dynamics
     : **inf** =&nbsp;alpha/(alpha+beta)(exposed as **inf**)
     : **tauUnscaled** =&nbsp;timeCourse->t
     : **tau** =&nbsp;tauUnscaled / rateScale(exposed as **tau**)
-    
+
 
 
 
@@ -11776,7 +11776,7 @@ Dynamics
 
 **Time Derivatives**
     : d **q** /dt = (inf - q) / tau
-    
+
 
 
 
@@ -11907,7 +11907,7 @@ Dynamics
     : **fcond** =&nbsp;q^instances(exposed as **fcond**)
     : **inf** =&nbsp;steadyState->x(exposed as **inf**)
     : **tau** =&nbsp;1/((alpha+beta) * rateScale)(exposed as **tau**)
-    
+
 
 
 
@@ -11915,7 +11915,7 @@ Dynamics
 
 **Time Derivatives**
     : d **q** /dt = (inf - q) / tau
-    
+
 
 
 
@@ -12048,7 +12048,7 @@ Dynamics
     : **tauUnscaled** =&nbsp;timeCourse->t
     : **tau** =&nbsp;tauUnscaled / rateScale(exposed as **tau**)
     : **fcond** =&nbsp;q^instances(exposed as **fcond**)
-    
+
 
 
 
@@ -12056,7 +12056,7 @@ Dynamics
 
 **Time Derivatives**
     : d **q** /dt = (inf - q) / tau
-    
+
 
 
 
@@ -12159,7 +12159,7 @@ Dynamics
     : **q** =&nbsp;subGate[*]->qfrac(reduce method: add)(exposed as **q**)
     : **fcond** =&nbsp;q^instances(exposed as **fcond**)
     : **rateScale** =&nbsp;q10Settings[*]->q10(reduce method: multiply)(exposed as **rateScale**)
-    
+
 
 
 
@@ -12281,7 +12281,7 @@ Dynamics
     : **tauUnscaled** =&nbsp;timeCourse->t
     : **tau** =&nbsp;tauUnscaled / rateScale(exposed as **tau**)
     : **qfrac** =&nbsp;q * fractionalConductance(exposed as **qfrac**)
-    
+
 
 
 
@@ -12289,7 +12289,7 @@ Dynamics
 
 **Time Derivatives**
     : d **q** /dt = (inf - q) / tau
-    
+
 
 
 
@@ -12354,7 +12354,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**neuroLexId**$ 
+**neuroLexId**$
 
 
 
@@ -12415,7 +12415,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**species**$ 
+**species**$
 
 
 
@@ -12450,7 +12450,7 @@ Dynamics
 **Derived Variables**
     : **fopen** =&nbsp;1(exposed as **fopen**)
     : **g** =&nbsp;conductance(exposed as **g**)
-    
+
 
 
 
@@ -12486,7 +12486,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**species**$ 
+**species**$
 
 
 
@@ -12533,7 +12533,7 @@ Dynamics
     : **fopen0** =&nbsp;gates[*]->fcond(reduce method: multiply)
     : **fopen** =&nbsp;conductanceScale * fopen0(exposed as **fopen**)
     : **g** =&nbsp;conductance * fopen(exposed as **g**)
-    
+
 
 
 
@@ -12586,8 +12586,8 @@ Usage: XML
 <ionChannelHH id="pas" conductance="10pS"/>
 ```
 ``` xml
-<ionChannelHH id="HH_Na" conductance="10pS" species="na">  
-        
+<ionChannelHH id="HH_Na" conductance="10pS" species="na">
+
     </ionChannelHH>
 ```
 ``` xml
@@ -12661,7 +12661,7 @@ Dynamics
     : **fopen0** =&nbsp;gates[*]->fcond(reduce method: multiply)
     : **fopen** =&nbsp;conductanceScale * fopen0(exposed as **fopen**)
     : **g** =&nbsp;conductance * fopen(exposed as **g**)
-    
+
 
 
 
@@ -12754,7 +12754,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**species**$ 
+**species**$
 
 
 
@@ -12866,7 +12866,7 @@ Dynamics
 
 **Derived Variables**
     : **q** =&nbsp;relativeConductance * occupancy(exposed as **q**)
-    
+
 
 
 
@@ -13020,7 +13020,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**species**$ 
+**species**$
 
 
 
@@ -13065,7 +13065,7 @@ Dynamics
 **Derived Variables**
     : **fopen** =&nbsp;gates[*]->fcond(reduce method: multiply)(exposed as **fopen**)
     : **g** =&nbsp;fopen * conductance(exposed as **g**)
-    
+
 
 
 
@@ -13189,7 +13189,7 @@ Dynamics
     : **rf0** =&nbsp;rate->r
     : **rf** =&nbsp;rf0(exposed as **rf**)
     : **rr** =&nbsp;0/SEC(exposed as **rr**)
-    
+
 
 
 
@@ -13286,7 +13286,7 @@ Dynamics
     : **rr0** =&nbsp;rate->r
     : **rr** =&nbsp;rr0(exposed as **rr**)
     : **rf** =&nbsp;0/SEC(exposed as **rf**)
-    
+
 
 
 
@@ -13397,7 +13397,7 @@ Dynamics
     : **rr0** =&nbsp;exp(-z * (1 - gamma) * (v - vHalf) / kte) / tau
     : **rf** =&nbsp;1 / (1/rf0 + tauMin)(exposed as **rf**)
     : **rr** =&nbsp;1 / (1/rr0 + tauMin)(exposed as **rr**)
-    
+
 
 
 
@@ -13454,7 +13454,7 @@ Dynamics
     : **inf** =&nbsp;steadyState->x
     : **rf** =&nbsp;inf/tau(exposed as **rf**)
     : **rr** =&nbsp;(1-inf)/tau(exposed as **rr**)
-    
+
 
 
 
@@ -13556,7 +13556,7 @@ Dynamics
     : **rateScale** =&nbsp;q10Settings[*]->q10(reduce method: multiply)(exposed as **rateScale**)
     : **q** =&nbsp;states[*]->q(reduce method: add)(exposed as **q**)
     : **fcond** =&nbsp;q^instances(exposed as **fcond**)
-    
+
 
 
 
@@ -13920,8 +13920,8 @@ Dynamics
 
 
 **State Variables**
-: **I**: dimensions:current 
-: **J**: dimensions:current 
+: **I**: dimensions:current
+: **J**: dimensions:current
 
 
 
@@ -13947,7 +13947,7 @@ Dynamics
 
 **Derived Variables**
     : **i** =&nbsp;I(exposed as **i**)
-    
+
 
 
 
@@ -13956,7 +13956,7 @@ Dynamics
 **Time Derivatives**
     : d **I** /dt = (2.7182818284590451*J - I)/tau
     : d **J** /dt = -J/tau
-    
+
 
 
 
@@ -14270,7 +14270,7 @@ Dynamics
 
 **Derived Variables**
     : **i** =&nbsp;g * (erev - v)(exposed as **i**)
-    
+
 
 
 
@@ -14278,7 +14278,7 @@ Dynamics
 
 **Time Derivatives**
     : d **g** /dt = -g / tauDecay
-    
+
 
 
 
@@ -14396,7 +14396,7 @@ Dynamics
 
 **State Variables**
 : **g**: dimensions:conductance (exposed as **g**)
-: **A**: dimensions:conductance 
+: **A**: dimensions:conductance
 
 
 
@@ -14422,7 +14422,7 @@ Dynamics
 
 **Derived Variables**
     : **i** =&nbsp;g * (erev - v)(exposed as **i**)
-    
+
 
 
 
@@ -14431,7 +14431,7 @@ Dynamics
 **Time Derivatives**
     : d **g** /dt = (2.7182818284590451 * A - g)/tau
     : d **A** /dt = -A / tau
-    
+
 
 
 
@@ -14560,8 +14560,8 @@ Dynamics
 
 
 **State Variables**
-: **A**: Dimensionless 
-: **B**: Dimensionless 
+: **A**: Dimensionless
+: **B**: Dimensionless
 
 
 
@@ -14589,7 +14589,7 @@ Dynamics
 **Derived Variables**
     : **g** =&nbsp;gbase * (B - A)(exposed as **g**)
     : **i** =&nbsp;g * (erev - v)(exposed as **i**)
-    
+
 
 
 
@@ -14598,7 +14598,7 @@ Dynamics
 **Time Derivatives**
     : d **A** /dt = -A / tauRise
     : d **B** /dt = -B / tauDecay
-    
+
 
 
 
@@ -14746,9 +14746,9 @@ Dynamics
 
 
 **State Variables**
-: **A**: Dimensionless 
-: **B**: Dimensionless 
-: **C**: Dimensionless 
+: **A**: Dimensionless
+: **B**: Dimensionless
+: **C**: Dimensionless
 
 
 
@@ -14778,7 +14778,7 @@ Dynamics
 **Derived Variables**
     : **g** =&nbsp;gbase1*(B - A) + gbase2*(C-A)(exposed as **g**)
     : **i** =&nbsp;g * (erev - v)(exposed as **i**)
-    
+
 
 
 
@@ -14788,7 +14788,7 @@ Dynamics
     : d **A** /dt = -A / tauRise
     : d **B** /dt = -B / tauDecay1
     : d **C** /dt = -C / tauDecay2
-    
+
 
 
 
@@ -14891,7 +14891,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**species**$ 
+**species**$
 
 
 
@@ -14924,7 +14924,7 @@ Dynamics
 
 **Derived Variables**
     : **blockFactor** =&nbsp;1/(1 + (blockConcentration / scalingConc)* exp(-1 * (v / scalingVolt)))(exposed as **blockFactor**)
-    
+
 
 
 
@@ -15009,14 +15009,14 @@ Dynamics
 **Structure**
 : WITH **parent** AS **a**
 : WITH **this** AS **b**
-: EVENT CONNECTION from **a** TO  **b**   
+: EVENT CONNECTION from **a** TO  **b**
 
 
 
 
 
 **State Variables**
-: **R**: Dimensionless 
+: **R**: Dimensionless
 
 
 
@@ -15042,7 +15042,7 @@ Dynamics
 **Derived Variables**
     : **U** =&nbsp;initReleaseProb
     : **plasticityFactor** =&nbsp;R * U(exposed as **plasticityFactor**)
-    
+
 
 
 
@@ -15050,7 +15050,7 @@ Dynamics
 
 **Time Derivatives**
     : d **R** /dt = (1 - R) / tauRec
-    
+
 
 
 
@@ -15103,15 +15103,15 @@ Dynamics
 **Structure**
 : WITH **parent** AS **a**
 : WITH **this** AS **b**
-: EVENT CONNECTION from **a** TO  **b**   
+: EVENT CONNECTION from **a** TO  **b**
 
 
 
 
 
 **State Variables**
-: **R**: Dimensionless 
-: **U**: Dimensionless 
+: **R**: Dimensionless
+: **U**: Dimensionless
 
 
 
@@ -15138,7 +15138,7 @@ Dynamics
 
 **Derived Variables**
     : **plasticityFactor** =&nbsp;R * U(exposed as **plasticityFactor**)
-    
+
 
 
 
@@ -15147,7 +15147,7 @@ Dynamics
 **Time Derivatives**
     : d **R** /dt = (1 - R) / tauRec
     : d **U** /dt = (initReleaseProb - U) / tauFac
-    
+
 
 
 
@@ -15246,8 +15246,8 @@ Dynamics
 
 
 **State Variables**
-: **A**: Dimensionless 
-: **B**: Dimensionless 
+: **A**: Dimensionless
+: **B**: Dimensionless
 
 
 
@@ -15278,7 +15278,7 @@ Dynamics
     : **blockFactor** =&nbsp;blockMechanisms[*]->blockFactor(reduce method: multiply)
     : **g** =&nbsp;blockFactor * gbase * (B - A)(exposed as **g**)
     : **i** =&nbsp;g * (erev - v)(exposed as **i**)
-    
+
 
 
 
@@ -15287,7 +15287,7 @@ Dynamics
 **Time Derivatives**
     : d **A** /dt = -A / tauRise
     : d **B** /dt = -B / tauDecay
-    
+
 
 
 
@@ -15372,8 +15372,8 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**synapse1Path**$ 
-**synapse2Path**$ 
+**synapse1Path**$
+**synapse2Path**$
 
 
 
@@ -15432,16 +15432,16 @@ Dynamics
 : WITH **synapse2Path** AS **c**
 : CHILD INSTANCE: **synapse1**
 : CHILD INSTANCE: **synapse2**
-: EVENT CONNECTION from **a** TO  **c**   
+: EVENT CONNECTION from **a** TO  **c**
 
-: EVENT CONNECTION from **a** TO  **b**   
+: EVENT CONNECTION from **a** TO  **b**
 
 
 
 
 
 **State Variables**
-: **weightFactor**: Dimensionless 
+: **weightFactor**: Dimensionless
 
 
 
@@ -15467,7 +15467,7 @@ Dynamics
     : **i1** =&nbsp;synapse1->i
     : **i2** =&nbsp;synapse2->i
     : **i** =&nbsp;weightFactor * (i1 + i2)(exposed as **i**)
-    
+
 
 
 
@@ -15610,8 +15610,8 @@ Dynamics
 
 
 **State Variables**
-: **A**: Dimensionless 
-: **B**: Dimensionless 
+: **A**: Dimensionless
+: **B**: Dimensionless
 : **M**: Dimensionless (exposed as **M**)
 : **P**: Dimensionless (exposed as **P**)
 : **tsince**: dimensions:time (exposed as **tsince**)
@@ -15646,7 +15646,7 @@ Dynamics
 **Derived Variables**
     : **g** =&nbsp;gbase * (B - A)(exposed as **g**)
     : **i** =&nbsp;g * (erev - v)(exposed as **i**)
-    
+
 
 
 
@@ -15656,7 +15656,7 @@ Dynamics
     : d **A** /dt = -A / tauRise
     : d **B** /dt = -B / tauDecay
     : d **tsince** /dt = tsinceRate
-    
+
 
 
 
@@ -15732,7 +15732,7 @@ Dynamics
 **Derived Variables**
     : **vpeer** =&nbsp;peer->v
     : **i** =&nbsp;weight * conductance * (vpeer - v)(exposed as **i**)
-    
+
 
 
 
@@ -15885,7 +15885,7 @@ Dynamics
 **Derived Variables**
     : **vpeer** =&nbsp;peer->v
     : **i** =&nbsp;0 * AMP(exposed as **i**)
-    
+
 
 
 
@@ -16007,7 +16007,7 @@ Dynamics
 **Derived Variables**
     : **vpeer** =&nbsp;peer->v
     : **i** =&nbsp;weight * conductance * (vpeer - v)(exposed as **i**)
-    
+
 
 
 
@@ -16123,7 +16123,7 @@ Dynamics
 
 
 **State Variables**
-: **s**: Dimensionless 
+: **s**: Dimensionless
 
 
 
@@ -16150,21 +16150,21 @@ Dynamics
     : **inf** =&nbsp;1/(1 + exp((Vth - vpeer)/delta))(exposed as **inf**)
     : **tau** =&nbsp;(1-inf)/k(exposed as **tau**)
     : **i** =&nbsp;weight * conductance * s * (erev-v)(exposed as **i**)
-    
+
 
 
 
 **Conditional Derived Variables**
-    
+
 : IF (1-inf) &gt; 1e-4 THEN
-:  **s_rate** = (inf - s)/tau 
+:  **s_rate** = (inf - s)/tau
 : OTHERWISE
-:  **s_rate** = 0 
+:  **s_rate** = 0
 
 
 **Time Derivatives**
     : d **s** /dt = s_rate
-    
+
 
 
 
@@ -16503,7 +16503,7 @@ Dynamics
 **Time Derivatives**
     : d **tsince** /dt = 1
     : d **tnext** /dt = 0
-    
+
 
 
 
@@ -16639,7 +16639,7 @@ Dynamics
 **Time Derivatives**
     : d **tsince** /dt = 1
     : d **tnext** /dt = 0
-    
+
 
 
 
@@ -16781,7 +16781,7 @@ Dynamics
     : d **tsince** /dt = 1
     : d **tnextUsed** /dt = 0
     : d **tnextIdeal** /dt = 0
-    
+
 
 
 
@@ -16924,7 +16924,7 @@ Dynamics
     : d **tsince** /dt = 1
     : d **tnextUsed** /dt = 0
     : d **tnextIdeal** /dt = 0
-    
+
 
 
 
@@ -17073,7 +17073,7 @@ Dynamics
 : WITH **this** AS **a**
 : WITH **spikeTarget** AS **b**
 : CHILD INSTANCE: **synapse**
-: EVENT CONNECTION from **a** TO  **b**   
+: EVENT CONNECTION from **a** TO  **b**
 
 
 
@@ -17117,7 +17117,7 @@ Dynamics
 **Derived Variables**
     : **iSyn** =&nbsp;synapse->i
     : **i** =&nbsp;weight * iSyn(exposed as **i**)
-    
+
 
 
 
@@ -17127,7 +17127,7 @@ Dynamics
     : d **tsince** /dt = 1
     : d **tnextUsed** /dt = 0
     : d **tnextIdeal** /dt = 0
-    
+
 
 
 
@@ -17221,7 +17221,7 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**spikeTarget**$ 
+**spikeTarget**$
 
 
 
@@ -17282,7 +17282,7 @@ Dynamics
 : WITH **this** AS **a**
 : WITH **spikeTarget** AS **b**
 : CHILD INSTANCE: **synapse**
-: EVENT CONNECTION from **a** TO  **b**   
+: EVENT CONNECTION from **a** TO  **b**
 
 
 
@@ -17326,7 +17326,7 @@ Dynamics
 **Derived Variables**
     : **iSyn** =&nbsp;synapse->i
     : **i** =&nbsp;weight * iSyn(exposed as **i**)
-    
+
 
 
 
@@ -17336,7 +17336,7 @@ Dynamics
     : d **tsince** /dt = 1
     : d **tnextUsed** /dt = 0
     : d **tnextIdeal** /dt = 0
-    
+
 
 
 
@@ -17406,7 +17406,7 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**spikeTarget**$ 
+**spikeTarget**$
 
 
 
@@ -17472,7 +17472,7 @@ Dynamics
 : WITH **this** AS **a**
 : WITH **spikeTarget** AS **b**
 : CHILD INSTANCE: **synapse**
-: EVENT CONNECTION from **a** TO  **b**   
+: EVENT CONNECTION from **a** TO  **b**
 
 
 
@@ -17504,7 +17504,7 @@ Dynamics
 **Derived Variables**
     : **iSyn** =&nbsp;synapse->i
     : **i** =&nbsp;weight * iSyn(exposed as **i**)
-    
+
 
 
 
@@ -17512,7 +17512,7 @@ Dynamics
 
 **Time Derivatives**
     : d **tsince** /dt = 1
-    
+
 
 
 
@@ -17652,7 +17652,7 @@ Dynamics
 
 **Time Derivatives**
     : d **tsince** /dt = 1
-    
+
 
 
 
@@ -17748,7 +17748,7 @@ Dynamics
 **Structure**
 : WITH **this** AS **a**
 : WITH **parent** AS **b**
-: EVENT CONNECTION from **a** TO  **b**   
+: EVENT CONNECTION from **a** TO  **b**
 
 
 
@@ -17787,7 +17787,7 @@ Dynamics
 
 **Time Derivatives**
     : d **tsince** /dt = 1
-    
+
 
 
 
@@ -18046,7 +18046,7 @@ Dynamics
 **Derived Variables**
     : **i_total** =&nbsp;currents[*]->i(reduce method: add)
     : **i** =&nbsp;weight * i_total(exposed as **i**)
-    
+
 
 
 
@@ -18175,7 +18175,7 @@ Dynamics
 **Derived Variables**
     : **I_total** =&nbsp;currents[*]->I(reduce method: add)
     : **I** =&nbsp;weight * I_total(exposed as **I**)
-    
+
 
 
 
@@ -19358,10 +19358,10 @@ Usage: XML
 ```
 ``` xml
 <network id="PyrCellNet">
-    <population id="Population1" component="PyrCell" extracellularProperties="extracellular" size="9"> 
+    <population id="Population1" component="PyrCell" extracellularProperties="extracellular" size="9">
         </population>
     <projection id="Proj1" presynapticPopulation="Population1" postsynapticPopulation="Population1" synapse="AMPA">
-           
+
         </projection>
 </network>
 ```
@@ -19773,8 +19773,8 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**presynapticPopulation**$ 
-**postsynapticPopulation**$ 
+**presynapticPopulation**$
+**postsynapticPopulation**$
 
 
 
@@ -19834,7 +19834,7 @@ variable = component_factory(
 Usage: XML
 ``` xml
 <projection id="Proj1" presynapticPopulation="Population1" postsynapticPopulation="Population1" synapse="AMPA">
-           
+
         </projection>
 ```
 ``` xml
@@ -19865,7 +19865,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**targetPort**$ 
+**targetPort**$
 
 
 
@@ -19873,8 +19873,8 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**from**$ 
-**to**$ 
+**from**$
+**to**$
 
 
 
@@ -19893,11 +19893,11 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**destination**$ 
-**preFractionAlong**$ 
-**postFractionAlong**$ 
-**preSegmentId**$ 
-**postSegmentId**$ 
+**destination**$
+**preFractionAlong**$
+**postFractionAlong**$
+**preSegmentId**$
+**postSegmentId**$
 
 
 
@@ -19905,8 +19905,8 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**preCellId**$ 
-**postCellId**$ 
+**preCellId**$
+**postCellId**$
 
 
 
@@ -19972,7 +19972,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**destination**$ 
+**destination**$
 
 
 
@@ -19980,8 +19980,8 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**from**$ 
-**to**$ 
+**from**$
+**to**$
 
 
 
@@ -20057,8 +20057,8 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**from**$ 
-**to**$ 
+**from**$
+**to**$
 
 
 
@@ -20091,11 +20091,11 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**destination**$ 
-**preFractionAlong**$ 
-**postFractionAlong**$ 
-**preSegmentId**$ 
-**postSegmentId**$ 
+**destination**$
+**preFractionAlong**$
+**postFractionAlong**$
+**preSegmentId**$
+**postSegmentId**$
 
 
 
@@ -20103,8 +20103,8 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**preCellId**$ 
-**postCellId**$ 
+**preCellId**$
+**postCellId**$
 
 
 
@@ -20230,10 +20230,10 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**preFractionAlong**$ 
-**postFractionAlong**$ 
-**preSegment**$ 
-**postSegment**$ 
+**preFractionAlong**$
+**postFractionAlong**$
+**preSegment**$
+**postSegment**$
 
 
 
@@ -20241,8 +20241,8 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**preCell**$ 
-**postCell**$ 
+**preCell**$
+**postCell**$
 
 
 
@@ -20321,10 +20321,10 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**preFractionAlong**$ 
-**postFractionAlong**$ 
-**preSegment**$ 
-**postSegment**$ 
+**preFractionAlong**$
+**postFractionAlong**$
+**preSegment**$
+**postSegment**$
 
 
 
@@ -20332,8 +20332,8 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**preCell**$ 
-**postCell**$ 
+**preCell**$
+**postCell**$
 
 
 
@@ -20531,10 +20531,10 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**preFractionAlong**$ 
-**postFractionAlong**$ 
-**preSegment**$ 
-**postSegment**$ 
+**preFractionAlong**$
+**postFractionAlong**$
+**preSegment**$
+**postSegment**$
 
 
 
@@ -20542,8 +20542,8 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**preCell**$ 
-**postCell**$ 
+**preCell**$
+**postCell**$
 
 
 
@@ -20619,10 +20619,10 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**preFractionAlong**$ 
-**postFractionAlong**$ 
-**preSegment**$ 
-**postSegment**$ 
+**preFractionAlong**$
+**postFractionAlong**$
+**preSegment**$
+**postSegment**$
 
 
 
@@ -20630,8 +20630,8 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**preCell**$ 
-**postCell**$ 
+**preCell**$
+**postCell**$
 
 
 
@@ -20774,9 +20774,9 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**destination**$ 
-**sourcePort**$ 
-**targetPort**$ 
+**destination**$
+**sourcePort**$
+**targetPort**$
 
 
 
@@ -20784,7 +20784,7 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**target**$ 
+**target**$
 
 
 
@@ -20853,7 +20853,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**population**$ 
+**population**$
 
 
 
@@ -20944,7 +20944,7 @@ Name $ description $ reference
 
 **segmentId**$ Optional specification of the segment to target, default 0
 **fractionAlong**$ Optional specification of the fraction along the specified segment, default 0.5
-**destination**$ 
+**destination**$
 
 
 
@@ -20952,7 +20952,7 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**target**$ 
+**target**$
 
 
 
@@ -21029,7 +21029,7 @@ Table of Text fields (separator='$')
 ```
 Name $ description $ reference
 
-**destination**$ 
+**destination**$
 
 
 
@@ -21037,7 +21037,7 @@ Table of Paths (separator='$')
 ```
 Name $ description $ reference
 
-**target**$ 
+**target**$
 
 
 
@@ -21373,7 +21373,7 @@ Dynamics
 
 **State Variables**
 : **v**: dimensions:voltage (exposed as **v**)
-: **lastSpikeTime**: dimensions:time 
+: **lastSpikeTime**: dimensions:time
 
 
 
@@ -21392,7 +21392,7 @@ Dynamics
 
 **Derived Variables**
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
-    
+
 
 
 
@@ -21530,7 +21530,7 @@ Dynamics
 
 **State Variables**
 : **v**: dimensions:voltage (exposed as **v**)
-: **lastSpikeTime**: dimensions:time 
+: **lastSpikeTime**: dimensions:time
 
 
 
@@ -21549,7 +21549,7 @@ Dynamics
 
 **Derived Variables**
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
-    
+
 
 
 
@@ -21689,7 +21689,7 @@ Dynamics
 
 **State Variables**
 : **v**: dimensions:voltage (exposed as **v**)
-: **lastSpikeTime**: dimensions:time 
+: **lastSpikeTime**: dimensions:time
 
 
 
@@ -21708,7 +21708,7 @@ Dynamics
 
 **Derived Variables**
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
-    
+
 
 
 
@@ -21853,7 +21853,7 @@ Dynamics
 
 **State Variables**
 : **v**: dimensions:voltage (exposed as **v**)
-: **lastSpikeTime**: dimensions:time 
+: **lastSpikeTime**: dimensions:time
 
 
 
@@ -21872,7 +21872,7 @@ Dynamics
 
 **Derived Variables**
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
-    
+
 
 
 
@@ -22031,7 +22031,7 @@ Dynamics
 **State Variables**
 : **v**: dimensions:voltage (exposed as **v**)
 : **w**: Dimensionless (exposed as **w**)
-: **lastSpikeTime**: dimensions:time 
+: **lastSpikeTime**: dimensions:time
 
 
 
@@ -22051,16 +22051,16 @@ Dynamics
 
 **Derived Variables**
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
-    
+
 
 
 
 **Conditional Derived Variables**
-    
+
 : IF delta_T &gt; 0 THEN
-:  **delta_I** = delta_T \* exp(((v / MVOLT) - v_thresh) / delta_T) 
+:  **delta_I** = delta_T \* exp(((v / MVOLT) - v_thresh) / delta_T)
 : IF delta_T = 0 THEN
-:  **delta_I** = 0 
+:  **delta_I** = 0
 
 
 
@@ -22231,7 +22231,7 @@ Dynamics
 **State Variables**
 : **v**: dimensions:voltage (exposed as **v**)
 : **w**: Dimensionless (exposed as **w**)
-: **lastSpikeTime**: dimensions:time 
+: **lastSpikeTime**: dimensions:time
 
 
 
@@ -22251,16 +22251,16 @@ Dynamics
 
 **Derived Variables**
     : **iSyn** =&nbsp;synapses[*]->i(reduce method: add)(exposed as **iSyn**)
-    
+
 
 
 
 **Conditional Derived Variables**
-    
+
 : IF delta_T &gt; 0 THEN
-:  **delta_I** = delta_T \* exp(((v / MVOLT) - v_thresh) / delta_T) 
+:  **delta_I** = delta_T \* exp(((v / MVOLT) - v_thresh) / delta_T)
 : IF delta_T = 0 THEN
-:  **delta_I** = 0 
+:  **delta_I** = 0
 
 
 
@@ -22444,7 +22444,7 @@ Dynamics
     : **betah** =&nbsp;4.0 / (1 + exp((40 - (v / MVOLT) + v_offset) / 5))
     : **alphan** =&nbsp;0.032 * (15 - (v / MVOLT) + v_offset) / (exp((15 - (v / MVOLT) + v_offset) / 5) - 1)
     : **betan** =&nbsp;0.5 * exp((10 - (v / MVOLT) + v_offset) / 40)
-    
+
 
 
 
@@ -22455,7 +22455,7 @@ Dynamics
     : d **m** /dt = (alpham * (1 - m) - betam * m) / MSEC
     : d **h** /dt = (alphah * (1 - h) - betah * h) / MSEC
     : d **n** /dt = (alphan * (1 - n) - betan * n) / MSEC
-    
+
 
 
 
@@ -22702,7 +22702,7 @@ Dynamics
 
 **Derived Variables**
     : **i** =&nbsp;g * (e_rev - (v/MVOLT)) * NAMP(exposed as **i**)
-    
+
 
 
 
@@ -22710,7 +22710,7 @@ Dynamics
 
 **Time Derivatives**
     : d **g** /dt = -g / (tau_syn*MSEC)
-    
+
 
 
 
@@ -22817,7 +22817,7 @@ Dynamics
 
 
 **State Variables**
-: **I**: Dimensionless 
+: **I**: Dimensionless
 
 
 
@@ -22840,7 +22840,7 @@ Dynamics
 
 **Derived Variables**
     : **i** =&nbsp;I * NAMP(exposed as **i**)
-    
+
 
 
 
@@ -22848,7 +22848,7 @@ Dynamics
 
 **Time Derivatives**
     : d **I** /dt = -I / (tau_syn*MSEC)
-    
+
 
 
 
@@ -22981,7 +22981,7 @@ Dynamics
 
 **Derived Variables**
     : **i** =&nbsp;g * (e_rev - (v/MVOLT)) * NAMP(exposed as **i**)
-    
+
 
 
 
@@ -22990,7 +22990,7 @@ Dynamics
 **Time Derivatives**
     : d **g** /dt = (2.7182818*A - g)/(tau_syn*MSEC)
     : d **A** /dt = -A /(tau_syn*MSEC)
-    
+
 
 
 
@@ -23098,7 +23098,7 @@ Dynamics
 
 
 **State Variables**
-: **I**: Dimensionless 
+: **I**: Dimensionless
 : **A**: Dimensionless (exposed as **A**)
 
 
@@ -23122,7 +23122,7 @@ Dynamics
 
 **Derived Variables**
     : **i** =&nbsp;I * NAMP(exposed as **i**)
-    
+
 
 
 
@@ -23131,7 +23131,7 @@ Dynamics
 **Time Derivatives**
     : d **I** /dt = (2.7182818*A - I)/(tau_syn*MSEC)
     : d **A** /dt = -A /(tau_syn*MSEC)
-    
+
 
 
 
@@ -23286,7 +23286,7 @@ Dynamics
     : d **tsince** /dt = 1
     : d **tnextUsed** /dt = 0
     : d **tnextIdeal** /dt = 0
-    
+
 
 
 
@@ -23402,7 +23402,7 @@ Dynamics
 
 
 **State Variables**
-: **t**: dimensions:time 
+: **t**: dimensions:time
 
 
 
@@ -24411,4 +24411,3 @@ Name $ description $ reference
 <a name="volume"/>
 
 - volume <dimensions:volume>
-

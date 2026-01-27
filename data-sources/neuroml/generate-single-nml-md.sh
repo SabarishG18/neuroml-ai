@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright 2025 Ankur Sinha
-# Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com> 
+# Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 # File : data/scripts/generate-single-nml-md.sh
 #
 

@@ -1655,7 +1655,7 @@ The generated LEMS simulation file is shown below:
 
 <Lems>
 
-    <!-- 
+    <!--
 
         This LEMS file has been automatically generated using PyNeuroML v1.1.13 (libNeuroML v0.5.8)
 
@@ -2185,9 +2185,9 @@ Help on class ExplicitInput in module neuroml.nml.nml:
 
 class ExplicitInput(BaseWithoutId)
  |  ExplicitInput(target: 'one str (required)' = None, input: 'one str (required)' = None, destination: 'one str (optional)' = None, gds_collector_=None, **kwargs_)
- |  
+ |
  |  ExplicitInput -- An explicit input ( anything which extends  **basePointCurrent**  ) to a target cell in a population
- |  
+ |
  ...
 
 
@@ -2197,7 +2197,7 @@ Help on class InputList in module neuroml.nml.nml:
 
 class InputList(Base)
  |  InputList(id: 'one NonNegativeInteger (required)' = None, populations: 'one NmlId (required)' = None, component: 'one NmlId (required)' = None, input: 'list of Input(s) (optional)' = None, input_ws: 'list of InputW(s) (optional)' = None, gds_collector_=None, **kwargs_)
- |  
+ |
  |  InputList -- An explicit list of  **input** s to a **population.**
  ...
 ```
@@ -3531,7 +3531,7 @@ The generated LEMS file is here:
 
 <Lems>
 
-    <!-- 
+    <!--
 
         This LEMS file has been automatically generated using PyNeuroML v1.1.13 (libNeuroML v0.5.8)
 
@@ -14927,7 +14927,7 @@ Read the paper: [NeuroML-DB: Sharing and characterizing data-driven neuroscience
 ```
 Figure: ../images/NML-DB.png
 
-The NeuroML Database contains NeuroML files for many [cells](https://neuroml-db.org/model_info?model_id=NMLCL000938) (left above), [channels](https://neuroml-db.org/model_info?model_id=NMLCH000103) (right) and synapses taken from Open Source Brain, Blue Brain Project, Allen Institute and more.  
+The NeuroML Database contains NeuroML files for many [cells](https://neuroml-db.org/model_info?model_id=NMLCL000938) (left above), [channels](https://neuroml-db.org/model_info?model_id=NMLCH000103) (right) and synapses taken from Open Source Brain, Blue Brain Project, Allen Institute and more.
 
 ```
 
@@ -14975,7 +14975,7 @@ To add your NeuroML model to Open Source Brain, please see the information on th
 
 ## Other related projects
 ```
-NOTE: 
+NOTE:
 Needs introductory text.
 ```
 
@@ -22053,7 +22053,7 @@ The graphs also show ranges of parameters that provide fits, so users can also h
 
 Models described in NeuroML can be run across multiple simulators, and it it essential that the activity (e.g. spike times) of the models are as close as possible across all of these independently developed platforms.
 
-It is also important to validate that the behaviour of a given NeuroML model reproduces some recorded aspect of the biological equivalent.  
+It is also important to validate that the behaviour of a given NeuroML model reproduces some recorded aspect of the biological equivalent.
 
 ## Testing behaviour of NeuroML models across simulators
 
@@ -22155,7 +22155,7 @@ Here is the XML for a simple integrate-and-fire cell definition:
      <Exposure name="v" dimension="voltage"/>
 
      <Dynamics>
-         <StateVariable name="v" exposure="v" dimension="voltage" />   
+         <StateVariable name="v" exposure="v" dimension="voltage" />
          <StateVariable name="tin" dimension="time"/>
          <OnStart>
              <StateAssignment variable="v" value="v0"/>
@@ -22633,9 +22633,9 @@ This page is structured as a walk-through of a single example explaining the var
 
 
     <Include file="SingleSimulation.xml" />
-    
+
     <Simulation id="sim1" length="80ms" step="0.01ms" target="net1">
-        <Display id="d0" title="Example 1: Dimensions, Units, ComponentTypes and Components" 
+        <Display id="d0" title="Example 1: Dimensions, Units, ComponentTypes and Components"
                  timeScale="1ms" xmin="-10" xmax="90" ymin="-90" ymax="60">
             <Line id="tsince" quantity="p1[0]/tsince" scale="1ms" timeScale="1ms" color="#00c000" />
             <Line id="p3v" quantity="p3[0]/v" scale="1mV" timeScale="1ms" color="#0000f0" />
@@ -22665,10 +22665,10 @@ This is done with the ComponentType element and child Parameter elements.
 A simple cell model with three parameters could be defined as:
 
 ``` xml
-<ComponentType name="cell1">     
-   <Parameter name="threshold" dimension="voltage" />     
-   <Parameter name="refractoryPeriod" dimension="time" />     
-   <Parameter name="capacitance" dimension="capacitance" />    
+<ComponentType name="cell1">
+   <Parameter name="threshold" dimension="voltage" />
+   <Parameter name="refractoryPeriod" dimension="time" />
+   <Parameter name="capacitance" dimension="capacitance" />
 </ComponentType>
 ```
 Each of the Parameter elements defines a parameter that should be supplied when a component is defined based on this type.
@@ -22713,7 +22713,7 @@ You could define a new type without the threshold, but it is neater to still use
 This can be done by creating a new type that extends the cell1 type and includes a Fixed element to fix the threshold:
 
 ``` xml
-<ComponentType name="cell2" extends="cell1">     
+<ComponentType name="cell2" extends="cell1">
    <Fixed parameter="threshold" value="-45mV" />
 </ComponentType>
 ```
@@ -22732,18 +22732,18 @@ In general, many components may be based on one type, and one component may give
 Here is a basic capacitative cell with a leaking potential and a simple event handler.
 
 ``` xml
-<ComponentType name="cell3" extends="cell1">     
-   <Parameter name="leakConductance" dimension="conductance" />     
-   <Parameter name="leakReversal" dimension="voltage" />     
-   <Parameter name="deltaV" dimension="voltage" />     
-   <EventPort name="spikes-in" direction="in" />     
-   <Exposure name="v" dimension="voltage" />     
-   <Dynamics>        
-      <StateVariable name="v" exposure="v" dimension="voltage" />        
-      <TimeDerivative variable="v" value="leakConductance * (leakReversal - v) / capacitance" />        
-      <OnEvent port="spikes-in">             
-         <StateAssignment variable="v" value="v + deltaV" />        
-      </OnEvent>     
+<ComponentType name="cell3" extends="cell1">
+   <Parameter name="leakConductance" dimension="conductance" />
+   <Parameter name="leakReversal" dimension="voltage" />
+   <Parameter name="deltaV" dimension="voltage" />
+   <EventPort name="spikes-in" direction="in" />
+   <Exposure name="v" dimension="voltage" />
+   <Dynamics>
+      <StateVariable name="v" exposure="v" dimension="voltage" />
+      <TimeDerivative variable="v" value="leakConductance * (leakReversal - v) / capacitance" />
+      <OnEvent port="spikes-in">
+         <StateAssignment variable="v" value="v + deltaV" />
+      </OnEvent>
    </Dynamics>
 </ComponentType>
 ```
@@ -22758,17 +22758,17 @@ The test attribute in the OnCondition element is a boolean valued expression.
 These use Fortran style operators (.gt. and .lt. for > and <) to avoid confusion with xml angle brackets.
 
 ``` xml
-<ComponentType name="spikeGenerator">     
-   <Parameter name="period" dimension="time" />     
-   <EventPort name="a" direction="out" />     
-   <Exposure name="tsince" dimension="time" />     
-   <Dynamics>         
-      <StateVariable name="tsince" exposure="tsince" dimension="time" />         
-      <TimeDerivative variable="tsince" value="1" />         
-      <OnCondition test="tsince .gt. period">             
-         <StateAssignment variable="tsince" value="0" />             
-         <EventOut port="a" />         
-      </OnCondition>     
+<ComponentType name="spikeGenerator">
+   <Parameter name="period" dimension="time" />
+   <EventPort name="a" direction="out" />
+   <Exposure name="tsince" dimension="time" />
+   <Dynamics>
+      <StateVariable name="tsince" exposure="tsince" dimension="time" />
+      <TimeDerivative variable="tsince" value="1" />
+      <OnCondition test="tsince .gt. period">
+         <StateAssignment variable="tsince" value="0" />
+         <EventOut port="a" />
+      </OnCondition>
    </Dynamics>
 </ComponentType>
 ```
@@ -22780,15 +22780,15 @@ Instead, it asks for access to the global time variable ("t" is the one global v
 [aside - there's a slight problem here since t exists even if the model doesn't define a dimension called time].
 
 ``` xml
-<ComponentType name="spikeGenerator2" extends="spikeGenerator">     
-   <Dynamics>         
-      <GlobalVariable name="t" dimension="time" />         
-      <StateVariable name="tlast" dimension="time" />         
-      <DerivedVariable name="tsince" exposure="tsince" value="t - tlast" />         
-      <OnCondition test="t - tlast .gt. period">             
-         <StateAssignment variable="tlast" value="t" />             
-         <EventOut port="a" />         
-      </OnCondition>     
+<ComponentType name="spikeGenerator2" extends="spikeGenerator">
+   <Dynamics>
+      <GlobalVariable name="t" dimension="time" />
+      <StateVariable name="tlast" dimension="time" />
+      <DerivedVariable name="tsince" exposure="tsince" value="t - tlast" />
+      <OnCondition test="t - tlast .gt. period">
+         <StateAssignment variable="tlast" value="t" />
+         <EventOut port="a" />
+      </OnCondition>
    </Dynamics>
 </ComponentType>
 ```
@@ -22813,26 +22813,26 @@ This is analogous to an abstract class in java: you can't actually make a compon
 So here is the basic HHRate and its three extensions:
 
 ``` xml
-<ComponentType name="HHRate">     
-   <Parameter name="rate" dimension="per_time" />     
-   <Parameter name="midpoint" dimension="voltage" />     
-   <Parameter name="scale" dimension="voltage" />     
-   <Exposure name="r" dimension="per_time" />    
+<ComponentType name="HHRate">
+   <Parameter name="rate" dimension="per_time" />
+   <Parameter name="midpoint" dimension="voltage" />
+   <Parameter name="scale" dimension="voltage" />
+   <Exposure name="r" dimension="per_time" />
 </ComponentType>
-<ComponentType name="HHExpRate" extends="HHRate">     
-   <Dynamics>         
-      <DerivedVariable name="r" exposure="r" value="rate * exp((v - midpoint)/scale)" />     
+<ComponentType name="HHExpRate" extends="HHRate">
+   <Dynamics>
+      <DerivedVariable name="r" exposure="r" value="rate * exp((v - midpoint)/scale)" />
    </Dynamics>
 </ComponentType>
-<ComponentType name="HHSigmoidRate" extends="HHRate">     
-   <Dynamics>         
-      <DerivedVariable name="r" exposure="r" value="rate / (1 + exp(0 - (v - midpoint)/scale))" />     
+<ComponentType name="HHSigmoidRate" extends="HHRate">
+   <Dynamics>
+      <DerivedVariable name="r" exposure="r" value="rate / (1 + exp(0 - (v - midpoint)/scale))" />
    </Dynamics>
 </ComponentType>
-<ComponentType name="HHExpLinearRate" extends="HHRate">     
-   <Dynamics>         
-      <DerivedVariable name="x" value="(v - midpoint) / scale" />         
-      <DerivedVariable name="r" exposure="r" value="rate * x / (1 - exp(0 - x))" />     
+<ComponentType name="HHExpLinearRate" extends="HHRate">
+   <Dynamics>
+      <DerivedVariable name="x" value="(v - midpoint) / scale" />
+      <DerivedVariable name="r" exposure="r" value="rate * x / (1 - exp(0 - x))" />
    </Dynamics>
 </ComponentType>
 ```
@@ -22841,18 +22841,18 @@ This introduces the Child element which says that components built using this ty
 A HH gate needs subcomponents for the forward and reverse rates.
 
 ``` xml
-<ComponentType name="HHGate0">     
-   <Parameter name="power" dimension="none" />      
-   <Child name="Forward" type="HHRate" />     
-   <Child name="Reverse" type="HHRate" />     
-   <Exposure name="fcond" dimension="none" />     
-   <Requirement name="v" dimension="voltage" />     
-   <Dynamics>         
-      <StateVariable name="q" dimension="none" />         
-      <DerivedVariable name="rf" select="Forward/r" />         
-      <DerivedVariable name="rr" select="Reverse/r" />          
-      <TimeDerivative variable="q" value="rf * (1 - q) - rr * q" />         
-      <DerivedVariable name="fcond" exposure="fcond" value="q^power" />     
+<ComponentType name="HHGate0">
+   <Parameter name="power" dimension="none" />
+   <Child name="Forward" type="HHRate" />
+   <Child name="Reverse" type="HHRate" />
+   <Exposure name="fcond" dimension="none" />
+   <Requirement name="v" dimension="voltage" />
+   <Dynamics>
+      <StateVariable name="q" dimension="none" />
+      <DerivedVariable name="rf" select="Forward/r" />
+      <DerivedVariable name="rr" select="Reverse/r" />
+      <TimeDerivative variable="q" value="rf * (1 - q) - rr * q" />
+      <DerivedVariable name="fcond" exposure="fcond" value="q^power" />
    </Dynamics>
 </ComponentType>
 ```
@@ -22863,20 +22863,20 @@ Instead of q which is defined on [0, 1] you can use x defined on (-infinity, inf
 This is what it looks like with x instead of q:
 
 ``` xml
-<ComponentType name="HHGate">     
-   <Parameter name="power" dimension="none" />      
-   <Child name="Forward" type="HHRate" />     
-   <Child name="Reverse" type="HHRate" />     
-   <Exposure name="fcond" dimension="none" />     
-   <Requirement name="v" dimension="voltage" />     
-   <Dynamics>         
-      <StateVariable name="x" dimension="none" />         
-      <DerivedVariable name="ex" dimension="none" value="exp(x)" />         
-      <DerivedVariable name="q" dimension="none" value="ex / (1 + ex)" />         
-      <DerivedVariable name="rf" select="Forward/r" />         
-      <DerivedVariable name="rr" select="Reverse/r" />          
-      <TimeDerivative variable="x" value="(1 + ex)^2 / ex * (rf * (1 - q) - rr * q)" />         
-      <DerivedVariable name="fcond" exposure="fcond" value="q^power" />     
+<ComponentType name="HHGate">
+   <Parameter name="power" dimension="none" />
+   <Child name="Forward" type="HHRate" />
+   <Child name="Reverse" type="HHRate" />
+   <Exposure name="fcond" dimension="none" />
+   <Requirement name="v" dimension="voltage" />
+   <Dynamics>
+      <StateVariable name="x" dimension="none" />
+      <DerivedVariable name="ex" dimension="none" value="exp(x)" />
+      <DerivedVariable name="q" dimension="none" value="ex / (1 + ex)" />
+      <DerivedVariable name="rf" select="Forward/r" />
+      <DerivedVariable name="rr" select="Reverse/r" />
+      <TimeDerivative variable="x" value="(1 + ex)^2 / ex * (rf * (1 - q) - rr * q)" />
+      <DerivedVariable name="fcond" exposure="fcond" value="q^power" />
    </Dynamics>
 </ComponentType>
 ```
@@ -22884,14 +22884,14 @@ Now the gate type has been defined, it can be used to say what a HH Channel actu
 In this picture, a channel just has a conductance and one or more gates:
 
 ``` xml
-<ComponentType name="HHChannel">     
-   <Parameter name="conductance" dimension="conductance" />     
-   <Children name="gates" type="HHGate" min="0" max="4" />     
-   <Requirement name="v" dimension="voltage" />     
-   <Exposure name="g" dimension="conductance" />          
-   <Dynamics>                  
-      <DerivedVariable name="gatefeff" select="gates[*]/fcond" reduce="multiply" />         
-      <DerivedVariable name="g" exposure="g" value="conductance * gatefeff" />     
+<ComponentType name="HHChannel">
+   <Parameter name="conductance" dimension="conductance" />
+   <Children name="gates" type="HHGate" min="0" max="4" />
+   <Requirement name="v" dimension="voltage" />
+   <Exposure name="g" dimension="conductance" />
+   <Dynamics>
+      <DerivedVariable name="gatefeff" select="gates[*]/fcond" reduce="multiply" />
+      <DerivedVariable name="g" exposure="g" value="conductance * gatefeff" />
    </Dynamics>
 </ComponentType>
 ```
@@ -22905,14 +22905,14 @@ The classic Hodgkin-Huxley sodium channel can be represented as:
 
 
 ``` xml
-<HHChannel id="na" conductance="20pS">     
-   <HHGate id="m" power="3">         
-      <Forward type="HHExpLinearRate" rate="1.per_ms" midpoint="-40mV" scale="10mV" />         
-      <Reverse type="HHExpRate" rate="4per_ms" midpoint="-65mV" scale="-18mV" />     
-   </HHGate>          
-   <HHGate id="h" power="1">         
-      <Forward type="HHExpRate" rate="0.07per_ms" midpoint="-65.mV" scale="-20.mV" />         
-      <Reverse type="HHSigmoidRate" rate="1per_ms" midpoint="-35mV" scale="10mV" />     
+<HHChannel id="na" conductance="20pS">
+   <HHGate id="m" power="3">
+      <Forward type="HHExpLinearRate" rate="1.per_ms" midpoint="-40mV" scale="10mV" />
+      <Reverse type="HHExpRate" rate="4per_ms" midpoint="-65mV" scale="-18mV" />
+   </HHGate>
+   <HHGate id="h" power="1">
+      <Forward type="HHExpRate" rate="0.07per_ms" midpoint="-65.mV" scale="-20.mV" />
+      <Reverse type="HHSigmoidRate" rate="1per_ms" midpoint="-35mV" scale="10mV" />
    </HHGate>
 </HHChannel>
 ```
@@ -22920,10 +22920,10 @@ The potassium channel uses exactly the same types, but has only one gate:
 
 
 ``` xml
-<HHChannel id="k" conductance="20pS">     
-   <HHGate id="n" power="4">         
-      <Forward type="HHExpLinearRate" rate="0.1per_ms" midpoint="-55mV" scale="10mV" />         
-      <Reverse type="HHExpRate" rate="0.125per_ms" midpoint="-65mV" scale="-80mV" />     
+<HHChannel id="k" conductance="20pS">
+   <HHGate id="n" power="4">
+      <Forward type="HHExpLinearRate" rate="0.1per_ms" midpoint="-55mV" scale="10mV" />
+      <Reverse type="HHExpRate" rate="0.125per_ms" midpoint="-65mV" scale="-80mV" />
    </HHGate>
 </HHChannel>
 ```
@@ -22936,16 +22936,16 @@ There is one new construct here: the ComponentRef element which in this case say
 The Dynamics block for a cannel population just computes the total conductance and then the current, in this case using Ohm's law.
 
 ``` xml
-<ComponentType name="ChannelPopulation">     
-   <ComponentRef name="channel" type="HHChannel" />     
-   <Parameter name="number" dimension="none" />     
-   <Parameter name="erev" dimension="voltage" />     
-   <Requirement name="v" dimension="voltage" />     
-   <Exposure name="current" dimension="current" />     
-   <Dynamics>         
-      <DerivedVariable name="channelg" select="channel/g" />         
-      <DerivedVariable name="geff" value="channelg * number" />         
-      <DerivedVariable name="current" exposure="current" value="geff * (erev - v)" />     
+<ComponentType name="ChannelPopulation">
+   <ComponentRef name="channel" type="HHChannel" />
+   <Parameter name="number" dimension="none" />
+   <Parameter name="erev" dimension="voltage" />
+   <Requirement name="v" dimension="voltage" />
+   <Exposure name="current" dimension="current" />
+   <Dynamics>
+      <DerivedVariable name="channelg" select="channel/g" />
+      <DerivedVariable name="geff" value="channelg * number" />
+      <DerivedVariable name="current" exposure="current" value="geff * (erev - v)" />
    </Dynamics>
 </ComponentType>
 ```
@@ -22953,19 +22953,19 @@ To use these populations, they need inserting in a cell.
 The following type represents a simple cell with a number of populations and an option to inject a current so it does something interesting.
 
 ``` xml
-<ComponentType name="HHCell">     
-   <Parameter name="capacitance" dimension="capacitance" />     
-   <Children name="populations" type="ChannelPopulation" />     
-   <Parameter name="injection" dimension="current" />     
-   <Parameter name="v0" dimension="voltage" />     
-   <Exposure name="v" dimension="voltage" />     
-   <Dynamics>         
-      <OnStart>              
-         <StateAssignment variable="v" value="v0" />         
-      </OnStart>             
-      <DerivedVariable name="totcurrent" select="populations[*]/current" reduce="add" />         
-      <StateVariable name="v" dimension="voltage" />          
-      <TimeDerivative variable="v" value="(totcurrent + injection) / capacitance" />     
+<ComponentType name="HHCell">
+   <Parameter name="capacitance" dimension="capacitance" />
+   <Children name="populations" type="ChannelPopulation" />
+   <Parameter name="injection" dimension="current" />
+   <Parameter name="v0" dimension="voltage" />
+   <Exposure name="v" dimension="voltage" />
+   <Dynamics>
+      <OnStart>
+         <StateAssignment variable="v" value="v0" />
+      </OnStart>
+      <DerivedVariable name="totcurrent" select="populations[*]/current" reduce="add" />
+      <StateVariable name="v" dimension="voltage" />
+      <TimeDerivative variable="v" value="(totcurrent + injection) / capacitance" />
    </Dynamics>
 </ComponentType>
 ```
@@ -22977,8 +22977,8 @@ Now all the definitions are in place to define a cell model with a couple of cha
 
 
 ``` xml
-<HHCell id="hhcell_1" capacitance="1pF" injection="4pA" v0="-60mV">     
-   <ChannelPopulation channel="na" number="6000" erev="50mV" />     
+<HHCell id="hhcell_1" capacitance="1pF" injection="4pA" v0="-60mV">
+   <ChannelPopulation channel="na" number="6000" erev="50mV" />
    <ChannelPopulation channel="k" number="1800" erev="-77mV" />
 </HHCell>
 ```
@@ -22999,9 +22999,9 @@ It also contains an embedded display element so the results of the simulation ca
 These are also user-defined types: their definitions will be presented in example 6.
 
 ``` xml
-<Simulation length="80ms" step="0.05ms" target="hhcell_1">     
-   <Display unit="ms">         
-      <Line quantity="v" unit="mV" color="#0000f0" />     
+<Simulation length="80ms" step="0.05ms" target="hhcell_1">
+   <Display unit="ms">
+      <Line quantity="v" unit="mV" color="#0000f0" />
    </Display>
 </Simulation>
 ```
@@ -23032,16 +23032,16 @@ This defines a few components, then a network that uses them and a simulation to
 ```
 
 <Lems>
- 
+
     <Target component="sim1"/>
- 
+
     <Include file="ex2dims.xml"/>
-    <Include file="hhchannel.xml"/> 
- 
+    <Include file="hhchannel.xml"/>
+
     <Include file="hhcell.xml"/>
     <Include file="spikegenerators.xml"/>
     <Include file="hhmodels.xml"/>
-    <Include file="misciaf.xml"/> 
+    <Include file="misciaf.xml"/>
 
     <Include file="SimpleNetwork.xml"/>
 
@@ -23049,7 +23049,7 @@ This defines a few components, then a network that uses them and a simulation to
         <ChannelPopulation channel="na" number="6000" erev="50mV"/>
         <ChannelPopulation channel="k" number="1800" erev="-77mV"/>
     </HHCell>
- 
+
     <Component id="gen1" type="spikeGenerator" period="30ms"/>
 
     <Component id="gen2" type="spikeGenerator2" period="32ms"/>
@@ -23062,17 +23062,17 @@ This defines a few components, then a network that uses them and a simulation to
         <Population id="p1" component="gen1" size="1"/>
         <Population id="p2" component="gen2" size="1"/>
         <Population id="p3" component="iaf3cpt" size="1"/>
-   
+
         <Population id="hhpop" component="hhcell_1" size="1"/>
-    
-   
+
+
         <EventConnectivity id="p1-p3" source="p1" target="p3">
             <Connections type="AllAll"/>
         </EventConnectivity>
     </Network>
-    
+
     <Include file="SingleSimulation.xml" />
-    
+
     <Simulation id="sim1" length="80ms" step="0.01ms" target="net1">
         <Display id="d0" title="Example 2" timeScale="1ms" xmin="-10" xmax="90" ymin="-90" ymax="60">
             <Line id="tsince" quantity="p1[0]/tsince" scale="1ms" timeScale="1ms" color="#00c000" />
@@ -23090,7 +23090,7 @@ This defines a few components, then a network that uses them and a simulation to
 
 ```
 
-<Lems> 
+<Lems>
 
     <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
     <Dimension name="time" t="1"/>
@@ -23100,8 +23100,8 @@ This defines a few components, then a network that uses them and a simulation to
     <Dimension name="current" i="1"/>
     <Dimension name="temperature" k="1"/>
 
-    <Unit symbol="mV" dimension="voltage" power="-3"/> 
-    <Unit symbol="ms" dimension="time" power="-3"/> 
+    <Unit symbol="mV" dimension="voltage" power="-3"/>
+    <Unit symbol="ms" dimension="time" power="-3"/>
     <Unit symbol="pS" dimension="conductance" power="-12"/>
     <Unit symbol="nS" dimension="conductance" power="-9"/>
     <Unit symbol="uF" dimension="capacitance" power="-6"/>
@@ -23131,7 +23131,7 @@ The file hhchannel.xml contains complete definitions of a fairly general HH-styl
     <Dimension name="capacitance" m="-1" l="-2" t="4" i="2"/>
     <Dimension name="current" i="1"/>
 
-    
+
     <ComponentType name="HHRate">
         <Parameter name="rate" dimension="per_time"/>
         <Parameter name="midpoint" dimension="voltage"/>
@@ -23161,28 +23161,28 @@ The file hhchannel.xml contains complete definitions of a fairly general HH-styl
             <DerivedVariable name="r" dimension="per_time" exposure="r" value="rate * x / (1 - exp(-x))"/>
         </Dynamics>
     </ComponentType>
- 
+
 
     <ComponentType name="HHGate0">
-        <Parameter name="power" dimension="none"/> 
+        <Parameter name="power" dimension="none"/>
         <Child name="Forward" type="HHRate"/>
         <Child name="Reverse" type="HHRate"/>
         <Requirement name="v" dimension="voltage"/>
         <Exposure name="fcond" dimension="none"/>
-    
+
         <Dynamics simultaneous="true">
             <StateVariable name="q" dimension="none"/>
             <DerivedVariable dimension="per_time" name="rf" select="Forward/r"/>
-            <DerivedVariable dimension="per_time" name="rr" select="Reverse/r"/> 
+            <DerivedVariable dimension="per_time" name="rr" select="Reverse/r"/>
             <TimeDerivative variable="q" value="rf * (1 - q) - rr * q"/>
             <DerivedVariable name="fcond" dimension="none" exposure="fcond" value="q^power"/>
-        </Dynamics>    
+        </Dynamics>
     </ComponentType>
 
 
     <Include file="hhaltgate.xml"/>
 
-    
+
     <ComponentType name="HHChannel">
         <Parameter name="conductance" dimension="conductance"/>
         <Children name="gates" type="HHGate"/>
@@ -23205,26 +23205,26 @@ As mentioned in example1, the numerics are too feeble to cope with this gate def
 ```
 
 <Lems>
- 
+
     <ComponentType name="HHGate">
-        <Parameter name="power" dimension="none"/> 
+        <Parameter name="power" dimension="none"/>
         <Child name="Forward" type="HHRate"/>
         <Child name="Reverse" type="HHRate"/>
         <Requirement name="v" dimension="voltage"/>
         <Exposure name="fcond" dimension="none"/>
-    
-   
+
+
         <Dynamics simultaneous="false">
             <StateVariable name="x" dimension="none"/>
             <DerivedVariable name="ex" dimension="none" value="exp(x)"/>
             <DerivedVariable name="q" dimension="none" value="ex / (1 + ex)"/>
             <DerivedVariable name="rf" dimension="per_time" select="Forward/r"/>
-            <DerivedVariable name="rr" dimension="per_time" select="Reverse/r"/> 
-        
+            <DerivedVariable name="rr" dimension="per_time" select="Reverse/r"/>
+
             <TimeDerivative variable="x" value="(1 + ex)^2 / ex * (rf * (1 - q) - rr * q)"/>
-      
+
             <DerivedVariable name="fcond" dimension="none" exposure="fcond" value="q^power"/>
-        </Dynamics>    
+        </Dynamics>
     </ComponentType>
 
 </Lems>
@@ -23245,7 +23245,7 @@ The file hhcell.xml defines a simple cell model with some populations of HH chan
     <Dimension name="capacitance" m="-1" l="-2" t="4" i="2"/>
     <Dimension name="current" i="1"/>
 
-    
+
     <ComponentType name="ChannelPopulation">
         <ComponentReference name="channel" type="HHChannel"/>
         <Parameter name="number" dimension="none"/>
@@ -23253,17 +23253,17 @@ The file hhcell.xml defines a simple cell model with some populations of HH chan
         <Requirement name="v" dimension="voltage"/>
         <Exposure name="current" dimension="current"/>
         <Exposure name="geff" dimension="conductance"/>
-  
+
         <Structure>
             <ChildInstance component="channel"/>
         </Structure>
-  
+
         <Dynamics simultaneous="false">
             <DerivedVariable name="channelg" dimension="conductance" select="channel/g"/>
             <DerivedVariable name="geff" exposure="geff" value="channelg * number"/>
             <DerivedVariable name="current" exposure="current" value="geff * (erev - v)"/>
         </Dynamics>
-    
+
     </ComponentType>
 
 
@@ -23273,18 +23273,18 @@ The file hhcell.xml defines a simple cell model with some populations of HH chan
         <Parameter name="injection" dimension="current"/>
         <Parameter name="v0" dimension="voltage"/>
         <Exposure name="v" dimension="voltage"/>
-    
+
         <Dynamics simultaneous="true">
             <OnStart>
                 <StateAssignment variable="v" value="v0"/>
             </OnStart>
-  
+
             <DerivedVariable name="totcurrent" dimension="current" select="populations[*]/current" reduce="add"/>
-            <StateVariable name="v" exposure="v" dimension="voltage"/> 
+            <StateVariable name="v" exposure="v" dimension="voltage"/>
             <TimeDerivative variable="v" value="(totcurrent + injection) / capacitance"/>
         </Dynamics>
     </ComponentType>
- 
+
 </Lems>
 
 ```
@@ -23297,7 +23297,7 @@ A couple of spike generators.
 <Lems>
 
     <Dimension name="time" t="1"/>
- 
+
 
     <ComponentType name="spikeGenerator">
         <Parameter name="period" dimension="time"/>
@@ -23324,7 +23324,7 @@ A couple of spike generators.
             </OnCondition>
         </Dynamics>
     </ComponentType>
- 
+
 
 </Lems>
 
@@ -23340,17 +23340,17 @@ These are the standard HH sodium and potassium channels (as used in Rallpack3).
 <Lems>
     <Include file="hhchannel.xml"/>
 
-    <Unit symbol="mV" dimension="voltage" power="-3"/> 
+    <Unit symbol="mV" dimension="voltage" power="-3"/>
     <Unit symbol="per_ms" dimension="per_time" power="3"/>
     <Unit symbol="pS" dimension="conductance" power="-12"/>
 
-    
+
     <HHChannel id="na" conductance="20pS">
         <HHGate id="m" power="3">
             <Forward type="HHExpLinearRate" rate="1.per_ms" midpoint="-40mV" scale="10mV"/>
             <Reverse type="HHExpRate" rate="4per_ms" midpoint="-65mV" scale="-18mV"/>
         </HHGate>
-    
+
         <HHGate id="h" power="1">
             <Forward type="HHExpRate" rate="0.07per_ms" midpoint="-65.mV" scale="-20.mV"/>
             <Reverse type="HHSigmoidRate" rate="1per_ms" midpoint="-35mV" scale="10mV"/>
@@ -23375,9 +23375,9 @@ Some miscellaneous iaf models.
 ```
 
 <Lems>
-    
+
     <Include file="elecdims.xml"/>
-   
+
 
     <ComponentType name="iaf1">
         <Parameter name="threshold" dimension="voltage"/>
@@ -23396,14 +23396,14 @@ Some miscellaneous iaf models.
         <Dynamics>
             <StateVariable name="v" exposure="v" dimension="voltage"/>
             <TimeDerivative variable="v" value="leakConductance * (leakReversal - v) / capacitance"/>
-             
+
             <OnEvent port="spikes-in">
                 <StateAssignment variable="v" value="v + deltaV"/>
-            </OnEvent>      
+            </OnEvent>
         </Dynamics>
 
     </ComponentType>
- 
+
 
 </Lems>
 
@@ -23421,7 +23421,7 @@ Finally, a small collection of dimension definitions useful for things like the 
     <Dimension name="conductance" m="-1" l="-2" t="3" i="2"/>
     <Dimension name="capacitance" m="-1" l="-2" t="4" i="2"/>
     <Dimension name="current" i="1"/>
-    
+
 </Lems>
 
 ```
@@ -23751,7 +23751,7 @@ The full model including both the type definitions and the components is include
 
     <Environment id="env1">
         <MembranePotential species="Na" reversal="50mV"/>
-        <MembranePotential species="K" reversal="-80mV"/>    
+        <MembranePotential species="K" reversal="-80mV"/>
     </Environment>
 
 
@@ -23760,7 +23760,7 @@ The full model including both the type definitions and the components is include
         <ComponentReference name="species" type="Species"/>
         <Children name="gates" type="KSGate"/>
         <Exposure name="g" dimension="conductance"/>
-    
+
         <Dynamics>
             <DerivedVariable name="fopen" dimension="none" select="gates[*]/fopen" reduce="multiply"/>
             <DerivedVariable name="g" exposure="g" dimension="conductance" value="fopen * conductance"/>
@@ -23768,30 +23768,30 @@ The full model including both the type definitions and the components is include
     </ComponentType>
 
 
-    
+
     <ComponentType name="KSGate">
         <Parameter name="power" dimension="none"/>
         <Parameter name="deltaV" dimension="voltage"/>
         <Children name="states" type="KSState"/>
         <Children name="transitions" type="KSTransition"/>
         <Exposure name="fopen" dimension="none"/>
-    
-        <Dynamics>   
+
+        <Dynamics>
             <KineticScheme name="ks" nodes="states" stateVariable="occupancy"
-                           edges="transitions" edgeSource="from" edgeTarget="to" 
+                           edges="transitions" edgeSource="from" edgeTarget="to"
                            forwardRate="rf" reverseRate="rr" dependency="v" step="deltaV"/>
-    
+
             <DerivedVariable name="q" dimension="none" select="states[*]/q" reduce="add"/>
             <DerivedVariable name="fopen" exposure="fopen" dimension="none" value="q^power"/>
         </Dynamics>
     </ComponentType>
 
-    
+
     <ComponentType name="KSState">
         <Parameter name="relativeConductance" dimension="none"/>
         <Exposure name="q" dimension="none"/>
         <Exposure name="occupancy" dimension="none"/>
-   
+
         <Dynamics>
             <StateVariable name="occupancy" exposure="occupancy" dimension="none"/>
             <DerivedVariable name="q" exposure="q" value="relativeConductance * occupancy"/>
@@ -23813,7 +23813,7 @@ The full model including both the type definitions and the components is include
         <Link name="to" type="KSState"/>
         <Exposure name="rf" dimension="per_time"/>
         <Exposure name="rr" dimension="per_time"/>
- 
+
     </ComponentType>
 
 
@@ -23824,8 +23824,8 @@ The full model including both the type definitions and the components is include
         <Parameter name="tau" dimension="time"/>
         <Parameter name="tauMin" dimension="time"/>
         <Constant name="kte" dimension="voltage" value="25.3mV"/>
-        <Requirement name="v" dimension="voltage"/>  
-    
+        <Requirement name="v" dimension="voltage"/>
+
         <Dynamics>
             <DerivedVariable name="rf0" dimension="per_time" value="exp(z * gamma * (v - vHalf) / kte) / tau"/>
             <DerivedVariable name="rr0" dimension="per_time" value="exp(-z * (1 - gamma) * (v - vHalf) / kte) / tau"/>
@@ -23847,7 +23847,7 @@ The full model including both the type definitions and the components is include
             <KSClosedState id="c3"/>
             <VHalfTransition from="c1" to="c2" vHalf = "-35mV" z="2.5" gamma="0.8" tau="0.15ms" tauMin="0.001ms"/>
             <VHalfTransition from="c2" to="o1" vHalf = "-35mV" z="2.5" gamma="0.8" tau="0.15ms" tauMin="0.001ms"/>
-            <VHalfTransition from="o1" to="c3" vHalf = "-70mV" z="1.1" gamma="0.90" tau="8.0ms" tauMin="0.01ms"/>         
+            <VHalfTransition from="o1" to="c3" vHalf = "-70mV" z="1.1" gamma="0.90" tau="8.0ms" tauMin="0.01ms"/>
         </KSGate>
     </KSChannel>
 
@@ -23870,15 +23870,15 @@ The full model including both the type definitions and the components is include
         <Exposure name="current" dimension="current"/>
         <DerivedParameter name="erev" dimension="voltage" select="//MembranePotential[species=channel/species]/reversal"/>
         <Dynamics>
-     
+
             <DerivedVariable name="channelg" dimension="conductance" select="channel/g"/>
             <DerivedVariable name="geff" value="channelg * number"/>
             <DerivedVariable name="current" exposure="current" value="geff * (erev - v)"/>
-        </Dynamics>    
-    
-    
-        <Structure>    
-            <ChildInstance component="channel"/>    
+        </Dynamics>
+
+
+        <Structure>
+            <ChildInstance component="channel"/>
         </Structure>
     </ComponentType>
 
@@ -23896,9 +23896,9 @@ The full model including both the type definitions and the components is include
             <OnStart>
                 <StateAssignment variable="v" value="v0"/>
             </OnStart>
-  
+
             <DerivedVariable name="totcurrent" dimension="current" select="populations[*]/current" reduce="add"/>
-            <StateVariable name="v" exposure="v" dimension="voltage"/> 
+            <StateVariable name="v" exposure="v" dimension="voltage"/>
             <TimeDerivative variable="v" value="(totcurrent + injection) / capacitance"/>
         </Dynamics>
     </ComponentType>
@@ -23910,9 +23910,9 @@ The full model including both the type definitions and the components is include
         <ChannelPopulation channel="k1" number="180"/>
     </KSCell>
 
-    
+
     <Include file="SingleSimulation.xml" />
-    
+
     <Simulation id="sim1" length="80ms" step="0.05ms" target="kscell_1">
         <Display id="d0" title="Example 5: References and paths" timeScale="1ms" xmin="-10" xmax="90" ymin="-90" ymax="60">
             <Line id="v" quantity="v" scale="1mV" timeScale="1ms" color="#0000f0"/>
@@ -24097,15 +24097,15 @@ LEMS GUI showing simulation output graphs
 ```
 
 <Lems>
- 
-    <Target component="sim1"/> 
- 
- 
+
+    <Target component="sim1"/>
+
+
     <Include file="ex2dims.xml"/>
     <Include file="spikegenerators.xml"/>
     <Include file="misciaf.xml"/>
 
- 
+
     <Component id="gen1" type="spikeGenerator" period="30ms"/>
 
     <Component id="gen2" type="spikeGenerator2" period="32ms"/>
@@ -24123,11 +24123,11 @@ LEMS GUI showing simulation output graphs
     <ComponentType name="Population">
         <ComponentReference name="component" type="Component"/>
         <Parameter name="size" dimension="none"/>
-   
+
         <Structure>
             <MultiInstantiate number="size" component="component"/>
         </Structure>
-  
+
     </ComponentType>
 
 
@@ -24147,7 +24147,7 @@ LEMS GUI showing simulation output graphs
                 <ForEach instances="../target" as="b">
                     <EventConnection from="a" to="b"/>
                 </ForEach>
-            </ForEach>    
+            </ForEach>
         </Structure>
     </ComponentType>
 
@@ -24155,7 +24155,7 @@ LEMS GUI showing simulation output graphs
     <Network id="net1">
         <Population id="p1" component="gen1" size="2"/>
         <Population id="p3" component="iaf3cpt" size="3"/>
-     
+
         <EventConnectivity id="p1-p3" source="p1" target="p3">
             <Connections type="AllAll"/>
         </EventConnectivity>
@@ -24163,7 +24163,7 @@ LEMS GUI showing simulation output graphs
 
 
     <Include file="SingleSimulation.xml" />
-    
+
     <Simulation id="sim1" length="80ms" step="0.05ms" target="net1">
         <Display id="d0" title="Example 7: User defined types for networks and populations" timeScale="1ms" xmin="-10" xmax="90" ymin="-50" ymax="90">
             <Line id="gen_v" quantity="p3[0]/v" scale="1mV" timeScale="1ms" color="#0000f0"/>
@@ -24229,7 +24229,7 @@ Full listing:
 
 <Lems>
 
-    <Target component="sim1"/> 
+    <Target component="sim1"/>
 
 
     <Include file="ex2dims.xml"/>
@@ -24254,30 +24254,30 @@ Full listing:
 
         <Exposure name="v" dimension="voltage"/>
 
-        <Dynamics>     
-            <StateVariable name="v" exposure="v" dimension="voltage" /> 
-            <StateVariable name="tin" dimension="time"/>       
-            
+        <Dynamics>
+            <StateVariable name="v" exposure="v" dimension="voltage" />
+            <StateVariable name="tin" dimension="time"/>
+
             <OnStart>
                 <StateAssignment variable="v" value="v0"/>
             </OnStart>
 
-            <Regime name="refr">         
-                <OnEntry>             
-                    <StateAssignment variable="tin" value="t" />             
-                    <StateAssignment variable="v" value="vreset" />          
-                </OnEntry>                   
-                <OnCondition test="t .gt. tin + refractoryPeriod">                 
-                    <Transition regime="int" />             
-                </OnCondition>         
-            </Regime>          
+            <Regime name="refr">
+                <OnEntry>
+                    <StateAssignment variable="tin" value="t" />
+                    <StateAssignment variable="v" value="vreset" />
+                </OnEntry>
+                <OnCondition test="t .gt. tin + refractoryPeriod">
+                    <Transition regime="int" />
+                </OnCondition>
+            </Regime>
 
-            <Regime name="int" initial="true">         
-                <TimeDerivative variable="v" value="(current + gleak * (vleak - v)) / capacitance" />         
-                <OnCondition test="v .gt. threshold">             
-                    <EventOut port="out" />             
-                    <Transition regime="refr" />         
-                </OnCondition>         
+            <Regime name="int" initial="true">
+                <TimeDerivative variable="v" value="(current + gleak * (vleak - v)) / capacitance" />
+                <OnCondition test="v .gt. threshold">
+                    <EventOut port="out" />
+                    <Transition regime="refr" />
+                </OnCondition>
                 <OnEvent port="in">
                     <StateAssignment variable="v" value="v + deltaV"/>
                 </OnEvent>
@@ -24290,9 +24290,9 @@ Full listing:
 
     <Component id="gen1" type="spikeGenerator" period="7ms"/>
 
-    
+
     <Component id="multiregime" type="refractiaf" threshold="-50mV" v0="-80mV"
-               refractoryPeriod="20ms" capacitance="1pF" vreset="-80mV" vleak="-90mV" 
+               refractoryPeriod="20ms" capacitance="1pF" vreset="-80mV" vleak="-90mV"
                gleak="5pS" current="0.00001nA" deltaV="5mV"/>
 
 
@@ -24327,7 +24327,7 @@ Full listing:
                 <ForEach instances="../target" as="b">
                     <EventConnection from="a" to="b"/>
                 </ForEach>
-            </ForEach>    
+            </ForEach>
         </Structure>
     </ComponentType>
 
@@ -24423,7 +24423,7 @@ For this, NeuroML version 2 makes use of LEMS (see section: LEMS: Low Entropy Mo
 # NeuroML v1
 
 ```
-NOTE: 
+NOTE:
 NeuroML v1.x is deprecated. This page is maintained for archival purposes only.
 
 Please use NeuroML v2 (see section: NeuroML v2).
@@ -24581,7 +24581,7 @@ Name $ description $ reference
 **name**$ String$ A readable name for the constant.
 **symbol**$ String$ The symbol used in expressions to refer to this constant.
 **value**$ String$ The value of a constant must be a plain number (no units) giving the SI magnitude of the quantity or an expression involving only plain numbers or other constants.
-**dimension**$ String$ 
+**dimension**$ String$
 
 ```
 
@@ -24992,8 +24992,8 @@ Table of Properties (separator='$')
 ```
 Name $ description $ reference
 
-**name**$ String$ 
-**dimension**$ String$ 
+**name**$ String$
+**dimension**$ String$
 **defaultValue**$ String$ The defaultValue for the property must be a plain number (no units) giving the SI magnitude of the quantity.
 
 ```
@@ -25057,8 +25057,8 @@ Table of Properties (separator='$')
 ```
 Name $ description $ reference
 
-**parameter**$ String$ 
-**value**$ String$ 
+**parameter**$ String$
+**value**$ String$
 
 ```
 
@@ -25427,7 +25427,7 @@ Table of Properties (separator='$')
 ```
 Name $ description $ reference
 
-**name**$ String$ 
+**name**$ String$
 
 ```
 
@@ -25441,7 +25441,7 @@ Table of Properties (separator='$')
 ```
 Name $ description $ reference
 
-**name**$ String$ 
+**name**$ String$
 
 ```
 
@@ -25455,7 +25455,7 @@ Table of Properties (separator='$')
 ```
 Name $ description $ reference
 
-**name**$ String$ 
+**name**$ String$
 
 ```
 
@@ -25559,7 +25559,7 @@ Table of Properties (separator='$')
 ```
 Name $ description $ reference
 
-**name**$ String$ 
+**name**$ String$
 
 ```
 
@@ -25947,7 +25947,7 @@ Name $ description $ reference
 **dimension**$ String$ The dimension, or 'none'. This should be the name of an already defined dimension element
 **description**$ String$ An optional description of the derived variable
 **reduce**$ String$ Either 'add' or 'multiply'. This applies if ther are multiple matches to the path or if 'required' is false. In the latter case, for multiply mode, multiplicative expressions in this variable behave as if the term was absent. Additive expressions generate an error. Conversely, if set to 'add' then additive expressions behave as if it was not there and multiplicative ones generateand error.
-**exposure**$ String$ 
+**exposure**$ String$
 **required**$ boolean$ Set to true if it OK for this variable to be absent. See 'reduce' for what happens in this case
 **value**$ String$ A string defining the value of the element
 
@@ -26398,9 +26398,9 @@ Table of Properties (separator='$')
 ```
 Name $ description $ reference
 
-**name**$ String$ 
-**dimension**$ String$ 
-**exposure**$ String$ 
+**name**$ String$
+**dimension**$ String$
+**exposure**$ String$
 
 ```
 
@@ -27185,7 +27185,7 @@ Table of Properties (separator='$')
 Name $ description $ reference
 
 **component**$ String$ name of the component reference that will set the component to be run
-**variable**$ String$ 
+**variable**$ String$
 **increment**$ String$ path to the parameter that sets the step size
 **total**$ String$ path to the parameter that sets the total span of the independent variable to be run
 
@@ -27281,11 +27281,11 @@ Table of Properties (separator='$')
 ```
 Name $ description $ reference
 
-**id**$ String$ 
+**id**$ String$
 **name**$ String$ Name by which the component was declared - this shouldn't be accessible.
 **declaredType**$ String$ Name by which the component was declared - this shouldn't be accessible.
-**type**$ String$ 
-**eXtends**$ String$ 
+**type**$ String$
+**eXtends**$ String$
 
 ```
 
@@ -27584,7 +27584,7 @@ For example `LEMS_HH_Simulation.xml`.
 ```
 Figure: ../images/lems_nml_files.png
 
-Typical organisation for a NeuroML simulation. The main NeuroML model is specified in a file with the network (`*.net.nml`), which can include/point to files containing individual synapses (`*.synapse.nml`) or cell files (`*.cell.nml`). If the latter are conductance based, they may include external channel files (`*.channel.nml`). The main LEMS Simulation file only needs to include the network file, and tools for running simulations of the model refer to just this LEMS file. Exceptions to these conventions are frequent and simulations will run perfectly well with all the elements inside the main LEMS file, but using this scheme will maximise reusability of model elements. 
+Typical organisation for a NeuroML simulation. The main NeuroML model is specified in a file with the network (`*.net.nml`), which can include/point to files containing individual synapses (`*.synapse.nml`) or cell files (`*.cell.nml`). If the latter are conductance based, they may include external channel files (`*.channel.nml`). The main LEMS Simulation file only needs to include the network file, and tools for running simulations of the model refer to just this LEMS file. Exceptions to these conventions are frequent and simulations will run perfectly well with all the elements inside the main LEMS file, but using this scheme will maximise reusability of model elements.
 
 ```
 
@@ -27713,7 +27713,7 @@ For example, `../../../` would mean "go up three levels".
 ## Helper functions in pyNeuroML
 
 ```
-NOTE: 
+NOTE:
 These functions require pyNeuroML (see section: pyNeuroML) version 0.5.18+, and pylems (see section: pyLEMS) version 0.5.8+.
 ```
 
@@ -27846,7 +27846,7 @@ These files are crucial in many of the workflows for simulating NeuroML models (
 ```
 Figure: ../images/lems_nml_files.png
 
-Typical organisation for a NeuroML simulation. The main NeuroML model is specified in a file with the network (`*.net.nml`), which can include/point to files containing individual synapses (`*.synapse.nml`) or cell files (`*.cell.nml`). If the latter are conductance based, they may include external channel files (`*.channel.nml`). The main LEMS Simulation file only needs to include the network file, and tools for running simulations of the model refer to just this LEMS file. Exceptions to these conventions are frequent and simulations will run perfectly well with all the elements inside the main LEMS file, but using this scheme will maximise reusability of model elements. 
+Typical organisation for a NeuroML simulation. The main NeuroML model is specified in a file with the network (`*.net.nml`), which can include/point to files containing individual synapses (`*.synapse.nml`) or cell files (`*.cell.nml`). If the latter are conductance based, they may include external channel files (`*.channel.nml`). The main LEMS Simulation file only needs to include the network file, and tools for running simulations of the model refer to just this LEMS file. Exceptions to these conventions are frequent and simulations will run perfectly well with all the elements inside the main LEMS file, but using this scheme will maximise reusability of model elements.
 
 ```
 
@@ -28297,7 +28297,7 @@ Here are some examples of Components written using LEMS to extend NeuroML that c
 
 ## Core NeuroML Tools
 
-The NeuroML initiative supports **a core set of libraries** (mainly in Python and Java) to enable the creation/validation/analysis/simulation of NeuroML models as well as to facilitate adding support for the language to other applications.  
+The NeuroML initiative supports **a core set of libraries** (mainly in Python and Java) to enable the creation/validation/analysis/simulation of NeuroML models as well as to facilitate adding support for the language to other applications.
 
 ```
 Figure: ../../images/pynml_jnml.svg
@@ -28408,9 +28408,9 @@ To use pyNeuroML with specific supporting tools (see section: Applications with 
 
   - VisPy:
 
-    - `pip install pyneuroml[vispy]`:        Qt6 (default): 
+    - `pip install pyneuroml[vispy]`:        Qt6 (default):
     - `pip install pyneuroml[vispy-qt5]`  :   Qt5
-    - `pip install pyneuroml[vispy-common]`: to manually use another [supported backend](https://vispy.org/installation): 
+    - `pip install pyneuroml[vispy-common]`: to manually use another [supported backend](https://vispy.org/installation):
 
   - `pip install pyneuroml[povray]`:         Povray
   - `pip install pyneuroml[plotly]`:       PlotLy
@@ -29038,7 +29038,7 @@ Please follow the instructions there to build jNeuroML from source.
 ### Nightly (pre-release) jar builds:
 
 ```
-NOTE: 
+NOTE:
 Please note that these JARs are considered experimental and should only be used for testing purposes.
 ```
 
@@ -29504,7 +29504,7 @@ This is the approach taken in MOOSE (see section: MOOSE), Arbor (see section: Ar
 
 Some simulators allow models to be created with their preferred native model description format, and then exported in valid NeuroML.
 
-This is the approach taken in NEURON (see section: NEURON and NeuroML) and NetPyNE (see section: NetPyNE and NeuroML). It is also possible to export PyNN (see section: PyNN and NeuroML) models to NeuroML equivalents. 
+This is the approach taken in NEURON (see section: NEURON and NeuroML) and NetPyNE (see section: NetPyNE and NeuroML). It is also possible to export PyNN (see section: PyNN and NeuroML) models to NeuroML equivalents.
 
 ### 4) 3rd party mapping to simulator's own format
 
@@ -29678,7 +29678,7 @@ See [here](https://github.com/OpenSourceBrain/ArborShowcase/blob/main/NeuroML2/t
 
 There is work under way to allow reading of the dynamics of ion channels and synapses which are specified in LEMS into Arbor.
 
-See https://github.com/thorstenhater/nmlcc for more details. 
+See https://github.com/thorstenhater/nmlcc for more details.
 
 ## Network models in Arbor with NeuroMLlite
 
@@ -30294,23 +30294,23 @@ The mod file defining the nas channel is shown below:
 
 ```
 
-: nas_wustenberg.mod --- 
-: 
+: nas_wustenberg.mod ---
+:
 : Filename: nas_wustenberg.mod
-: Description: 
+: Description:
 : Author: Subhasis Ray
-: Maintainer: 
+: Maintainer:
 : Created: Wed Dec 13 19:06:03 EST 2017
-: Version: 
+: Version:
 : Last-Updated: Mon Jun 18 14:38:15 2018 (-0400)
 :           By: Subhasis Ray
-: URL: 
-: Doc URL: 
-: Keywords: 
-: Compatibility: 
+: URL:
+: Doc URL:
+: Keywords:
+: Compatibility:
 
-: Commentary: 
-: 
+: Commentary:
+:
 : NEURON implementation of slow Na+ channel ( NAS ) from Wustenberg
 : DG, Boytcheva M, Grunewald B, Byrne JH, Menzel R, Baxter DA
 
@@ -30325,7 +30325,7 @@ ENDCOMMENT
 
 INDEPENDENT { t FROM 0 TO 1 WITH 1 (ms) }
 
-NEURON { 
+NEURON {
         SUFFIX nas
         USEION na READ ena WRITE ina
         RANGE gbar, ina, g
@@ -30333,15 +30333,15 @@ NEURON {
 
 UNITS {
         (S) = (siemens)
-        (mV) = (millivolt) 
-        (mA) = (milliamp) 
+        (mV) = (millivolt)
+        (mA) = (milliamp)
 }
- 
-PARAMETER { 
+
+PARAMETER {
         gbar = 0.0      (mho/cm2)
 }
- 
-ASSIGNED { 
+
+ASSIGNED {
 	ena	(mV)
         v	(mV)
         ina	(mA/cm2)
@@ -30351,26 +30351,26 @@ ASSIGNED {
         mtau	(ms)
         htau	(ms)
 }
- 
+
 STATE {
     m
     h
 }
 
-BREAKPOINT { 
-        SOLVE states METHOD cnexp 
+BREAKPOINT {
+        SOLVE states METHOD cnexp
         g = gbar * m * m * m * h
         ina = g * ( v - ena )
 }
- 
-INITIAL { 
+
+INITIAL {
         settables(v)
 	m = minf
         h  = hinf
-} 
+}
 
-DERIVATIVE states { 
-        settables(v) 
+DERIVATIVE states {
+        settables(v)
         h' = (hinf - h) / htau
 	m' = (minf - m ) / mtau
 }
@@ -30390,7 +30390,7 @@ DERIVATIVE states {
 :       hinf = 1 / ( 1 + exp((V - Vh) / s))
 :       taum = (taumax - taumin) / (1 + exp((V - Vh1) / s1)) + taumin
 
-PROCEDURE settables(v (mV)) { 
+PROCEDURE settables(v (mV)) {
 UNITSOFF
         TABLE minf, hinf, mtau, htau FROM -120 TO 40 WITH 641
         minf  = 1.0 / (1 + exp((-30.1 - v) / 6.65))
@@ -30646,7 +30646,7 @@ The last remaining channel is the ka channel.
 It's dynamics are defined in the mod file as:
 
 ```
-PROCEDURE settables(v (mV)) { 
+PROCEDURE settables(v (mV)) {
 UNITSOFF
         TABLE minf, hinf, mtau, htau FROM -120 TO 40 WITH 641
         minf  = 1.0 / (1 + exp((-20.1 - v)/16.1))
@@ -31226,7 +31226,7 @@ We will be running a NeuroML  workshop during the upcoming [COMBINE network's HA
 
 **NeuroML hackathon: convert your neuron and network models to open, standardised, reusable formats**
 
-This will be an opportunity for developers of models in computational neuroscience to get an introduction to the aims and structure of NeuroML, a guide to the tools available for building/converting their models to NeuroML, and to receive hands on help with expressing their models (or other published models they are interested in) in NeuroML format, making them more open, accessible and reusable. 
+This will be an opportunity for developers of models in computational neuroscience to get an introduction to the aims and structure of NeuroML, a guide to the tools available for building/converting their models to NeuroML, and to receive hands on help with expressing their models (or other published models they are interested in) in NeuroML format, making them more open, accessible and reusable.
 
 ## Agenda
 
@@ -31413,7 +31413,7 @@ The sessions will make use of the NeuroML Python tools.
 Please follow the documentation to install them on your system if you wish to use them locally:
 
 - PyNeuroML (see section: pyNeuroML)
-- libNeuroML <libNeuroML> 
+- libNeuroML <libNeuroML>
 
 You can also use the interactive Jupyter notebooks from the documentation if you prefer ([example](https://docs.neuroml.org/Userdocs/NML2_examples/SingleNeuron.html)). These can be run on Binder and Google Collab in your web browser and do not require you to install anything locally on your computer.
 
@@ -33218,4 +33218,3 @@ http://www.neuromorpho.org/myfaq.jsp
 ```{bibliography} ./references.bib
 :all:
 ```
-
