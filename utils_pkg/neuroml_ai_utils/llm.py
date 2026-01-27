@@ -80,19 +80,32 @@ def split_thought_and_output(message: AIMessage):
 
 def check_model_works(model, timeout=30, retries=20):
     """Check if a model works since it is not tested when loaded"""
-    for attempt in range(retries):
+    if timeout < 0:
+        return False, f"Invalid timeout {timeout}"
+    elif timeout == 0:
         try:
-            # Use a very simple prompt with short max_tokens
-            _ = model.invoke("test", config={"timeout": timeout})
-            print(f"Model available (attempt {attempt + 1})")
-            return True, f"Model available (attempt {attempt + 1})"
+            _ = model.invoke("test")
         except Exception as e:
             error_msg = str(e)
-            if attempt < retries - 1:
-                time.sleep(2**attempt)  # Exponential backoff
-            else:
-                print(f"Model unavailable after {retries} attempts: {error_msg}")
-                return False, f"Model unavailable after {retries} attempts: {error_msg}"
+            print(f"Model unavailable: {error_msg}")
+            return False, f"Model unavailable: {error_msg}"
+    else:
+        for attempt in range(retries):
+            try:
+                # Use a very simple prompt with short max_tokens
+                _ = model.invoke("test", config={"timeout": timeout})
+                print(f"Model available (attempt {attempt + 1})")
+                return True, f"Model available (attempt {attempt + 1})"
+            except Exception as e:
+                error_msg = str(e)
+                if attempt < retries - 1:
+                    time.sleep(2**attempt)  # Exponential backoff
+                else:
+                    print(f"Model unavailable after {retries} attempts: {error_msg}")
+                    return (
+                        False,
+                        f"Model unavailable after {retries} attempts: {error_msg}",
+                    )
     return False, "Unknown error"
 
 
@@ -145,6 +158,10 @@ def setup_llm(model_name_full, logger):
             llm=llm,
             configurable_fields=("temperature"),
         )
+        assert model_var
+
+        state, msg = check_model_works(model_var, timeout=0)
+        assert state
     else:
         if model_name_full.lower().startswith("ollama:"):
             check_ollama_model(logger, model_name_full.lower().replace("ollama:", ""))
@@ -152,10 +169,11 @@ def setup_llm(model_name_full, logger):
         model_var = init_chat_model(
             model_name_full, configurable_fields=("temperature")
         )
-    assert model_var
+        assert model_var
 
-    state, msg = check_model_works(model_var)
-    assert state
+        state, msg = check_model_works(model_var, timeout=60)
+        assert state
+
     logger.info(f"Using chat model: {model_name_full}")
 
     return model_var
