@@ -84,12 +84,14 @@ def check_model_works(model, timeout=30, retries=3):
         try:
             # Use a very simple prompt with short max_tokens
             _ = model.invoke("test", config={"timeout": timeout})
+            print(f"Model available (attempt {attempt + 1})")
             return True, f"Model available (attempt {attempt + 1})"
         except Exception as e:
             error_msg = str(e)
             if attempt < retries - 1:
                 time.sleep(2**attempt)  # Exponential backoff
             else:
+                print(f"Model unavailable after {retries} attempts: {error_msg}")
                 return False, f"Model unavailable after {retries} attempts: {error_msg}"
     return False, "Unknown error"
 
