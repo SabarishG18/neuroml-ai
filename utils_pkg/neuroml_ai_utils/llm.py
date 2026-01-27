@@ -165,7 +165,7 @@ def setup_llm(model_name_full, logger):
         """
         assert model_var
 
-        state, msg = check_model_works(model_var, timeout=0)
+        state, msg = check_model_works(model_var, timeout=60)
         assert state
     else:
         if model_name_full.lower().startswith("ollama:"):
