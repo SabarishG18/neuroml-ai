@@ -145,7 +145,7 @@ class Vector_Stores(object):
         domain = self.vs_config.domains.get(domain_name, None)
         assert domain
 
-        self.logger.debug(f"Got domain {domain}")
+        self.logger.debug(f"Got domain information: {domain}")
 
         stores = domain.vector_stores
         assert stores
@@ -154,7 +154,7 @@ class Vector_Stores(object):
             store_name = store.name
             store_path = Path(store.path)
             self.logger.debug(
-                f"Got store for domain {domain}: {store_name} ({store_path})"
+                f"Got store for domain {domain_name}: {store_name} ({store_path})"
             )
 
             # if not absolute, it must be in a data folder in the location of
