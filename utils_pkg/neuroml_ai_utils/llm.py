@@ -87,12 +87,12 @@ def check_model_works(model, timeout=30, retries=5):
     assert timeout >= 0
 
     for attempt in range(retries):
-        print(f"Checking model. Attempt #{attempt}")
+        print(f"Checking model. Attempt #{attempt + 1}/{retries}")
         try:
             # Use a very simple prompt with short max_tokens
             result = model.invoke("Hello world", config={"timeout": timeout})
-            print(f"Model available (attempt {attempt + 1}): {result}")
-            return True, f"Model available (attempt {attempt + 1})"
+            print(f"Model available (attempt {attempt + 1}/{retries}): {result}")
+            return True, f"Model available (attempt {attempt + 1}/{retries})"
         except StopIteration as e:
             return (
                 False,
@@ -100,7 +100,7 @@ def check_model_works(model, timeout=30, retries=5):
             )
         except Exception as e:
             error_msg = f"{e.__class__.__name__}: {e.__str__()}"
-            print(f"Attempt #{attempt}: model unavailable: {error_msg}")
+            print(f"Attempt #{attempt + 1}/{retries}: model unavailable: {error_msg}")
             if attempt < retries - 1:
                 time.sleep(2**attempt)  # Exponential backoff
             else:
@@ -161,7 +161,7 @@ def setup_llm(model_name_full, logger):
         llm = HuggingFaceEndpoint(
             repo_id=f"{model_name}",
             provider="auto",
-            max_new_tokens=512,
+            # max_new_tokens=512,
             do_sample=False,
             repetition_penalty=1.03,
             task="conversational",  # seems to be ignored, defaults to text-generation
