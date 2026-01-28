@@ -43,7 +43,7 @@ def nml_ai_cli(
 
             # wait for API to be ready
             with yaspin(text="Waiting for API..."):
-                response = await check_api_is_ready()
+                response = await check_api_is_ready(f"{url}/health/ready")
 
             if len(single_query):
                 print(f"NeuroML-AI (USER) >>> {single_query}\n\n")
