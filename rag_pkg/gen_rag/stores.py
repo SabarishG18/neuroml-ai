@@ -102,6 +102,7 @@ class Vector_Stores(object):
 
     def load_config(self):
         """Load domains this RAG is going to answer for from config file"""
+        self.logger.debug(f"{self.vs_config_file =}")
         with open(self.vs_config_file) as f:
             domain_info = json.load(f)
             self.vs_config = VectorStoresConfig(**domain_info)
@@ -144,12 +145,17 @@ class Vector_Stores(object):
         domain = self.vs_config.domains.get(domain_name, None)
         assert domain
 
+        self.logger.debug(f"Got domain {domain}")
+
         stores = domain.vector_stores
         assert stores
 
         for store in stores:
             store_name = store.name
             store_path = Path(store.path)
+            self.logger.debug(
+                f"Got store for domain {domain}: {store_name} ({store_path})"
+            )
 
             # if not absolute, it must be in a data folder in the location of
             # this file
@@ -157,6 +163,8 @@ class Vector_Stores(object):
                 store_path = (
                     Path(__file__).parent / Path("data/vector-stores/") / store_path
                 )
+                self.logger.debug(f"Store path made absolute to: {store_path}")
+
             assert store_path.is_dir()
 
             # check that it is a pre-existing DB
