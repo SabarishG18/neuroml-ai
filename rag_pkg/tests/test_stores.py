@@ -8,11 +8,13 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
+import os
 import unittest
 
 import pytest
-from gen_rag.stores import Vector_Stores
 from ollama import ResponseError
+
+from gen_rag.stores import Vector_Stores
 
 
 class TestStores(unittest.TestCase):
@@ -21,7 +23,8 @@ class TestStores(unittest.TestCase):
     def test_retrieval(self):
         """Test retrieval"""
         try:
-            stores = Vector_Stores(vs_config_file="vector-stores.json")
+            vs_config_file = os.environ.get("NML_AI_VS_CONFIG", None)
+            stores = Vector_Stores(vs_config_file=vs_config_file)
             stores.setup()
             stores.retrieve("NeuroML", "NeuroML community")
         except ResponseError as e:

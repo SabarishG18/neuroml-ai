@@ -160,10 +160,10 @@ class Vector_Stores(object):
             # if not absolute, it must be in a data folder in the location of
             # this file
             if not store_path.is_absolute():
-                store_path = (
-                    Path(__file__).parent / Path("data/vector-stores/") / store_path
+                store_path = Path.cwd() / store_path
+                self.logger.debug(
+                    f"Store path made absolute relative to cwd: {store_path}"
                 )
-                self.logger.debug(f"Store path made absolute to: {store_path}")
 
             assert store_path.is_dir()
 
