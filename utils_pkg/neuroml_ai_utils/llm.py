@@ -21,7 +21,11 @@ from langchain.embeddings import init_embeddings
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_huggingface import HuggingFaceEndpoint, HuggingFaceEndpointEmbeddings
+from langchain_huggingface import (
+    ChatHuggingFace,
+    HuggingFaceEndpoint,
+    HuggingFaceEndpointEmbeddings,
+)
 
 
 def check_ollama_model(logger, model, exit=False):
@@ -78,34 +82,43 @@ def split_thought_and_output(message: AIMessage):
     return thoughts, answer
 
 
-def check_model_works(model, timeout=30, retries=20):
+def check_model_works(model, timeout=30, retries=5):
     """Check if a model works since it is not tested when loaded"""
-    if timeout < 0:
-        return False, f"Invalid timeout {timeout}"
-    elif timeout == 0:
+    assert timeout >= 0
+
+    for attempt in range(retries):
+        print(f"Checking model. Attempt #{attempt}")
         try:
-            _ = model.invoke("test")
+            # Use a very simple prompt with short max_tokens
+            result = model.invoke("Hello world", config={"timeout": timeout})
+            print(f"Model available (attempt {attempt + 1}): {result}")
+            return True, f"Model available (attempt {attempt + 1})"
+        except StopIteration as e:
+            return (
+                False,
+                f"{e.__class__.__name__}: check if any inference providers are available for the selected model",
+            )
         except Exception as e:
-            error_msg = str(e)
-            print(f"Model unavailable: {error_msg}")
-            return False, f"Model unavailable: {error_msg}"
-    else:
-        for attempt in range(retries):
-            try:
-                # Use a very simple prompt with short max_tokens
-                _ = model.invoke("test", config={"timeout": timeout})
-                print(f"Model available (attempt {attempt + 1})")
-                return True, f"Model available (attempt {attempt + 1})"
-            except Exception as e:
-                error_msg = str(e)
-                if attempt < retries - 1:
-                    time.sleep(2**attempt)  # Exponential backoff
-                else:
-                    print(f"Model unavailable after {retries} attempts: {error_msg}")
-                    return (
-                        False,
-                        f"Model unavailable after {retries} attempts: {error_msg}",
-                    )
+            error_msg = f"{e.__class__.__name__}: {e.__str__()}"
+            print(f"Attempt #{attempt}: model unavailable: {error_msg}")
+            if attempt < retries - 1:
+                time.sleep(2**attempt)  # Exponential backoff
+            else:
+                print(f"Model unavailable after {retries} attempts: {error_msg}")
+                return (
+                    False,
+                    f"Model unavailable after {retries} attempts: {error_msg}",
+                )
+            error_msg = f"{e.__class__.__name__}: {e.__str__()}"
+            print(f"Attempt #{attempt}: model unavailable: {error_msg}")
+            if attempt < retries - 1:
+                time.sleep(2**attempt)  # Exponential backoff
+            else:
+                print(f"Model unavailable after {retries} attempts: {error_msg}")
+                return (
+                    False,
+                    f"Model unavailable after {retries} attempts: {error_msg}",
+                )
     return False, "Unknown error"
 
 
@@ -143,15 +156,19 @@ def setup_llm(model_name_full, logger):
         hf_token = os.environ.get("HF_TOKEN", None)
         assert hf_token
 
-        model_var = HuggingFaceEndpoint(
+        logger.debug("Got HuggingFace Token")
+
+        llm = HuggingFaceEndpoint(
             repo_id=f"{model_name}",
             provider="auto",
             max_new_tokens=512,
             do_sample=False,
             repetition_penalty=1.03,
-            task="text-generation",
+            task="conversational",  # seems to be ignored, defaults to text-generation
             huggingfacehub_api_token=hf_token,
         )
+
+        model_var = ChatHuggingFace(llm=llm)
 
         """
 
@@ -165,7 +182,11 @@ def setup_llm(model_name_full, logger):
         """
         assert model_var
 
-        state, msg = check_model_works(model_var, timeout=60)
+        state, msg = check_model_works(model_var, timeout=10, retries=3)
+        if state:
+            logger.debug(f"Model works: {state}, {msg}")
+        else:
+            logger.debug(f"Model does not work: {state}, {msg}")
         assert state
     else:
         if model_name_full.lower().startswith("ollama:"):
