@@ -169,18 +169,15 @@ class RAG(object):
         domain_str = ""
 
         for d in domains:
-            domain_str += f"\n- {d}"
+            domain_str += f"\n- {d}: if the question is about {d}"
 
         system_prompt = dedent("""
             You are an expert query classifier.
-            Classify the user input into exactly one category based on its intent.
+            Reason about the user's query to classify it into one of the given
+            categories:
 
-            Valid categories (in order of priority):
             """)
-        system_prompt += (
-            domain_str
-            + "\n- undefined: if the query doesn't fit into another category\n"
-        )
+        system_prompt += domain_str + "\n- undefined: otherwise\n"
         system_prompt += dedent("""
             Rules:
 
@@ -188,7 +185,11 @@ class RAG(object):
             - Base your decision on semantic intent
             - Do not explain your reasoning
             - Do not include any other additional text
-            - Provide your answer ONLY as a JSON object matching the requested schema.
+            - Provide your answer ONLY as a JSON object matching the requested
+              schema:
+              {{
+                "query_domain": "..."
+              }}
             - Take past conversation history and context into account.
 
         """)
@@ -217,6 +218,9 @@ class RAG(object):
         output = query_node_llm.invoke(
             prompt, config={"configurable": {"temperature": 0.3}}
         )
+
+        self.logger.debug(f"{output = }")
+
         if output["parsing_error"]:
             query_domain_result = parse_output_with_thought(
                 output["raw"], self.QueryDomainSchema
