@@ -65,7 +65,7 @@ jobs:
 
     - name: Run unit tests
       run: |
-        pytest -v
+        pushd rag_pkg && pytest -v && popd
 
     - name: Lint with ruff
       run: |
