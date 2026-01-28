@@ -79,6 +79,10 @@ def split_thought_and_output(message: AIMessage):
     else:
         answer = message.content.strip()
         thoughts = ""
+
+    if "<think>" in message.content and "</think>" not in message.content:
+        answer += "NOTE: INCOMPLETE OUTPUT"
+
     return thoughts, answer
 
 
@@ -161,7 +165,7 @@ def setup_llm(model_name_full, logger):
         llm = HuggingFaceEndpoint(
             repo_id=f"{model_name}",
             provider="auto",
-            # max_new_tokens=512,
+            max_new_tokens=32768,
             do_sample=False,
             repetition_penalty=1.03,
             task="conversational",  # seems to be ignored, defaults to text-generation
