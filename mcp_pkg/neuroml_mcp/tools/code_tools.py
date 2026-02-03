@@ -33,8 +33,8 @@ async def dummy_code_tool(astring: str) -> str:
     return f"I got {astring}"
 
 
-async def run_command_tool(command: str) -> Dict[str, Any]:
-    """Runs a command in a shell.
+async def execute_command_tool(command: str) -> Dict[str, Any]:
+    """Execute a command in a shell.
 
     Input:
 
@@ -50,8 +50,8 @@ async def run_command_tool(command: str) -> Dict[str, Any]:
     - data (dict): additional metadata
 
     Examples:
-    - run_command_tool(command="ls")
-    - run_command_tool(command="ls -l"])
+    - execute_command_tool(command="ls")
+    - execute_command_tool(command="ls -l"])
 
     """
     request = RunCommand(command=command.split())
