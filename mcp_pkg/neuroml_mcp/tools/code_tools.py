@@ -14,11 +14,12 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from neuroml_mcp.tools.sandbox import docker, local
-from neuroml_mcp.tools.sandbox.sandbox import RunCommand, RunPythonCode
+from neuroml_mcp.tools.sandbox.sandbox import RunPythonCode
+
+from .sandbox import nml_mcp_sandbox
 
 # set the implementation for development
-sbox = local.LocalSandbox
+sbox = nml_mcp_sandbox
 
 
 async def dummy_code_tool(astring: str) -> str:
@@ -74,37 +75,48 @@ async def list_files_tool(
 
     """
     the_path = Path(path)
+    if pattern is None:
+        pattern = "*"
 
+    truncated = "False"
     error = ""
-    files = []
+    files: List[Dict[str, Any]] = []
+    paths: List[Path] = []
 
     if ".." in path:
         return {
             "files": [],
-            "truncated": False,
+            "truncated": "False",
             "error": "Path contains '..', exiting.",
         }
 
     try:
-        if pattern is not None:
-            for f in the_path.glob(pattern):
-                ftype = "file"
-                if f.is_dir():
-                    ftype = "directory"
-                if f.is_symlink():
-                    ftype = "link"
-                files.append(
-                    {
-                        "path": str(f),
-                        "type": ftype,
-                        "modified time": f.stat().st_mtime,
-                        "size": f.stat().st_size,
-                    }
-                )
+        if recursive:
+            paths = list(the_path.rglob(pattern))
+        else:
+            paths = list(the_path.glob(pattern))
+
+        if len(paths) > limit:
+            truncated = "True"
+
+        for f in paths[:limit]:
+            ftype = "file"
+            if f.is_dir():
+                ftype = "directory"
+            if f.is_symlink():
+                ftype = "link"
+            files.append(
+                {
+                    "path": str(f),
+                    "type": ftype,
+                    "modified time": f.stat().st_mtime,
+                    "size": f.stat().st_size,
+                }
+            )
     except Exception as e:
         error = e.__str__()
 
-    result = {"files": files, "error": error}
+    result = {"files": files, "error": error, "truncated": truncated}
 
     return result
 

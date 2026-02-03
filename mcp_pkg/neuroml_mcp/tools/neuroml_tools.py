@@ -12,11 +12,12 @@ from dataclasses import asdict
 from textwrap import dedent
 from typing import Any, Dict, List
 
-# set the implementation for development
-from neuroml_mcp.tools.sandbox import docker, local
 from neuroml_mcp.tools.sandbox.sandbox import RunCommand
 
-sbox = local.LocalSandbox
+# set the implementation for development
+from .sandbox import nml_mcp_sandbox
+
+sbox = nml_mcp_sandbox
 
 
 async def dummy_tool(astring: str) -> str:
