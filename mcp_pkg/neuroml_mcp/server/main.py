@@ -18,7 +18,7 @@ from starlette.responses import PlainTextResponse, JSONResponse
 import asyncio
 
 
-def create_server():
+async def create_server():
     """main server creator"""
     usage = dedent(
         """
@@ -41,13 +41,13 @@ def create_server():
         return JSONResponse(resp)
 
     docs = FastMCPDocs(mcp, title="NeuroML MCP")
-    asyncio.run(docs.setup())
+    await docs.setup()
 
     return mcp
 
 def main():
     """main runner method"""
-    mcp = create_server()
+    mcp = asyncio.run(create_server())
     mcp.run(transport="streamable-http")
 
 
