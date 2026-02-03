@@ -12,8 +12,10 @@ from neuroml_mcp.utils import register_tools
 from neuroml_mcp.tools import code_tools
 from textwrap import dedent
 from fastmcp import FastMCP
+from fastmcp_docs import FastMCPDocs
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse, JSONResponse
+import asyncio
 
 
 def create_server():
@@ -24,7 +26,7 @@ def create_server():
 
         """
     )
-    mcp = FastMCP("nml_ai", instructions=usage, port=8542)
+    mcp = FastMCP("neuroml_MCP", instructions=usage, port=8542)
     register_tools(mcp, [code_tools])
 
     @mcp.custom_route("/health", methods=["GET"])
@@ -37,6 +39,9 @@ def create_server():
         tools_description = [{str(tool.name): str(tool.description)} for name, tool in all_tools.items()]
         resp = {"registered_tools": tools_description}
         return JSONResponse(resp)
+
+    docs = FastMCPDocs(mcp, title="NeuroML MCP")
+    asyncio.run(docs.setup())
 
     return mcp
 
