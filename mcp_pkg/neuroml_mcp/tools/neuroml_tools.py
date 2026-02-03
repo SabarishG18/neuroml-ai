@@ -8,7 +8,15 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
+from dataclasses import asdict
 from textwrap import dedent
+from typing import Any, Dict, List
+
+# set the implementation for development
+from neuroml_mcp.tools.sandbox import docker, local
+from neuroml_mcp.tools.sandbox.sandbox import RunCommand
+
+sbox = local.LocalSandbox
 
 
 async def dummy_tool(astring: str) -> str:
@@ -40,7 +48,7 @@ def create_new_NeuroML_model_tool(model_name: str = "NeuroMLModel") -> str:
     model_name = model_name.replace(" ", "")
 
     model_str = dedent(
-    f"""
+        f"""
     from neuroml.utils import component_factory
 
     nml_document = component_factory(neuroml.NeuroMLDocument, id=network_name)
@@ -50,3 +58,30 @@ def create_new_NeuroML_model_tool(model_name: str = "NeuroMLModel") -> str:
     )
 
     return model_str
+
+
+async def run_lems_simulation(lems_file: str) -> Dict[str, Any]:
+    """Run a LEMS simulation file using pynml and the default jnml simulator
+
+    Inputs:
+
+    - lems_file: path to lems simulation file
+
+    Output:
+
+    Dictionary with keys:
+    - stdout (str)
+    - stderr (str)
+    - returncode (int)
+    - data (dict): additional metadata
+
+    Example:
+
+    - run_lems_simulation(lems_file="LEMS_example_simulation.xml")
+
+    """
+    command = "pynml {lems_file}"
+    request = RunCommand(command=command.split())
+    async with sbox(".") as f:
+        result = await f.run(request)
+    return asdict(result)
