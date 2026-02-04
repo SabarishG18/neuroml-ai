@@ -14,6 +14,7 @@ import sys
 import time
 from textwrap import dedent
 from typing import Optional
+from pathlib import Path
 
 import ollama
 from langchain.chat_models import init_chat_model
@@ -360,3 +361,18 @@ def add_memory_to_prompt(context_summary: str, messages, num_recent_messages) ->
         ret_string += directive
 
     return ret_string
+
+def load_prompt(prompt_name: str, prompt_registry_location: str):
+    """Load a prompt from file called prompt_name.md
+
+    :param str: prompt file name
+    :param prompt_registry_location: location of prompts folder/registry
+    :returns: loaded prompt text
+
+    """
+    prompt_path = Path(f"{prompt_registry_location}/{prompt_name}.md")
+    if not prompt_path.exists():
+        raise FileNotFoundError(f"{prompt_path} was not found")
+
+    with open(prompt_path, 'r') as f:
+        return f.read()
