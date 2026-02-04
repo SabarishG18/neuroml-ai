@@ -11,7 +11,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 from fastmcp.client.client import CallToolResult
 from langchain_core.messages import AnyMessage
 from pydantic import BaseModel, Field
-from typing_extensions import Any, Dict, List, Literal, Tuple
+from typing_extensions import Any, Dict, List, Literal, Tuple, Optional
 
 
 class QueryTypeSchema(BaseModel):
@@ -45,13 +45,6 @@ class EvaluateAnswerSchema(BaseModel):
     summary: str = ""
 
 
-class EvaluateCodeCommandSchema(BaseModel):
-    """Schema for code generation or command call."""
-    next_step: Literal[
-        "continue", "update_code", "call_tool", "undefined"
-    ] = Field(default="undefined")
-    reason: str = ""
-
 class ToolCallSchema(BaseModel):
     """Schema for tool call response."""
     tool: str = ""
@@ -64,23 +57,42 @@ class CodeSchema(BaseModel):
     version: int = 0
     patches: List[str] = []
 
+class StepSchema(BaseModel):
+    id_: int = 0
+    description: str = ""
+    tool_call: Optional[ToolCallSchema]
+    inputs: Dict[str, str] = Field(default_factory=dict)
+    produces: Dict[str, str] = Field(default_factory=dict)
+    status: Literal["pending", "done", "failed"] = Field(default="pending")
+
+class ArtefactSchema(BaseModel):
+    id_: str = ""
+    type_: str = ""
+    content: Any
+    metadata: dict[str, Any] = {}
 
 class AgentState(BaseModel):
     """The state of the graph"""
 
     query: str = ""
-    query_type: QueryTypeSchema = QueryTypeSchema()
     query_domain: QueryDomainSchema = QueryDomainSchema()
     text_response_eval: EvaluateAnswerSchema = EvaluateAnswerSchema()
     messages: List[AnyMessage] = Field(default_factory=list)
 
     # code string if any
     code: CodeSchema = CodeSchema()
-    code_eval: EvaluateCodeCommandSchema = EvaluateCodeCommandSchema()
 
-    # tool call response
-    tool_call: ToolCallSchema = ToolCallSchema()
-    tool_response: CallToolResult = None
+    # planning related
+    goal: str = ""
+    plan: List[StepSchema] = Field(default_factory=list)
+    plan_status: Literal["not_started", "in_progress", "completed", "failed", "aborted"] = Field(default="not_started")
+    current_plan_step: int = 0
+    # { step index -> tool result }
+    tool_responses: Dict[int, CallToolResult] = {}
+    iteration_could: int = 0
+    max_iterations: int = 20
+    # { id -> artefact }
+    artefacts: Dict[str, ArtefactSchema] = Field(default_factory=dict)
 
     # summarised version of context so far
     context_summary: str = ""
@@ -88,6 +100,3 @@ class AgentState(BaseModel):
     # index till which summarised
     summarised_till: int = 0
     message_for_user: str = ""
-
-    # reference material from retrievals
-    reference_material: Dict[str, List[Tuple]] = Field(default_factory=dict)

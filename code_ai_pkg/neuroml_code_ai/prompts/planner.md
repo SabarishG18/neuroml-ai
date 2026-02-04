@@ -15,6 +15,7 @@
 * `current_step` (optional): the index of the last completed step
 * `artefacts`: durable results produced so far
 * `observations`: recent tool outputs or errors
+* `tools`: tools you can use
 
 ---
 
@@ -103,11 +104,9 @@ Artefact references must use the form:
       "produces": "artefact:id_or_null"
     }
   ],
-  "done": false
+  "plan_status": "not_started" or "in_progress" or "completed" or "failed" or "aborted"
 }
 ```
-
-* Set `"done": true` only if no further steps are required.
 
 ---
 
@@ -126,7 +125,37 @@ Artefact references must use the form:
       "produces": "artefact:cell_model"
     }
   ],
-  "done": false
+  "plan_status": "In_progress"
 }
 ```
+---
+
+## Available tools
+
+{tools_description}
+
+---
+
+## Current plan
+
+{plan}
+
+---
+
+## Current step
+
+{current_step}
+
+---
+
+## Artefacts:
+
+{artefacts}
+
+---
+
+## Observations
+
+{observations}
+
 ---
