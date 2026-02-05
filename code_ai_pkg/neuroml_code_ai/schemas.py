@@ -14,37 +14,6 @@ from pydantic import BaseModel, Field
 from typing_extensions import Any, Dict, List, Literal, Optional, Tuple
 
 
-class QueryTypeSchema(BaseModel):
-    """Schema for query type."""
-
-    query_type: Literal["undefined", "question", "task"] = Field(
-        default="undefined",
-    )
-
-
-class QueryDomainSchema(BaseModel):
-    """Schema for query type."""
-
-    query_domain: Literal["undefined", "neuroml", "general"] = Field(
-        default="undefined",
-    )
-
-
-class EvaluateAnswerSchema(BaseModel):
-    """Evaluation of LLM generated answer. Descriptions given in the main prompt"""
-
-    confidence: float = 0.0
-    coverage: float = 0.0
-    relevance: float = 0.0
-    groundedness: float = 0.0
-    coherence: float = 0.0
-    conciseness: float = 0.0
-    next_step: Literal[
-        "continue", "retrieve_more_info", "modify_query", "rewrite_answer", "undefined"
-    ] = Field(default="undefined")
-    summary: str = ""
-
-
 class ToolCallSchema(BaseModel):
     """Schema for tool call response."""
 
@@ -60,20 +29,20 @@ class CodeSchema(BaseModel):
 
 
 class StepSchema(BaseModel):
-    id_: int = 0
-    step_summary: str = ""
-    tool_call: Optional[ToolCallSchema]
-    inputs: Dict[str, str] = Field(default_factory=dict)
-    produces: Dict[str, str] = Field(default_factory=dict)
+    id_: int = 1
+    summary: str = ""
+    tool_call: bool = False
+    inputs: str = ""
+    output: str = ""
     status: Literal["pending", "done", "failed"] = Field(default="pending")
 
 
 class PlanSchema(BaseModel):
-    plan: List[StepSchema] = Field(default_factory=list)
-    plan_status: Literal[
-        "not_started", "in_progress", "completed", "failed", "aborted"
-    ] = Field(default="not_started")
-    current_plan_step: int = 0
+    steps: List[StepSchema] = Field(default_factory=list)
+    status: Literal["not_started", "in_progress", "completed", "failed", "aborted"] = (
+        Field(default="not_started")
+    )
+    current_step: int = 0
 
 
 class GoalSchema(BaseModel):
@@ -88,11 +57,10 @@ class ArtefactSchema(BaseModel):
     metadata: dict[str, Any] = {}
 
 
-class AgentState(BaseModel):
+class CodeAIState(BaseModel):
     """The state of the graph"""
 
     query: str = ""
-    query_domain: QueryDomainSchema = QueryDomainSchema()
     messages: List[AnyMessage] = Field(default_factory=list)
 
     # code string if any
@@ -102,10 +70,11 @@ class AgentState(BaseModel):
     goal: GoalSchema = GoalSchema()
     plan: PlanSchema = PlanSchema()
 
-    tool_responses: Dict[int, CallToolResult] = {}
+    # current tool call
+    tool_call: Optional[ToolCallSchema] = None
+    # keep history of responses for context
+    tool_responses: list[CallToolResult] = Field(default_factory=list)
 
-    iteration_count: int = 0
-    max_iterations: int = 20
     # { id -> artefact }
     artefacts: Dict[str, ArtefactSchema] = Field(default_factory=dict)
 

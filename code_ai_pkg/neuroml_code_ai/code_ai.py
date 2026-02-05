@@ -2,7 +2,7 @@
 """
 NeuroML CodeAI implementation
 
-File: rag.py
+File: code_ai.py
 
 Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
@@ -12,7 +12,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from fastmcp import Client
 from fastmcp.client.client import CallToolResult
@@ -30,7 +30,7 @@ from neuroml_ai_utils.logging import (
 
 from neuroml_code_ai import prompts
 
-from .schemas import AgentState, GoalSchema, PlanSchema
+from .schemas import CodeAIState, GoalSchema, PlanSchema, ToolCallSchema
 
 logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
@@ -116,21 +116,17 @@ class CodeAI(object):
         """Set up the LLM chat model"""
         self.model = setup_llm(self.code_model, self.logger)
 
-    def _init_graph_state_node(self, state: AgentState) -> dict:
+    def _init_graph_state_node(self, state: CodeAIState) -> dict:
         """Initialise, reset state before next iteration"""
         return {
             "message_for_user": "",
             "plan": PlanSchema(),
             "goal": GoalSchema(),
-            "tool_response": CallToolResult(
-                content=[],
-                structured_content=None,
-                data={},
-                meta=None,
-            ),
+            "tool_call": None,
+            "tool_responses": [],
         }
 
-    async def _goal_setter_node(self, state: AgentState) -> dict:
+    async def _goal_setter_node(self, state: CodeAIState) -> dict:
         assert self.model
         self.logger.debug(f"{state =}")
         system_prompt = load_prompt(
@@ -180,10 +176,10 @@ class CodeAI(object):
 
         self.logger.debug(f"{goal_result =}")
 
-        return {"goal": goal_result}
+        return {"goal": goal_result, "message_for_user": goal_result.goal}
 
     # TODO: add note that does the goal before planning begins
-    async def _code_agent_planner_node(self, state: AgentState) -> dict:
+    async def _planner_node(self, state: CodeAIState) -> dict:
         assert self.model
         self.logger.debug(f"{state =}")
 
@@ -208,7 +204,7 @@ class CodeAI(object):
                 "query": state.query,
                 "goal": state.goal,
                 "plan": state.plan,
-                "current_step": state.plan.current_plan_step,
+                "current_step": state.plan.current_step,
                 "artefacts": state.artefacts,
                 "observations": state.tool_responses,
                 "tools_description": self.tool_description,
@@ -234,24 +230,160 @@ class CodeAI(object):
                     self.logger.critical(
                         f"Received unexpected query classification: {plan_result =}"
                     )
-                    plan_result = OutputSchema(plan_status="failed")
+                    plan_result = OutputSchema(status="failed")
 
         self.logger.debug(f"{plan_result =}")
 
-        return {"plan": plan_result}
+        # Generate a plan summary and send to user
+        plan_summary = "## Plan summary:\n\n"
+        for step in plan_result.steps:
+            plan_summary += f"- {step.id_}: {step.summary}"
+
+        return {"plan": plan_result, "message_for_user": plan_summary}
+
+    async def _tool_picker_node(self, state: CodeAIState) -> dict:
+        assert self.model
+        self.logger.debug(f"{state =}")
+
+        current_step = state.plan.steps[state.plan.current_step]
+        if not current_step.tool_call:
+            return {}
+
+        system_prompt = load_prompt(
+            prompt_name="tool_picker",
+            prompt_registry_location=Path(prompts.__file__).parent,
+        )
+        self.logger.debug(f"{system_prompt = }")
+
+        OutputSchema = ToolCallSchema
+
+        prompt_template = ChatPromptTemplate([("system", system_prompt)])
+
+        # can use | to merge these lines
+        planner_llm = self.model.with_structured_output(
+            OutputSchema, method="json_schema", include_raw=True
+        )
+        prompt = prompt_template.invoke(
+            {
+                "goal": state.goal,
+                "current_step": state.plan.current_step,
+                "artefacts": state.artefacts,
+                "observations": state.tool_responses,
+                "tools_description": self.tool_description,
+            }
+        )
+
+        self.logger.debug(f"{prompt = }")
+
+        output = planner_llm.invoke(
+            prompt, config={"configurable": {"temperature": 0.01}}
+        )
+
+        self.logger.debug(f"{output = }")
+
+        if output["parsing_error"]:
+            tool_picker_result = parse_output_with_thought(output["raw"], OutputSchema)
+        else:
+            tool_picker_result = output["parsed"]
+            if isinstance(tool_picker_result, dict):
+                tool_picker_result = OutputSchema(**tool_picker_result)
+            else:
+                if not isinstance(tool_picker_result, OutputSchema):
+                    self.logger.critical(
+                        f"Received unexpected LLM output: {tool_picker_result =}"
+                    )
+                    tool_picker_result = OutputSchema(status="failed")
+
+        self.logger.debug(f"{tool_picker_result =}")
+
+        return {"tool_action": tool_picker_result}
+
+    async def _tool_caller_node(self, state: CodeAIState) -> dict:
+        plan = state.plan
+        current_step = plan.steps[plan.current_step]
+        result: dict[str, Any] = {}
+
+        # call tool if it is in the current state
+        if current_step.tool_call:
+            # TODO: retry X times if fails before marking as failed
+            tool_call = state.tool_call
+            assert tool_call
+
+            tool_responses = state.tool_responses
+            tool_result: CallToolResult = self.mcp_client.call_tool_mcp(
+                name=tool_call.tool, arguments=tool_call.args
+            )
+            tool_responses.append(tool_result)
+
+            if tool_result.is_error:
+                current_step.status = "failed"
+            else:
+                current_step.status = "done"
+
+            # TODO: populate artefacts
+            result["tool_responses"] = tool_responses
+
+        plan.current_step += 1
+
+        result["plan"] = plan
+        return result
+
+    async def _evaluator_node(self, state: CodeAIState) -> dict:
+        plan = state.plan
+        result = {}
+
+        # if all steps completed
+        if plan.current_step > len(plan.steps):
+            plan.status = "completed"
+            result["plan"] = plan
+
+        # if any steps failed?
+
+        return result
+
+    async def _step_router_node(self, state: CodeAIState) -> str:
+        return state.plan.status
+
+    def _give_answer_to_user_node(self, state: CodeAIState) -> dict:
+        """Return the message to the user"""
+        self.logger.debug(f"{state =}")
+
+        answer = state.message_for_user
+        self.logger.info(f"Returning final answer to user: {answer}")
+
+        return {"message_for_user": answer}
 
     async def _create_graph(self):
         """Create the LangGraph"""
-        self.workflow = StateGraph(AgentState)
+        self.workflow = StateGraph(CodeAIState)
         self.workflow.add_node("init_graph_state", self._init_graph_state_node)
         # self.workflow.add_node("summarise_history", self._summarise_history_node)
         self.workflow.add_node("goal_setter", self._goal_setter_node)
-        self.workflow.add_node("planner", self._code_agent_planner_node)
+        self.workflow.add_node("planner", self._planner_node)
+        self.workflow.add_node("tool_picker", self._tool_picker_node)
+        self.workflow.add_node("tool_caller", self._tool_caller_node)
+        self.workflow.add_node("evaluator", self._evaluator_node)
+        self.workflow.add_node("step_router", self._step_router_node)
+        self.workflow.add_node("give_answer_to_user", self._give_answer_to_user_node)
 
         self.workflow.add_edge(START, "init_graph_state")
         self.workflow.add_edge("init_graph_state", "goal_setter")
         self.workflow.add_edge("goal_setter", "planner")
-        self.workflow.add_edge("planner", END)
+        self.workflow.add_edge("planner", "tool_picker")
+        self.workflow.add_edge("tool_picker", "tool_caller")
+
+        self.workflow.add_conditional_edges(
+            "evaluator",
+            self._step_router_node,
+            {
+                "not_started": "planner",
+                "in_progress": "tool_picker",
+                "failed": "planner",
+                "aborted": "give_answer_to_user",
+                "completed": "give_answer_to_user",
+            },
+        )
+        self.workflow.add_edge("give_answer_to_user", END)
 
         self.graph = self.workflow.compile(checkpointer=self.checkpointer)
         if not os.environ.get("RUNNING_IN_DOCKER", 0):

@@ -26,10 +26,8 @@
   * Produce a new, ordered, minimal plan to fulfil the query.
 
 * If a **plan already exists**:
-
   * Inspect artefacts and observations.
   * Decide whether:
-
     * The remaining plan is still valid, or
     * The plan must be revised.
   * Modify **only the remaining steps** when possible.
@@ -47,6 +45,7 @@
 * Steps must be **linear** (no branching).
 * Only reference **available tools**.
 * Do not invent tool outputs.
+* Do not specify tool calls.
 * Every step that produces a durable result must name an artefact.
 * Do not include validation, confirmation, or explanation steps unless required.
 * Do not rely on hidden state or implicit behaviour.
@@ -58,25 +57,21 @@
 Each step must include:
 
 * `step_id`: integer (monotonic, increasing)
-* `step_summary`: short concise description of the action for the step.
-* `tool`: tool name or `null`
-* `inputs`: arguments for the tool (may reference artefacts)
-* `produces`: artefact identifier or `null`
-
-Artefact references must use the form:
-
-* `artefact:<id>`
+* `summary`: short concise description of the action for the step.
+* `tool_call`: `True` if a tool call is required for this step, else `False`
+* `inputs`: short concise description of input for this step.
+* `output`: short concise description of expected output for this step.
 
 ---
 
 ## Replanning rules (critical)
 
 * If a tool failed or produced unexpected output:
-
   * Adjust the plan to account for the new information.
-* If the plan is still valid:
 
+* If the plan is still valid:
   * Return it unchanged.
+
 * Do **not** discard a plan unless it is invalidated.
 * Do **not** reset step numbering unless the plan is replaced entirely.
 
@@ -85,24 +80,19 @@ Artefact references must use the form:
 ## Output format (strict)
 
 * Output **only valid JSON** based on the provided schema
-* Do not include explanations
-* Do not include reasoning traces
 * Do not include markdown
 
 ---
 
-## Example (replanning case)
+### Example output (replanning case)
 
 ```
 {{
   "plan": [
     {{
       "step_id": 3,
-      "description": "Parse the discovered NeuroML cell model",
-      "tool": "parse_neuroml",
-      "inputs": {{
-        "file": "artefact:nml_files[0]"
-      }},
+      "description": "Parse the discovered NeuroML cell model to get the cell model",
+      "inputs": "NeuroML model files"
       "produces": "artefact:cell_model"
     }}
   ],
