@@ -84,49 +84,30 @@ Artefact references must use the form:
 
 ## Output format (strict)
 
-* Output **only valid JSON**
+* Output **only valid JSON** based on the provided schema
 * Do not include explanations
 * Do not include reasoning traces
 * Do not include markdown
 
 ---
 
-## Output schema
-
-```json
-{
-  "plan": [
-    {
-      "step_id": 1,
-      "description": "...",
-      "tool": "tool_name_or_null",
-      "inputs": {},
-      "produces": "artefact:id_or_null"
-    }
-  ],
-  "plan_status": "not_started" or "in_progress" or "completed" or "failed" or "aborted"
-}
-```
-
----
-
 ## Example (replanning case)
 
-```json
-{
+```
+{{
   "plan": [
-    {
+    {{
       "step_id": 3,
       "description": "Parse the discovered NeuroML cell model",
       "tool": "parse_neuroml",
-      "inputs": {
+      "inputs": {{
         "file": "artefact:nml_files[0]"
-      },
+      }},
       "produces": "artefact:cell_model"
-    }
+    }}
   ],
-  "plan_status": "In_progress"
-}
+  "plan_status": "in_progress"
+}}
 ```
 ---
 
