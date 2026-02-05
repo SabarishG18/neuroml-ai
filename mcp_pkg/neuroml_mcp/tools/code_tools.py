@@ -42,7 +42,7 @@ async def list_files_tool(
     include_files: bool = True,
     include_directories: bool = True,
     recursive: bool = False,
-    limit: int = 100,
+    max_results: int = 100,
 ) -> Dict[str, Any]:
     """List files and directories in a given path
 
@@ -54,7 +54,7 @@ async def list_files_tool(
     - include_files (bool, default True): include files in list
     - include_directories (bool, default True): include directories in list
     - recursive (bool, default False): if True, traverse subdirectories
-    - limit (integer, default 100): maximum number of entries returned
+    - max_results (integer, default 100): maximum number of entries returned
 
     Output:
 
@@ -66,7 +66,7 @@ async def list_files_tool(
         - modified time: time file was last modified
         - size: size of file
     - error (str): error if any
-    - truncated (bool): True if list was limited to `limit` entries
+    - truncated (bool): True if list was limited to `max_results` entries
 
     Examples:
 
@@ -96,10 +96,10 @@ async def list_files_tool(
         else:
             paths = list(the_path.glob(pattern))
 
-        if len(paths) > limit:
+        if len(paths) > max_results:
             truncated = "True"
 
-        for f in paths[:limit]:
+        for f in paths[:max_results]:
             ftype = "file"
             if f.is_dir():
                 ftype = "directory"

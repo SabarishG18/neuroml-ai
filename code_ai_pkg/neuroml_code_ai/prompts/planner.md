@@ -58,7 +58,7 @@
 Each step must include:
 
 * `step_id`: integer (monotonic, increasing)
-* `description`: short, concrete action
+* `step_summary`: short concise description of the action for the step.
 * `tool`: tool name or `null`
 * `inputs`: arguments for the tool (may reference artefacts)
 * `produces`: artefact identifier or `null`
@@ -115,6 +115,13 @@ Artefact references must use the form:
 
 {tools_description}
 
+---
+
+## Goal
+
+{goal}
+
+---
 ---
 
 ## Current plan

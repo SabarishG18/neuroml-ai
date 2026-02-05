@@ -11,7 +11,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 from fastmcp.client.client import CallToolResult
 from langchain_core.messages import AnyMessage
 from pydantic import BaseModel, Field
-from typing_extensions import Any, Dict, List, Literal, Tuple, Optional
+from typing_extensions import Any, Dict, List, Literal, Optional, Tuple
 
 
 class QueryTypeSchema(BaseModel):
@@ -47,6 +47,7 @@ class EvaluateAnswerSchema(BaseModel):
 
 class ToolCallSchema(BaseModel):
     """Schema for tool call response."""
+
     tool: str = ""
     args: Dict[str, str] = Field(default_factory=dict)
     reason: str = ""
@@ -57,19 +58,30 @@ class CodeSchema(BaseModel):
     version: int = 0
     patches: List[str] = []
 
+
 class StepSchema(BaseModel):
     id_: int = 0
-    description: str = ""
+    step_summary: str = ""
     tool_call: Optional[ToolCallSchema]
     inputs: Dict[str, str] = Field(default_factory=dict)
     produces: Dict[str, str] = Field(default_factory=dict)
     status: Literal["pending", "done", "failed"] = Field(default="pending")
+
+
+class PlanSchema(BaseModel):
+    plan: List[StepSchema] = Field(default_factory=list)
+    plan_status: Literal[
+        "not_started", "in_progress", "completed", "failed", "aborted"
+    ] = Field(default="not_started")
+    current_plan_step: int = 0
+
 
 class ArtefactSchema(BaseModel):
     id_: str = ""
     type_: str = ""
     content: Any
     metadata: dict[str, Any] = {}
+
 
 class AgentState(BaseModel):
     """The state of the graph"""
@@ -84,12 +96,11 @@ class AgentState(BaseModel):
 
     # planning related
     goal: str = ""
-    plan: List[StepSchema] = Field(default_factory=list)
-    plan_status: Literal["not_started", "in_progress", "completed", "failed", "aborted"] = Field(default="not_started")
-    current_plan_step: int = 0
-    # { step index -> tool result }
+    plan: PlanSchema = PlanSchema()
+
     tool_responses: Dict[int, CallToolResult] = {}
-    iteration_could: int = 0
+
+    iteration_count: int = 0
     max_iterations: int = 20
     # { id -> artefact }
     artefacts: Dict[str, ArtefactSchema] = Field(default_factory=dict)

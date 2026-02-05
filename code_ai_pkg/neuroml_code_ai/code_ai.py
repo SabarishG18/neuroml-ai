@@ -29,10 +29,11 @@ from neuroml_ai_utils.logging import (
 from neuroml_ai_utils.llm import (
     load_prompt,
     setup_llm,
+    parse_output_with_thought,
 )
 
 from neuroml_code_ai import prompts
-from .schemas import AgentState
+from .schemas import AgentState, PlanSchema
 
 logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
@@ -122,9 +123,8 @@ class CodeAI(object):
         """Initialise, reset state before next iteration"""
         return {
             "message_for_user": "",
-            "plan": [],
+            "plan": PlanSchema(),
             "goal": "",
-            "plan_status": "not_started",
             "tool_response": CallToolResult(
                 content=[],
                 structured_content=None,
@@ -133,6 +133,7 @@ class CodeAI(object):
             ),
         }
 
+    # TODO: add note that does the goal before planning begins
     async def _code_agent_planner_node(self, state: AgentState) -> dict:
         assert self.model
 
@@ -147,15 +148,15 @@ class CodeAI(object):
         )
 
         # can use | to merge these lines
-        planner_llm = self.model
-        # planner_llm = self.model.with_structured_output(
-        #     self.QueryDomainSchema, method="json_schema", include_raw=True
-        # )
+        planner_llm = self.model.with_structured_output(
+            PlanSchema, method="json_schema", include_raw=True
+        )
         prompt = prompt_template.invoke(
             {
                 "query": state.query,
+                "goal": state.query,  # TODO: generate goal separately
                 "plan": state.plan,
-                "current_step": state.current_plan_step,
+                "current_step": state.plan.current_plan_step,
                 "artefacts": state.artefacts,
                 "observations": state.tool_responses,
                 "tools_description": self.tool_description
@@ -165,41 +166,32 @@ class CodeAI(object):
         self.logger.debug(f"{prompt = }")
 
         output = planner_llm.invoke(
-            prompt, config={"configurable": {"temperature": 0.3}}
+            prompt, config={"configurable": {"temperature": 0.01}}
         )
 
         self.logger.debug(f"{output = }")
 
-        """
-
         if output["parsing_error"]:
-            query_domain_result = parse_output_with_thought(
-                output["raw"], self.QueryDomainSchema
+            plan_result = parse_output_with_thought(
+                output["raw"], PlanSchema
             )
         else:
-            query_domain_result = output["parsed"]
-            if isinstance(query_domain_result, str):
-                query_domain_result = self.QueryDomainSchema(
-                    query_domain=query_domain_result
-                )
-            elif isinstance(query_domain_result, dict):
-                query_domain_result = self.QueryDomainSchema(**query_domain_result)
+            plan_result = output["parsed"]
+            if isinstance(plan_result, dict):
+                plan_result = PlanSchema(**plan_result)
             else:
-                if not isinstance(query_domain_result, self.QueryDomainSchema):
+                if not isinstance(plan_result, PlanSchema):
                     self.logger.critical(
-                        f"Received unexpected query classification: {query_domain_result =}"
+                        f"Received unexpected query classification: {plan_result =}"
                     )
-                    query_domain_result = self.QueryDomainSchema(
-                        query_domain="undefined"
-                    )
+                    plan_result = PlanSchema(plan_status="failed")
 
-        self.logger.debug(f"{query_domain_result =}")
+        self.logger.debug(f"{plan_result =}")
+
         return {
-            "query_domain": query_domain_result.query_domain,
-            "messages": messages,
+            "goal": state.query,
+            "plan": plan_result
         }
-        """
-        return {"messages": output.content}
 
     async def _create_graph(self):
         """Create the LangGraph"""
