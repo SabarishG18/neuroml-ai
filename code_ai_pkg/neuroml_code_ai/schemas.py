@@ -76,6 +76,11 @@ class PlanSchema(BaseModel):
     current_plan_step: int = 0
 
 
+class GoalSchema(BaseModel):
+    goal: str = ""
+    success_criteria: str = ""
+
+
 class ArtefactSchema(BaseModel):
     id_: str = ""
     type_: str = ""
@@ -88,14 +93,13 @@ class AgentState(BaseModel):
 
     query: str = ""
     query_domain: QueryDomainSchema = QueryDomainSchema()
-    text_response_eval: EvaluateAnswerSchema = EvaluateAnswerSchema()
     messages: List[AnyMessage] = Field(default_factory=list)
 
     # code string if any
     code: CodeSchema = CodeSchema()
 
     # planning related
-    goal: str = ""
+    goal: GoalSchema = GoalSchema()
     plan: PlanSchema = PlanSchema()
 
     tool_responses: Dict[int, CallToolResult] = {}

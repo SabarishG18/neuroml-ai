@@ -20,20 +20,17 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
+from neuroml_ai_utils.llm import load_prompt, parse_output_with_thought, setup_llm
 from neuroml_ai_utils.logging import (
     LoggerInfoFilter,
     LoggerNotInfoFilter,
     logger_formatter_info,
     logger_formatter_other,
 )
-from neuroml_ai_utils.llm import (
-    load_prompt,
-    setup_llm,
-    parse_output_with_thought,
-)
 
 from neuroml_code_ai import prompts
-from .schemas import AgentState, PlanSchema
+
+from .schemas import AgentState, GoalSchema, PlanSchema
 
 logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
@@ -49,7 +46,7 @@ class CodeAI(object):
         mcp_client: Client = None,
         code_model: Optional[str] = None,
         logging_level: int = logging.DEBUG,
-        memory: bool = True
+        memory: bool = True,
     ):
         """Initialise"""
         self.code_model = "ollama:qwen3:1.7b" if code_model is None else code_model
@@ -124,7 +121,7 @@ class CodeAI(object):
         return {
             "message_for_user": "",
             "plan": PlanSchema(),
-            "goal": "",
+            "goal": GoalSchema(),
             "tool_response": CallToolResult(
                 content=[],
                 structured_content=None,
@@ -133,12 +130,11 @@ class CodeAI(object):
             ),
         }
 
-    # TODO: add note that does the goal before planning begins
-    async def _code_agent_planner_node(self, state: AgentState) -> dict:
+    async def _goal_setter_node(self, state: AgentState) -> dict:
         assert self.model
-
+        self.logger.debug(f"{state =}")
         system_prompt = load_prompt(
-            prompt_name="planner",
+            prompt_name="goal",
             prompt_registry_location=Path(prompts.__file__).parent,
         )
         self.logger.debug(f"{system_prompt = }")
@@ -146,20 +142,76 @@ class CodeAI(object):
         prompt_template = ChatPromptTemplate(
             [("system", system_prompt), ("human", "User query: {query}")]
         )
+        OutputSchema = GoalSchema
 
         # can use | to merge these lines
-        planner_llm = self.model.with_structured_output(
-            PlanSchema, method="json_schema", include_raw=True
+        goal_setter_llm = self.model.with_structured_output(
+            OutputSchema, method="json_schema", include_raw=True
         )
         prompt = prompt_template.invoke(
             {
                 "query": state.query,
-                "goal": state.query,  # TODO: generate goal separately
+                "context_summary": "",  # TODO add memory module
+            }
+        )
+
+        self.logger.debug(f"{prompt = }")
+
+        output = goal_setter_llm.invoke(
+            prompt, config={"configurable": {"temperature": 0.01}}
+        )
+
+        self.logger.debug(f"{output = }")
+
+        if output["parsing_error"]:
+            goal_result = parse_output_with_thought(output["raw"], OutputSchema)
+        else:
+            goal_result = output["parsed"]
+            if isinstance(goal_result, dict):
+                goal_result = OutputSchema(**goal_result)
+            else:
+                if not isinstance(goal_result, OutputSchema):
+                    self.logger.critical(
+                        f"Received unexpected query classification: {goal_result =}"
+                    )
+                    goal_result = OutputSchema(
+                        goal="Invalid", success_criteria="Invalid"
+                    )
+
+        self.logger.debug(f"{goal_result =}")
+
+        return {"goal": goal_result}
+
+    # TODO: add note that does the goal before planning begins
+    async def _code_agent_planner_node(self, state: AgentState) -> dict:
+        assert self.model
+        self.logger.debug(f"{state =}")
+
+        system_prompt = load_prompt(
+            prompt_name="planner",
+            prompt_registry_location=Path(prompts.__file__).parent,
+        )
+        self.logger.debug(f"{system_prompt = }")
+
+        OutputSchema = PlanSchema
+
+        prompt_template = ChatPromptTemplate(
+            [("system", system_prompt), ("human", "User query: {query}")]
+        )
+
+        # can use | to merge these lines
+        planner_llm = self.model.with_structured_output(
+            OutputSchema, method="json_schema", include_raw=True
+        )
+        prompt = prompt_template.invoke(
+            {
+                "query": state.query,
+                "goal": state.goal,
                 "plan": state.plan,
                 "current_step": state.plan.current_plan_step,
                 "artefacts": state.artefacts,
                 "observations": state.tool_responses,
-                "tools_description": self.tool_description
+                "tools_description": self.tool_description,
             }
         )
 
@@ -172,37 +224,34 @@ class CodeAI(object):
         self.logger.debug(f"{output = }")
 
         if output["parsing_error"]:
-            plan_result = parse_output_with_thought(
-                output["raw"], PlanSchema
-            )
+            plan_result = parse_output_with_thought(output["raw"], OutputSchema)
         else:
             plan_result = output["parsed"]
             if isinstance(plan_result, dict):
-                plan_result = PlanSchema(**plan_result)
+                plan_result = OutputSchema(**plan_result)
             else:
-                if not isinstance(plan_result, PlanSchema):
+                if not isinstance(plan_result, OutputSchema):
                     self.logger.critical(
                         f"Received unexpected query classification: {plan_result =}"
                     )
-                    plan_result = PlanSchema(plan_status="failed")
+                    plan_result = OutputSchema(plan_status="failed")
 
         self.logger.debug(f"{plan_result =}")
 
-        return {
-            "goal": state.query,
-            "plan": plan_result
-        }
+        return {"plan": plan_result}
 
     async def _create_graph(self):
         """Create the LangGraph"""
         self.workflow = StateGraph(AgentState)
         self.workflow.add_node("init_graph_state", self._init_graph_state_node)
         # self.workflow.add_node("summarise_history", self._summarise_history_node)
-        self.workflow.add_node("planner_node", self._code_agent_planner_node)
+        self.workflow.add_node("goal_setter", self._goal_setter_node)
+        self.workflow.add_node("planner", self._code_agent_planner_node)
 
         self.workflow.add_edge(START, "init_graph_state")
-        self.workflow.add_edge("init_graph_state", "planner_node")
-        self.workflow.add_edge("planner_node", END)
+        self.workflow.add_edge("init_graph_state", "goal_setter")
+        self.workflow.add_edge("goal_setter", "planner")
+        self.workflow.add_edge("planner", END)
 
         self.graph = self.workflow.compile(checkpointer=self.checkpointer)
         if not os.environ.get("RUNNING_IN_DOCKER", 0):

@@ -122,7 +122,6 @@ Artefact references must use the form:
 {goal}
 
 ---
----
 
 ## Current plan
 
