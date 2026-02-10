@@ -23,14 +23,22 @@ sbox = nml_mcp_sandbox
 
 
 async def dummy_code_tool(astring: str) -> str:
-    """Dummy tool that returns the string given to it. Doesn't do anything
-    else. Only here for unit testing. Ignore me.
+    """Return the input string in a sentence (testing tool only).
 
-    :param astring: a string
-    :type astring: str
-    :returns: the given string in a sentence
-    :rtype: str
+    This is a dummy tool used only for unit testing and debugging.
+    It simply returns the input string in a formatted sentence.
 
+    Do NOT use in production workflows - this tool provides no real functionality.
+
+    Args:
+        astring: Any string to be echoed back
+
+    Returns:
+        The input string formatted as "I got {astring}"
+
+    Example:
+        result = await dummy_code_tool("hello")
+        # Returns: "I got hello"
     """
     return f"I got {astring}"
 
@@ -44,35 +52,62 @@ async def list_files_tool(
     recursive: bool = False,
     max_results: int = 100,
 ) -> Dict[str, Any]:
-    """List files and directories in a given path
+    """List files and directories with filtering and metadata.
 
-    Input:
+    Use this tool to explore the file system structure, find specific files,
+    or understand the organization of a project before making changes.
 
-    - a path (string): path relative to current root. Must not include ".."
-    - max_depth (integer): maximum number of levels
-    - pattern (string): pattern to match, passed to Python's Path.glob function.
-    - include_files (bool, default True): include files in list
-    - include_directories (bool, default True): include directories in list
-    - recursive (bool, default False): if True, traverse subdirectories
-    - max_results (integer, default 100): maximum number of entries returned
+    Common use cases:
+    - Find all Python files in a project: path=".", pattern="*.py", recursive=True
+    - Explore directory structure before creating new files
+    - Check if specific files exist
+    - Understand project layout
 
-    Output:
+    Do NOT use for:
+    - Reading file contents (use file reading tools instead)
+    - Modifying files (this tool is read-only)
+    - Accessing system directories outside current workspace
 
-    Dictionary with keys:
+    Args:
+        path: Directory path to list. Must be relative to current working directory.
+              Cannot contain ".." for security. Use "." for current directory.
+        max_depth: Maximum directory depth to traverse. None for unlimited.
+                  Only used when recursive=True.
+        pattern: Glob pattern to filter results (e.g., "*.py", "*.xml", "test_*").
+                 Uses Python's Path.glob matching rules.
+        include_files: Whether to include files in results.
+        include_directories: Whether to include directories in results.
+        recursive: If True, traverse subdirectories recursively.
+        max_results: Maximum number of entries to return. Prevents overwhelming
+                    results from large directories.
 
-    - files (list of dictionaries): list of returned files with metadata:
-        - path: full file path
-        - type: whether it is a file or a directory
-        - modified time: time file was last modified
-        - size: size of file
-    - error (str): error if any
-    - truncated (bool): True if list was limited to `max_results` entries
+    Returns:
+        Dictionary containing:
+        - files: List of file/directory entries with metadata:
+            - path: Full path to the file/directory
+            - type: "file", "directory", or "link"
+            - modified time: Unix timestamp of last modification
+            - size: Size in bytes (0 for directories)
+        - error: Error message if operation failed, empty string otherwise
+        - truncated: "True" if results were limited by max_results, "False" otherwise
 
     Examples:
+        # List all Python files recursively
+        result = await list_files_tool(path=".", pattern="*.py", recursive=True)
 
-    - list all files and folders in current directory: list_files_tool(path=".")
-    - list only python files in "source" directory: list_files_tool(path="./source/", pattern="*.py")
+        # Explore NeuroML project structure
+        result = await list_files_tool(path=".", include_directories=True, max_depth=2)
 
+        # Find XML files in specific directory
+        result = await list_files_tool(path="./models/", pattern="*.xml")
+
+        # Quick overview of current directory
+        result = await list_files_tool(path=".", max_results=20)
+
+    Security notes:
+        - Cannot access paths containing ".."
+        - Limited to current working directory and subdirectories
+        - Results are truncated to prevent memory issues
     """
     the_path = Path(path)
     if pattern is None:
@@ -122,23 +157,78 @@ async def list_files_tool(
 
 
 async def run_python_code_tool(code: str) -> Dict[str, Any]:
-    """Run given Python code
+    """Execute Python code in a sandboxed environment.
 
-    Input:
+        This is your primary tool for running Python code, testing scripts,
+        and performing computational tasks. Use it to validate code before
+        including it in final outputs or to generate NeuroML models programmatically.
 
-    - code (strings): Python code as a string
+        Common use cases:
+        - Testing code snippets before finalizing them
+        - Generating NeuroML models programmatically
+        - Running calculations or data processing
+        - Validating Python syntax
+        - Importing and testing external libraries (numpy, neuroml, etc.)
 
-    Output:
+        Do NOT use for:
+        - System administration tasks (use command execution tools)
+        - File system operations (use file management tools)
+        - Network operations (no internet access)
+        - Interactive input (code must be self-contained)
 
-    Dictionary with keys:
-    - stdout (str)
-    - stderr (str)
-    - returncode (int)
-    - data (dict): additional metadata
+        Args:
+            code: Complete Python code to execute. Must be valid Python syntax.
+                  Can include imports, function definitions, and execution statements.
+                  Cannot read user input or require interactive sessions.
 
-    Example:
-    - run_python_code_tool(code="import numpy")
+        Returns:
+            Dictionary with execution results:
+            - stdout: Standard output from the code execution
+            - stderr: Error messages and warnings
+            - returncode: 0 for success, non-zero indicates errors
+            - data: Additional execution metadata (timing, resource usage, etc.)
 
+        Examples:
+            # Test a simple calculation
+            result = await run_python_code_tool("print(2 + 2)")
+            # Expected: stdout contains "4", returncode 0
+
+            # Generate a simple NeuroML model
+            code = '''
+    import neuroml
+    from neuroml.utils import component_factory
+
+    doc = component_factory(neuroml.NeuroMLDocument, id="test")
+    print(f"Created document: {doc.id}")
+            '''
+            result = await run_python_code_tool(code)
+
+            # Check if a library is available
+            result = await run_python_code_tool(
+            "import numpy; print('numpy version:', numpy.__version__)"
+        )
+
+            # Test code with error handling
+            code = '''
+    try:
+        import nonexistent_lib
+        print("Import successful")
+    except ImportError as e:
+        print(f"Import failed: {e}")
+            '''
+            result = await run_python_code_tool(code)
+
+        Execution environment:
+        - Sandboxed: Limited access to system resources
+        - No internet access
+        - Memory and time limits enforced
+        - Common scientific libraries available (numpy, matplotlib, neuroml, etc.)
+        - Working directory is preserved between calls in the same session
+
+        Error handling:
+        - Syntax errors will appear in stderr
+        - Runtime errors will appear in stderr with tracebacks
+        - Check returncode for success/failure status
     """
     request = RunPythonCode(code=code)
     async with sbox(".") as f:
