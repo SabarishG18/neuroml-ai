@@ -22,7 +22,6 @@
 ## Your responsibilities
 
 * If **no plan exists**:
-
   * Produce a new, ordered, minimal plan to fulfil the query.
 
 * If a **plan already exists**:
