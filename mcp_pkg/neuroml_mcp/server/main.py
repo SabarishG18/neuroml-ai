@@ -8,17 +8,21 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
-from neuroml_mcp.utils import register_tools
-from neuroml_mcp.tools import code_tools
+import asyncio
 from textwrap import dedent
+
+import typer
 from fastmcp import FastMCP
 from fastmcp_docs import FastMCPDocs
+from neuroml_mcp.tools import code_tools
+from neuroml_mcp.utils import register_tools
 from starlette.requests import Request
-from starlette.responses import PlainTextResponse, JSONResponse
-import asyncio
+from starlette.responses import JSONResponse, PlainTextResponse
+
+mcp_app = typer.Typer()
 
 
-async def create_server():
+async def create_server(port: int = 8542):
     """main server creator"""
     usage = dedent(
         """
@@ -35,8 +39,10 @@ async def create_server():
 
     @mcp.custom_route("/list", methods=["GET"])
     async def tool_list(request: Request) -> JSONResponse:
-        all_tools = await (mcp.get_tools())
-        tools_description = [{str(tool.name): str(tool.description)} for name, tool in all_tools.items()]
+        all_tools = await mcp.get_tools()
+        tools_description = [
+            {str(tool.name): str(tool.description)} for name, tool in all_tools.items()
+        ]
         resp = {"registered_tools": tools_description}
         return JSONResponse(resp)
 
@@ -45,11 +51,13 @@ async def create_server():
 
     return mcp
 
-def main():
+
+@mcp_app.command()
+def mcp_cli(port: int = 8542, transport: str = "streamable-http"):
     """main runner method"""
-    mcp = asyncio.run(create_server())
-    mcp.run(transport="streamable-http")
+    mcp = asyncio.run(create_server(port))
+    mcp.run(transport=transport)
 
 
 if __name__ == "__main__":
-    main()
+    mcp_app()
