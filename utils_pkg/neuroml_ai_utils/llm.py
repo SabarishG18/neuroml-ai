@@ -12,9 +12,10 @@ import logging
 import os
 import sys
 import time
+from functools import lru_cache
+from pathlib import Path
 from textwrap import dedent
 from typing import Optional
-from pathlib import Path
 
 import ollama
 from langchain.chat_models import init_chat_model
@@ -362,6 +363,8 @@ def add_memory_to_prompt(context_summary: str, messages, num_recent_messages) ->
 
     return ret_string
 
+
+@lru_cache(maxsize=10000)
 def load_prompt(prompt_name: str, prompt_registry_location: str):
     """Load a prompt from file called prompt_name.md
 
@@ -374,5 +377,5 @@ def load_prompt(prompt_name: str, prompt_registry_location: str):
     if not prompt_path.exists():
         raise FileNotFoundError(f"{prompt_path} was not found")
 
-    with open(prompt_path, 'r') as f:
+    with open(prompt_path, "r") as f:
         return f.read()
