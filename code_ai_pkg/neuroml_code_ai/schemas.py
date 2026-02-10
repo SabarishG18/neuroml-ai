@@ -31,7 +31,7 @@ class CodeSchema(BaseModel):
 class StepSchema(BaseModel):
     id_: int = 1
     summary: str = ""
-    tool_call: bool = False
+    tool_required: bool = False
     inputs: str = ""
     output: str = ""
     status: Literal["pending", "done", "failed"] = Field(default="pending")

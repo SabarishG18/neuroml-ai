@@ -236,17 +236,20 @@ class CodeAI(object):
 
         # Generate a plan summary and send to user
         plan_summary = "## Plan summary:\n\n"
-        for step in plan_result.steps:
+        for step in plan_result:
             plan_summary += f"- {step.id_}: {step.summary}"
 
-        return {"plan": plan_result, "message_for_user": plan_summary}
+        plan = state.plan
+        plan.steps = plan_result
+
+        return {"plan": plan, "message_for_user": plan_summary}
 
     async def _tool_picker_node(self, state: CodeAIState) -> dict:
         assert self.model
         self.logger.debug(f"{state =}")
 
         current_step = state.plan.steps[state.plan.current_step]
-        if not current_step.tool_call:
+        if not current_step.tool_required:
             return {}
 
         system_prompt = load_prompt(
@@ -304,13 +307,13 @@ class CodeAI(object):
         result: dict[str, Any] = {}
 
         # call tool if it is in the current state
-        if current_step.tool_call:
+        if current_step.tool_required:
             # TODO: retry X times if fails before marking as failed
             tool_call = state.tool_call
             assert tool_call
 
             tool_responses = state.tool_responses
-            tool_result: CallToolResult = self.mcp_client.call_tool_mcp(
+            tool_result: CallToolResult = await self.mcp_client.call_tool_mcp(
                 name=tool_call.tool, arguments=tool_call.args
             )
             tool_responses.append(tool_result)
