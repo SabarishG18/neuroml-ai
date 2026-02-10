@@ -84,23 +84,6 @@ Each step MUST include:
 
 ---
 
-### Example output (replanning case)
-
-```
-{{
-  "plan": [
-    {{
-      "step_id": 3,
-      "description": "Parse the discovered NeuroML cell model to get the cell model",
-      "inputs": "NeuroML model files"
-      "produces": "artefact:cell_model"
-    }}
-  ],
-  "plan_status": "in_progress"
-}}
-```
----
-
 ## Available tools
 
 {tools_description}

@@ -197,7 +197,6 @@ class CodeAI(object):
 
         return {"goal": goal_result, "message_for_user": goal_result.goal}
 
-    # TODO: add note that does the goal before planning begins
     async def _planner_node(self, state: CodeAIState) -> dict:
         assert self.model
         self.logger.debug(f"{state =}")
@@ -240,8 +239,13 @@ class CodeAI(object):
 
         if output["parsing_error"]:
             plan_result = parse_output_with_thought(output["raw"], OutputSchema)
+            self.logger.debug(f"parse error {plan_result =}")
         else:
             plan_result = output["parsed"]
+            self.logger.debug(f"parsed {plan_result =}")
+            # error: it gives a slightly different output
+            # {'step_list': [{'step_id': 1, 'summary': 'Recursively list all .md and .py files in the current directory', 'tool_call': True, 'inputs': "Directory: '.', pattern: '*.md *.py', recursive: True", 'output': 'List of full paths to .md and .py files'}], 'status': 'ready', 'current_step': 1}
+            # TODO:debug and fix: need to include example output in prompt? why doesn't structured output work
             if isinstance(plan_result, dict):
                 plan_result = OutputSchema(**plan_result)
             else:
