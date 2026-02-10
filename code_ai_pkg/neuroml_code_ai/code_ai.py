@@ -11,12 +11,15 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 import logging
 import os
 import sys
+from functools import cached_property
 from pathlib import Path
+from textwrap import dedent
 from typing import Any, Optional
 
 from fastmcp import Client
 from fastmcp.client.client import CallToolResult
-from langchain_core.messages import AIMessage, HumanMessage
+
+# from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
@@ -30,7 +33,7 @@ from neuroml_ai_utils.logging import (
 
 from neuroml_code_ai import prompts
 
-from .schemas import CodeAIState, GoalSchema, PlanSchema, ToolCallSchema
+from .schemas import CodeAIState, GoalSchema, PlanSchema, StepListSchema, ToolCallSchema
 
 logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
@@ -43,13 +46,15 @@ class CodeAI(object):
 
     def __init__(
         self,
-        mcp_client: Client = None,
+        mcp_client: Client,
         code_model: Optional[str] = None,
         logging_level: int = logging.DEBUG,
         memory: bool = True,
     ):
         """Initialise"""
-        self.code_model = "ollama:qwen3:1.7b" if code_model is None else code_model
+        self.code_model = (
+            "ollama:qwen2.5-coder:3b" if code_model is None else code_model
+        )
         self.model = None
 
         # number of conversations after which to summarise
@@ -59,7 +64,6 @@ class CodeAI(object):
 
         self.mcp_client: Client = mcp_client
         self.mcp_tools = None
-        self.tool_description = ""
 
         self.logger = logging.getLogger("NeuroML-AI-codegen")
         self.logger.setLevel(logging_level)
@@ -93,24 +97,39 @@ class CodeAI(object):
                 "No MCP client available. Functions requiring MCP server will fail."
             )
 
-        # Generate tool description
-        # Note: we remove the param/type information from the description and
-        # use the type hints directly instead
+        self.logger.debug(f"{self.tool_description =}")
+        await self._create_graph()
+
+    @cached_property
+    def tool_description(self):
+        """Get the tool description"""
         ctr = 0
+        description = ""
         for t in self.mcp_tools:
             if "dummy" in t.name:
                 continue
             ctr += 1
-            self.tool_description += f"## {ctr}.  {t.name}\n{t.description}\n"
-            # args = t.inputSchema.get("properties", [])
-            # if len(args):
-            #     self.tool_description += "\n\nInputs:\n"
-            #     for arg, arginfo in args.items():
-            #         self.tool_description += f"- {arg}: {arginfo.get('type')}"
-            #     self.tool_description += "\n"
+            description += dedent(
+                f"""
+                ## {ctr}.  {t.name}
 
-        self.logger.debug(f"{self.tool_description =}")
-        await self._create_graph()
+                ### Description
+
+                {t.description}
+
+                """
+            )
+            if t.inputSchema:
+                description += dedent(
+                    f"""
+                    ### Parameters
+
+                    {t.inputSchema.get("properties")}
+
+                    """
+                )
+
+        return description
 
     def _setup_code_model(self):
         """Set up the LLM chat model"""
@@ -189,7 +208,7 @@ class CodeAI(object):
         )
         self.logger.debug(f"{system_prompt = }")
 
-        OutputSchema = PlanSchema
+        OutputSchema = StepListSchema
 
         prompt_template = ChatPromptTemplate(
             [("system", system_prompt), ("human", "User query: {query}")]
@@ -236,11 +255,11 @@ class CodeAI(object):
 
         # Generate a plan summary and send to user
         plan_summary = "## Plan summary:\n\n"
-        for step in plan_result:
+        for step in plan_result.steps:
             plan_summary += f"- {step.id_}: {step.summary}"
 
         plan = state.plan
-        plan.steps = plan_result
+        plan.step_list = plan_result
 
         return {"plan": plan, "message_for_user": plan_summary}
 
@@ -248,7 +267,7 @@ class CodeAI(object):
         assert self.model
         self.logger.debug(f"{state =}")
 
-        current_step = state.plan.steps[state.plan.current_step]
+        current_step = state.plan.step_list.steps[state.plan.current_step]
         if not current_step.tool_required:
             return {}
 
@@ -269,7 +288,7 @@ class CodeAI(object):
         prompt = prompt_template.invoke(
             {
                 "goal": state.goal,
-                "current_step": state.plan.current_step,
+                "current_step": current_step,
                 "artefacts": state.artefacts,
                 "observations": state.tool_responses,
                 "tools_description": self.tool_description,
@@ -299,11 +318,13 @@ class CodeAI(object):
 
         self.logger.debug(f"{tool_picker_result =}")
 
-        return {"tool_action": tool_picker_result}
+        return {"tool_call": tool_picker_result}
 
     async def _tool_caller_node(self, state: CodeAIState) -> dict:
+        self.logger.debug(f"{state =}")
+
         plan = state.plan
-        current_step = plan.steps[plan.current_step]
+        current_step = plan.step_list.steps[plan.current_step]
         result: dict[str, Any] = {}
 
         # call tool if it is in the current state
@@ -313,9 +334,10 @@ class CodeAI(object):
             assert tool_call
 
             tool_responses = state.tool_responses
-            tool_result: CallToolResult = await self.mcp_client.call_tool_mcp(
-                name=tool_call.tool, arguments=tool_call.args
-            )
+            async with self.mcp_client:
+                tool_result = await self.mcp_client.call_tool(
+                    name=tool_call.tool, arguments=tool_call.args, raise_on_error=False
+                )
             tool_responses.append(tool_result)
 
             if tool_result.is_error:
@@ -325,18 +347,20 @@ class CodeAI(object):
 
             # TODO: populate artefacts
             result["tool_responses"] = tool_responses
+            self.logger.debug(f"{tool_responses =}")
 
         plan.current_step += 1
 
         result["plan"] = plan
         return result
 
+    # TODO
     async def _evaluator_node(self, state: CodeAIState) -> dict:
         plan = state.plan
         result = {}
 
         # if all steps completed
-        if plan.current_step > len(plan.steps):
+        if plan.current_step > len(plan.step_list.steps):
             plan.status = "completed"
             result["plan"] = plan
 

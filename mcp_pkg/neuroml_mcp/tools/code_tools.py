@@ -14,6 +14,9 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from pydantic import Field
+from typing_extensions import Annotated
+
 from neuroml_mcp.tools.sandbox.sandbox import RunPythonCode
 
 from .sandbox import nml_mcp_sandbox
@@ -22,97 +25,68 @@ from .sandbox import nml_mcp_sandbox
 sbox = nml_mcp_sandbox
 
 
-async def dummy_code_tool(astring: str) -> str:
+async def dummy_code_tool(
+    astring: Annotated[str, Field(description="String to be echoed back")],
+) -> str:
     """Return the input string in a sentence (testing tool only).
 
     This is a dummy tool used only for unit testing and debugging.
-    It simply returns the input string in a formatted sentence.
 
-    Do NOT use in production workflows - this tool provides no real functionality.
-
-    Args:
-        astring: Any string to be echoed back
-
-    Returns:
-        The input string formatted as "I got {astring}"
-
-    Example:
-        result = await dummy_code_tool("hello")
-        # Returns: "I got hello"
+    Example: dummy_code_tool("hello") returns "I got hello"
     """
     return f"I got {astring}"
 
 
 async def list_files_tool(
-    path: str,
-    max_depth: Optional[int] = None,
-    pattern: Optional[str] = None,
-    include_files: bool = True,
-    include_directories: bool = True,
-    recursive: bool = False,
-    max_results: int = 100,
+    path: Annotated[
+        str,
+        Field(
+            description=(
+                "Directory path to list. Must be relative to current working "
+                "directory and cannot contain '..' for security"
+            ),
+            min_length=1,
+        ),
+    ],
+    max_depth: Annotated[
+        Optional[int],
+        Field(description="Maximum directory depth to traverse. 'None' for unlimited"),
+    ] = None,
+    # LLMs are trained on shell style globs, so they insist on using space
+    # separated file patterns. So we explicitly support these. Otherwise, this
+    # becomes error prone.
+    pattern: Annotated[
+        str,
+        Field(
+            description=(
+                """
+                Space separated file patterns to filter based on files type.
+                Correct: '*.py'
+                Correct: '*.md'
+                Correct: '*.py *.md'
+            """
+            )
+        ),
+    ] = "*",
+    include_files: Annotated[
+        bool, Field(description="Whether to include files in results")
+    ] = True,
+    include_directories: Annotated[
+        bool, Field(description="Whether to include directories in results")
+    ] = True,
+    recursive: Annotated[
+        bool, Field(description="If True, traverse subdirectories recursively")
+    ] = False,
+    max_results: Annotated[
+        int, Field(description="Maximum number of entries to return", ge=1, le=10000)
+    ] = 100,
 ) -> Dict[str, Any]:
     """List files and directories with filtering and metadata.
+    Use this tool to explore file system structure and find specific files.
 
-    Use this tool to explore the file system structure, find specific files,
-    or understand the organization of a project before making changes.
-
-    Common use cases:
-    - Find all Python files in a project: path=".", pattern="*.py", recursive=True
-    - Explore directory structure before creating new files
-    - Check if specific files exist
-    - Understand project layout
-
-    Do NOT use for:
-    - Reading file contents (use file reading tools instead)
-    - Modifying files (this tool is read-only)
-    - Accessing system directories outside current workspace
-
-    Args:
-        path: Directory path to list. Must be relative to current working directory.
-              Cannot contain ".." for security. Use "." for current directory.
-        max_depth: Maximum directory depth to traverse. None for unlimited.
-                  Only used when recursive=True.
-        pattern: Glob pattern to filter results (e.g., "*.py", "*.xml", "test_*").
-                 Uses Python's Path.glob matching rules.
-        include_files: Whether to include files in results.
-        include_directories: Whether to include directories in results.
-        recursive: If True, traverse subdirectories recursively.
-        max_results: Maximum number of entries to return. Prevents overwhelming
-                    results from large directories.
-
-    Returns:
-        Dictionary containing:
-        - files: List of file/directory entries with metadata:
-            - path: Full path to the file/directory
-            - type: "file", "directory", or "link"
-            - modified time: Unix timestamp of last modification
-            - size: Size in bytes (0 for directories)
-        - error: Error message if operation failed, empty string otherwise
-        - truncated: "True" if results were limited by max_results, "False" otherwise
-
-    Examples:
-        # List all Python files recursively
-        result = await list_files_tool(path=".", pattern="*.py", recursive=True)
-
-        # Explore NeuroML project structure
-        result = await list_files_tool(path=".", include_directories=True, max_depth=2)
-
-        # Find XML files in specific directory
-        result = await list_files_tool(path="./models/", pattern="*.xml")
-
-        # Quick overview of current directory
-        result = await list_files_tool(path=".", max_results=20)
-
-    Security notes:
-        - Cannot access paths containing ".."
-        - Limited to current working directory and subdirectories
-        - Results are truncated to prevent memory issues
+    Example: list_files_tool(path=".", pattern="*.py", recursive=True)
     """
     the_path = Path(path)
-    if pattern is None:
-        pattern = "*"
-
     truncated = "False"
     error = ""
     files: List[Dict[str, Any]] = []
@@ -125,11 +99,15 @@ async def list_files_tool(
             "error": "Path contains '..', exiting.",
         }
 
+    patterns = pattern.split()
+    patterns = list(set(patterns))
+
     try:
-        if recursive:
-            paths = list(the_path.rglob(pattern))
-        else:
-            paths = list(the_path.glob(pattern))
+        for p in patterns:
+            if recursive:
+                paths.extend(list(the_path.rglob(p)))
+            else:
+                paths.extend(list(the_path.glob(p)))
 
         if len(paths) > max_results:
             truncated = "True"
@@ -156,79 +134,25 @@ async def list_files_tool(
     return result
 
 
-async def run_python_code_tool(code: str) -> Dict[str, Any]:
+async def run_python_code_tool(
+    code: Annotated[
+        str,
+        Field(
+            description=(
+                "Complete Python code to execute. Must be valid Python syntax "
+                "and cannot require interactive input"
+            ),
+            min_length=1,
+        ),
+    ],
+) -> Dict[str, Any]:
     """Execute Python code in a sandboxed environment.
 
-        This is your primary tool for running Python code, testing scripts,
-        and performing computational tasks. Use it to validate code before
-        including it in final outputs or to generate NeuroML models programmatically.
+    Use this tool to test code snippets, generate models, and perform calculations.
 
-        Common use cases:
-        - Testing code snippets before finalizing them
-        - Generating NeuroML models programmatically
-        - Running calculations or data processing
-        - Validating Python syntax
-        - Importing and testing external libraries (numpy, neuroml, etc.)
-
-        Do NOT use for:
-        - System administration tasks (use command execution tools)
-        - File system operations (use file management tools)
-        - Network operations (no internet access)
-        - Interactive input (code must be self-contained)
-
-        Args:
-            code: Complete Python code to execute. Must be valid Python syntax.
-                  Can include imports, function definitions, and execution statements.
-                  Cannot read user input or require interactive sessions.
-
-        Returns:
-            Dictionary with execution results:
-            - stdout: Standard output from the code execution
-            - stderr: Error messages and warnings
-            - returncode: 0 for success, non-zero indicates errors
-            - data: Additional execution metadata (timing, resource usage, etc.)
-
-        Examples:
-            # Test a simple calculation
-            result = await run_python_code_tool("print(2 + 2)")
-            # Expected: stdout contains "4", returncode 0
-
-            # Generate a simple NeuroML model
-            code = '''
-    import neuroml
-    from neuroml.utils import component_factory
-
-    doc = component_factory(neuroml.NeuroMLDocument, id="test")
-    print(f"Created document: {doc.id}")
-            '''
-            result = await run_python_code_tool(code)
-
-            # Check if a library is available
-            result = await run_python_code_tool(
-            "import numpy; print('numpy version:', numpy.__version__)"
-        )
-
-            # Test code with error handling
-            code = '''
-    try:
-        import nonexistent_lib
-        print("Import successful")
-    except ImportError as e:
-        print(f"Import failed: {e}")
-            '''
-            result = await run_python_code_tool(code)
-
-        Execution environment:
-        - Sandboxed: Limited access to system resources
-        - No internet access
-        - Memory and time limits enforced
-        - Common scientific libraries available (numpy, matplotlib, neuroml, etc.)
-        - Working directory is preserved between calls in the same session
-
-        Error handling:
-        - Syntax errors will appear in stderr
-        - Runtime errors will appear in stderr with tracebacks
-        - Check returncode for success/failure status
+    Example: run_python_code_tool(
+        "import numpy; print('numpy version:', numpy.__version__)"
+    )
     """
     request = RunPythonCode(code=code)
     async with sbox(".") as f:

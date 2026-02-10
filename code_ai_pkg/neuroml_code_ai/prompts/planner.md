@@ -43,6 +43,7 @@
 * Use the **fewest steps necessary**.
 * Steps must be **linear** (no branching).
 * Only reference **available tools**.
+* Do not ignore tool usage rules.
 * Do not invent tool outputs.
 * Do not specify tool calls.
 * Every step that produces a durable result must name an artefact.
@@ -53,10 +54,10 @@
 
 ## Step structure
 
-Each step must include:
+Each step MUST include:
 
 * `step_id`: integer (monotonic, increasing)
-* `summary`: short concise description of the action for the step.
+* `summary`: short concise description of step.
 * `tool_call`: `True` if a tool call is required for this step, else `False`
 * `inputs`: short concise description of input for this step.
 * `output`: short concise description of expected output for this step.

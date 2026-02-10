@@ -37,8 +37,12 @@ class StepSchema(BaseModel):
     status: Literal["pending", "done", "failed"] = Field(default="pending")
 
 
-class PlanSchema(BaseModel):
+class StepListSchema(BaseModel):
     steps: List[StepSchema] = Field(default_factory=list)
+
+
+class PlanSchema(BaseModel):
+    step_list: StepListSchema = StepListSchema()
     status: Literal["not_started", "in_progress", "completed", "failed", "aborted"] = (
         Field(default="not_started")
     )
