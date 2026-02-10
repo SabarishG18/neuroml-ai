@@ -12,20 +12,21 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastmcp import Client
 from neuroml_code_ai.api.chat import chat_router
+from neuroml_code_ai.api.conf import nml_code_ai_settings
 from neuroml_code_ai.api.health import health_router
 from neuroml_code_ai.code_ai import CodeAI
-from fastmcp import Client
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.is_ready = False
 
-    client_url = "http://127.0.0.1:8542/mcp"
+    client_url = f"{nml_code_ai_settings.nml_mcp_server_url}/mcp"
     mcp_client = Client(client_url)
 
-    code_model = os.environ.get("NML_AI_CODE_MODEL", "ollama:qwen3:1.7b")
+    code_model = nml_code_ai_settings.nml_ai_code_model
 
     # check that client is up
     async with mcp_client:
