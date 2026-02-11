@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastmcp import Client
+
 from neuroml_code_ai.api.chat import chat_router
 from neuroml_code_ai.api.conf import nml_code_ai_settings
 from neuroml_code_ai.api.health import health_router
@@ -27,6 +28,7 @@ async def lifespan(app: FastAPI):
     mcp_client = Client(client_url)
 
     code_model = nml_code_ai_settings.nml_ai_code_model
+    reasoning_model = nml_code_ai_settings.nml_ai_reasoning_model
 
     # check that client is up
     async with mcp_client:
@@ -34,7 +36,12 @@ async def lifespan(app: FastAPI):
         tools = await mcp_client.list_tools()
         print(f"Available tools: {[tool.name for tool in tools]}")
 
-    code_ai = CodeAI(code_model=code_model, memory=True, mcp_client=mcp_client)
+    code_ai = CodeAI(
+        code_model=code_model,
+        reasoning_model=reasoning_model,
+        memory=True,
+        mcp_client=mcp_client,
+    )
     await code_ai.setup()
 
     app.state.code_ai = code_ai

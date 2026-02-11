@@ -21,6 +21,7 @@ from fastmcp.client.client import CallToolResult
 
 # from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.utils.function_calling import convert_to_json_schema
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from neuroml_ai_utils.llm import load_prompt, parse_output_with_thought, setup_llm
@@ -48,6 +49,7 @@ class CodeAI(object):
         self,
         mcp_client: Client,
         code_model: Optional[str] = None,
+        reasoning_model: Optional[str] = None,
         logging_level: int = logging.DEBUG,
         memory: bool = True,
     ):
@@ -55,7 +57,9 @@ class CodeAI(object):
         self.code_model = (
             "ollama:qwen2.5-coder:3b" if code_model is None else code_model
         )
-        self.model = None
+        self.reasoning_model = "ollama:qwen3:1.7b" if code_model is None else code_model
+        self.code_model_inst = None
+        self.reasoning_model_inst = None
 
         # number of conversations after which to summarise
         # no need to summarise after each
@@ -84,7 +88,7 @@ class CodeAI(object):
     async def setup(self):
         """Set up basics."""
 
-        self._setup_code_model()
+        self._setup_models()
 
         if self.mcp_client:
             async with self.mcp_client:
@@ -131,9 +135,10 @@ class CodeAI(object):
 
         return description
 
-    def _setup_code_model(self):
+    def _setup_models(self):
         """Set up the LLM chat model"""
-        self.model = setup_llm(self.code_model, self.logger)
+        self.code_model_inst = setup_llm(self.code_model, self.logger)
+        self.reasoning_model_inst = setup_llm(self.reasoning_model, self.logger)
 
     def _init_graph_state_node(self, state: CodeAIState) -> dict:
         """Initialise, reset state before next iteration"""
@@ -146,7 +151,8 @@ class CodeAI(object):
         }
 
     async def _goal_setter_node(self, state: CodeAIState) -> dict:
-        assert self.model
+        my_model = self.reasoning_model_inst
+        assert my_model
         self.logger.debug(f"{state =}")
         system_prompt = load_prompt(
             prompt_name="goal",
@@ -160,7 +166,7 @@ class CodeAI(object):
         OutputSchema = GoalSchema
 
         # can use | to merge these lines
-        goal_setter_llm = self.model.with_structured_output(
+        goal_setter_llm = my_model.with_structured_output(
             OutputSchema, method="json_schema", include_raw=True
         )
         prompt = prompt_template.invoke(
@@ -198,7 +204,8 @@ class CodeAI(object):
         return {"goal": goal_result, "message_for_user": goal_result.goal}
 
     async def _planner_node(self, state: CodeAIState) -> dict:
-        assert self.model
+        my_model = self.reasoning_model_inst
+        assert my_model
         self.logger.debug(f"{state =}")
 
         system_prompt = load_prompt(
@@ -207,25 +214,27 @@ class CodeAI(object):
         )
         self.logger.debug(f"{system_prompt = }")
 
-        OutputSchema = StepListSchema
+        OutputSchema = PlanSchema
+        self.logger.debug(f"{convert_to_json_schema(OutputSchema) =}")
 
         prompt_template = ChatPromptTemplate(
             [("system", system_prompt), ("human", "User query: {query}")]
         )
 
         # can use | to merge these lines
-        planner_llm = self.model.with_structured_output(
+        planner_llm = my_model.with_structured_output(
             OutputSchema, method="json_schema", include_raw=True
         )
         prompt = prompt_template.invoke(
             {
                 "query": state.query,
                 "goal": state.goal,
-                "plan": state.plan,
-                "current_step": state.plan.current_step,
+                "step_list": state.plan.step_list,
+                "current_step_index": state.plan.current_step_index,
                 "artefacts": state.artefacts,
                 "observations": state.tool_responses,
                 "tools_description": self.tool_description,
+                "output_schema": convert_to_json_schema(OutputSchema),
             }
         )
 
@@ -259,21 +268,19 @@ class CodeAI(object):
 
         # Generate a plan summary and send to user
         plan_summary = "## Plan summary:\n\n"
-        for step in plan_result.steps:
-            plan_summary += f"- {step.id_}: {step.summary}"
+        for step in plan_result.step_list:
+            plan_summary += f"- {step.step_number}: {step.description}"
 
         plan = state.plan
-        plan.step_list = plan_result
+        plan.step_list = plan_result.step_list
 
         return {"plan": plan, "message_for_user": plan_summary}
 
     async def _tool_picker_node(self, state: CodeAIState) -> dict:
-        assert self.model
+        assert self.code_model_inst
         self.logger.debug(f"{state =}")
-
-        current_step = state.plan.step_list.steps[state.plan.current_step]
-        if not current_step.tool_required:
-            return {}
+        current_step_index = state.plan.current_step_index
+        current_step = state.plan.step_list[current_step_index]
 
         system_prompt = load_prompt(
             prompt_name="tool_picker",
@@ -286,16 +293,17 @@ class CodeAI(object):
         prompt_template = ChatPromptTemplate([("system", system_prompt)])
 
         # can use | to merge these lines
-        planner_llm = self.model.with_structured_output(
+        planner_llm = self.code_model_inst.with_structured_output(
             OutputSchema, method="json_schema", include_raw=True
         )
         prompt = prompt_template.invoke(
             {
-                "goal": state.goal,
                 "current_step": current_step,
                 "artefacts": state.artefacts,
                 "observations": state.tool_responses,
                 "tools_description": self.tool_description,
+                # TODO: investigate use of OutputSchema.model_json_schema()
+                "output_schema": convert_to_json_schema(OutputSchema),
             }
         )
 
@@ -328,11 +336,11 @@ class CodeAI(object):
         self.logger.debug(f"{state =}")
 
         plan = state.plan
-        current_step = plan.step_list.steps[plan.current_step]
+        current_step = plan.step_list[plan.current_step_index]
         result: dict[str, Any] = {}
 
         # call tool if it is in the current state
-        if current_step.tool_required:
+        if state.tool_call:
             # TODO: retry X times if fails before marking as failed
             tool_call = state.tool_call
             assert tool_call
@@ -353,7 +361,7 @@ class CodeAI(object):
             result["tool_responses"] = tool_responses
             self.logger.debug(f"{tool_responses =}")
 
-        plan.current_step += 1
+        plan.current_step_index += 1
 
         result["plan"] = plan
         return result
@@ -364,7 +372,7 @@ class CodeAI(object):
         result = {}
 
         # if all steps completed
-        if plan.current_step > len(plan.step_list.steps):
+        if plan.current_step_index > len(plan.step_list):
             plan.status = "completed"
             result["plan"] = plan
 
