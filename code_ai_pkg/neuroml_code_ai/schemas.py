@@ -18,7 +18,7 @@ class ToolCallSchema(BaseModel):
     """Schema for tool call response."""
 
     tool: str = ""
-    args: Dict[str, str] = Field(default_factory=dict)
+    args: Dict[str, Any] = Field(default_factory=dict)
     reason: str = ""
 
 
@@ -29,24 +29,18 @@ class CodeSchema(BaseModel):
 
 
 class StepSchema(BaseModel):
-    id_: int = 1
-    summary: str = ""
-    tool_required: bool = False
-    inputs: str = ""
-    output: str = ""
+    step_number: int = 1
+    description: str = ""
+    suggested_tool: Optional[str] = None
     status: Literal["pending", "done", "failed"] = Field(default="pending")
 
 
-class StepListSchema(BaseModel):
-    steps: List[StepSchema] = Field(default_factory=list)
-
-
 class PlanSchema(BaseModel):
-    step_list: StepListSchema = StepListSchema()
+    step_list: List[StepSchema] = Field(default_factory=list)
     status: Literal["not_started", "in_progress", "completed", "failed", "aborted"] = (
         Field(default="not_started")
     )
-    current_step: int = 0
+    current_step_index: int = 0
 
 
 class GoalSchema(BaseModel):

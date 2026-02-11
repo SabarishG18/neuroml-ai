@@ -24,18 +24,18 @@ Your job is to pick the right tool to carry out a step in a larger plan.
 
 ---
 
+## Output schema (strict)
+
+{output_schema}
+
+---
+
 ## Rules:
 
 * Only pick tools from the provided list
 * Do not invent tools or arbitrary shell commands.
 * The tool selected must align with the intent of the plan_step.
 * Keep your JSON valid and include all required fields for the chosen action.
-
----
-
-## Goal
-
-{goal}
 
 ---
 
