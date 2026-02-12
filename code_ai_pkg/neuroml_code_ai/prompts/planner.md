@@ -79,35 +79,3 @@
 ## Available tools
 
 {tools_description}
-
----
-
-## Goal
-
-{goal}
-
----
-
-## Current list of steps
-
-{step_list}
-
----
-
-## Current step index
-
-{current_step_index}
-
----
-
-## Artefacts:
-
-{artefacts}
-
----
-
-## Observations
-
-{observations}
-
----

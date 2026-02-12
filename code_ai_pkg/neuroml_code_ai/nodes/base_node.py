@@ -14,10 +14,9 @@ from typing import Any
 
 from langchain_core.prompts import ChatPromptTemplate
 from neuroml_ai_utils.nodes import BaseLLMNode
+from neuroml_code_ai.llm import load_prompt
 
 from neuroml_code_ai import prompts
-
-from .llm import load_prompt
 
 
 class BaseCodeAINode(BaseLLMNode):
@@ -27,30 +26,42 @@ class BaseCodeAINode(BaseLLMNode):
         self,
         logger: logging.Logger,
         model: Any,
-        memory: bool = True,
+        system_prompt_template: str,
+        human_prompt_template: str,
+        output_schema: BaseModel,
+        memory: bool = False,
     ):
         """Initialize with memory support"""
         super().__init__(logger, model)
         # TODO: used later when we implement memory
         self.memory = memory
+        self.system_prompt_template = system_prompt_template
+        self.human_prompt_template = human_prompt_template
 
     def _get_system_prompt(self) -> str:
         """Add other required bits to system prompt, like memory"""
-        base_prompt = self._get_base_system_prompt()
+        system_prompt = self._get_base_prompt(self.system_prompt_template)
+        self.logger(f"{system_prompt =}")
+        return system_prompt
+
+    def _get_human_prompt(self) -> str:
+        """Add other required bits to system prompt, like memory"""
+        human_prompt = self._get_base_prompt(self.human_prompt_template)
 
         if self.memory and hasattr(self, "_get_memory_addition"):
             memory_addition = self._get_memory_addition()
-            return base_prompt + memory_addition
+            return human_prompt + memory_addition
+        self.logger.debug(f"{human_prompt =}")
 
-        return base_prompt
+        return human_prompt
 
-    def _get_base_system_prompt(self) -> str:
+    def _get_base_prompt(self, prompt_name: str) -> str:
         """Return the base system prompt"""
-        system_prompt = load_prompt(
-            prompt_name="goal",
+        loaded_prompt = load_prompt(
+            prompt_name=prompt_name,
             prompt_registry_location=Path(prompts.__file__).parent,
         )
-        return system_prompt
+        return loaded_prompt
 
     def _create_prompt_template(
         self, system_prompt: str, human_prompt: str

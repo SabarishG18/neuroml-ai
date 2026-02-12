@@ -31,6 +31,7 @@ from neuroml_ai_utils.logging import (
     logger_formatter_info,
     logger_formatter_other,
 )
+from neuroml_ai_utils.nodes import BaseMemoryAwareLLMNode
 
 from neuroml_code_ai import prompts
 
@@ -163,8 +164,8 @@ class CodeAI(object):
         prompt_template = ChatPromptTemplate(
             [("system", system_prompt), ("human", "User query: {query}")]
         )
-        OutputSchema = GoalSchema
 
+        OutputSchema = GoalSchema
         # can use | to merge these lines
         goal_setter_llm = my_model.with_structured_output(
             OutputSchema, method="json_schema", include_raw=True
