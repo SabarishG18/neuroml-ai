@@ -15,7 +15,7 @@ import time
 from functools import lru_cache
 from pathlib import Path
 from textwrap import dedent
-from typing import Optional
+from typing import Optional, Type
 
 import ollama
 from langchain.chat_models import init_chat_model
@@ -28,6 +28,7 @@ from langchain_huggingface import (
     HuggingFaceEndpoint,
     HuggingFaceEndpointEmbeddings,
 )
+from pydantic import BaseModel
 
 
 def check_ollama_model(logger, model, exit=False):
@@ -58,7 +59,7 @@ def check_ollama_model(logger, model, exit=False):
             sys.exit(-1)
 
 
-def parse_output_with_thought(message: AIMessage, schema) -> dict:
+def parse_output_with_thought(message: AIMessage, schema: Type[BaseModel]) -> BaseModel:
     """Parse AI message with thought to a dict based on given schema"""
     if "</think>" in message.content:
         splits = message.content.split("</think>")
