@@ -23,7 +23,7 @@ def runner():
             asyncio.run(check_api_is_ready(f"{url}/health/ready"))
         except Exception as e:
             st.error(f"Could not connect to backend: {e}")
-            st.stop
+            st.stop()
 
     st.title("NeuroML AI Assistant")
     st.info(
