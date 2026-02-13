@@ -18,12 +18,12 @@ from neuroml_ai_utils.api import check_api_is_ready
 def runner():
     """Main runner for streamlit app"""
     url = "http://127.0.0.1:8005"
-    with st.spinner("Waiting for backend..."):
-        try:
+    try:
+        with st.spinner("Waiting for backend..."):
             asyncio.run(check_api_is_ready(f"{url}/health/ready"))
-        except Exception as e:
-            st.error(f"Could not connect to backend: {e}")
-            st.stop()
+    except Exception as e:
+        st.error(f"Could not connect to backend: {e}")
+        st.stop()
 
     st.title("NeuroML AI Assistant")
     st.info(
