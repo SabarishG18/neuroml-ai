@@ -10,7 +10,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, Type
 
 from langchain_core.prompts import ChatPromptTemplate
 from neuroml_ai_utils.nodes import BaseLLMNode
@@ -20,24 +20,27 @@ from pydantic import BaseModel
 from neuroml_code_ai import prompts
 
 
-class BaseCodeAINode(BaseLLMNode):
+class BaseCodeAINode[TSchema: BaseModel](BaseLLMNode[TSchema]):
     """Base class for nodes that include memory"""
 
     def __init__(
         self,
         logger: logging.Logger,
         model: Any,
-        output_schema: BaseModel,
+        temperature: float,
+        output_schema: Type[TSchema],
         system_prompt_file: str,
         human_prompt_file: str,
         memory: bool = False,
     ):
         """Initialize with memory support"""
-        super().__init__(logger, model)
+        super().__init__(logger, model, temperature, output_schema=output_schema)
+
+        self.system_prompt_file = system_prompt_file
+        self.human_prompt_file = human_prompt_file
+
         # TODO: used later when we implement memory
         self.memory = memory
-        self.human_prompt_file = human_prompt_file
-        self.system_prompt_file = system_prompt_file
 
     def _get_system_prompt(self) -> str:
         """Add other required bits to system prompt, like memory"""

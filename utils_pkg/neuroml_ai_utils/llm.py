@@ -59,7 +59,9 @@ def check_ollama_model(logger, model, exit=False):
             sys.exit(-1)
 
 
-def parse_output_with_thought(message: AIMessage, schema: Type[BaseModel]) -> BaseModel:
+def parse_output_with_thought[TSchema: BaseModel](
+    message: AIMessage, schema: Type[TSchema]
+) -> TSchema:
     """Parse AI message with thought to a dict based on given schema"""
     if "</think>" in message.content:
         splits = message.content.split("</think>")

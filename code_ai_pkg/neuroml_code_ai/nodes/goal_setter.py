@@ -14,20 +14,32 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel
 
 from neuroml_code_ai.nodes.base_node import BaseCodeAINode
-from neuroml_code_ai.schemas import GoalSchema
+from neuroml_code_ai.schemas import CodeAIState, GoalSchema
 
 
-class GoalSetterNode(BaseCodeAINode):
+class GoalSetterNode(BaseCodeAINode[GoalSchema]):
     """Goal setter node"""
 
     def __init__(
-        self, logger, model, system_prompt_template, human_prompt_template, memory
+        self,
+        logger,
+        model,
+        temperature,
+        output_schema,
+        system_prompt_file,
+        human_prompt_file,
+        memory,
     ):
-        BaseCodeAINode.__init__(self, logger, model)
-
-    def _get_output_schema(self):
-        """Return Pydantic schema for structured output"""
-        return GoalSchema
+        super().__init__(
+            self,
+            logger,
+            model,
+            temperature,
+            output_schema,
+            system_prompt_file,
+            human_prompt_file,
+            memory,
+        )
 
     def _create_prompt_template(
         self, system_prompt: str, human_prompt: str
@@ -35,14 +47,14 @@ class GoalSetterNode(BaseCodeAINode):
         """Create ChatPromptTemplate for this node"""
         pass
 
-    def _get_prompt_variables(self, state: BaseModel) -> dict:
+    def _get_prompt_variables(self, state: CodeAIState) -> dict:
         """Format prompt with state-specific parameters"""
-        return {}
+        return {"query": state.query, "context_summary": ""}
 
-    def _update_state(self, result: BaseModel, state: BaseModel) -> Dict[str, Any]:
+    def _update_state(self, result: GoalSchema, state: BaseModel) -> Dict[str, Any]:
         """Update and return state dictionary"""
-        return {}
+        return {"goal": result, "message_for_user": result.goal}
 
-    def _get_default_error_result(self) -> BaseModel:
+    def _get_default_error_result(self) -> GoalSchema:
         """Return default result when processing fails"""
-        pass
+        return self._get_output_schema()(goal="Invalid", success_criteria="Invalid")

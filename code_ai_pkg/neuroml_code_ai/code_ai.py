@@ -31,11 +31,12 @@ from neuroml_ai_utils.logging import (
     logger_formatter_info,
     logger_formatter_other,
 )
-from neuroml_ai_utils.nodes import BaseMemoryAwareLLMNode
 
 from neuroml_code_ai import prompts
+from neuroml_code_ai.nodes.base_node import BaseCodeAINode
+from neuroml_code_ai.nodes.goal_setter import GoalSetterNode
 
-from .schemas import CodeAIState, GoalSchema, PlanSchema, StepListSchema, ToolCallSchema
+from .schemas import CodeAIState, GoalSchema, PlanSchema, ToolCallSchema
 
 logging.basicConfig()
 logging.root.setLevel(logging.WARNING)
@@ -150,59 +151,6 @@ class CodeAI(object):
             "tool_call": None,
             "tool_responses": [],
         }
-
-    async def _goal_setter_node(self, state: CodeAIState) -> dict:
-        my_model = self.reasoning_model_inst
-        assert my_model
-        self.logger.debug(f"{state =}")
-        system_prompt = load_prompt(
-            prompt_name="goal",
-            prompt_registry_location=Path(prompts.__file__).parent,
-        )
-        self.logger.debug(f"{system_prompt = }")
-
-        prompt_template = ChatPromptTemplate(
-            [("system", system_prompt), ("human", "User query: {query}")]
-        )
-
-        OutputSchema = GoalSchema
-        # can use | to merge these lines
-        goal_setter_llm = my_model.with_structured_output(
-            OutputSchema, method="json_schema", include_raw=True
-        )
-        prompt = prompt_template.invoke(
-            {
-                "query": state.query,
-                "context_summary": "",  # TODO add memory module
-            }
-        )
-
-        self.logger.debug(f"{prompt = }")
-
-        output = goal_setter_llm.invoke(
-            prompt, config={"configurable": {"temperature": 0.01}}
-        )
-
-        self.logger.debug(f"{output = }")
-
-        if output["parsing_error"]:
-            goal_result = parse_output_with_thought(output["raw"], OutputSchema)
-        else:
-            goal_result = output["parsed"]
-            if isinstance(goal_result, dict):
-                goal_result = OutputSchema(**goal_result)
-            else:
-                if not isinstance(goal_result, OutputSchema):
-                    self.logger.critical(
-                        f"Received unexpected query classification: {goal_result =}"
-                    )
-                    goal_result = OutputSchema(
-                        goal="Invalid", success_criteria="Invalid"
-                    )
-
-        self.logger.debug(f"{goal_result =}")
-
-        return {"goal": goal_result, "message_for_user": goal_result.goal}
 
     async def _planner_node(self, state: CodeAIState) -> dict:
         my_model = self.reasoning_model_inst
@@ -398,7 +346,18 @@ class CodeAI(object):
         self.workflow = StateGraph(CodeAIState)
         self.workflow.add_node("init_graph_state", self._init_graph_state_node)
         # self.workflow.add_node("summarise_history", self._summarise_history_node)
-        self.workflow.add_node("goal_setter", self._goal_setter_node)
+
+        self._goal_setter_node = GoalSetterNode(
+            logger=self.logger,
+            model=self.reasoning_model,
+            temperature=0.01,
+            output_schema=GoalSchema,
+            system_prompt_file="goal",
+            human_prompt="goal_human",
+            memory=False,
+        )
+        self.workflow.add_node("goal_setter", self._goal_setter_node.execute)
+
         self.workflow.add_node("planner", self._planner_node)
         self.workflow.add_node("tool_picker", self._tool_picker_node)
         self.workflow.add_node("tool_caller", self._tool_caller_node)

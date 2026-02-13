@@ -10,7 +10,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Type, Union
 
 from langchain_core.prompts import ChatPromptTemplate, PromptValue
 from langchain_core.runnables import Runnable
@@ -19,15 +19,23 @@ from pydantic import BaseModel
 from .llm import parse_output_with_thought
 
 
-class BaseLLMNode(ABC):
+class BaseLLMNode[TSchema: BaseModel](ABC):
     """Abstract base class for LangGraph nodes that use LLMs"""
 
-    def __init__(self, logger: logging.Logger, model_inst: Any):
+    def __init__(
+        self,
+        logger: logging.Logger,
+        model_inst: Any,
+        temperature: float,
+        output_schema: Optional[Type[TSchema]] = None,
+    ):
         """Initialize with logger and model"""
         self.logger = logger
         self.model_inst = model_inst
+        self.temperature = temperature
+        self.output_schema = output_schema
 
-    def execute(self, state: BaseModel) -> Dict[str, Any]:
+    async def execute(self, state: BaseModel) -> Dict[str, Any]:
         """Template method defining standard execution flow"""
         self.logger.debug(f"{state =}")
 
@@ -46,9 +54,10 @@ class BaseLLMNode(ABC):
 
         return state_updates
 
-    def _get_output_schema(self):
+    # but can be overridden
+    def _get_output_schema(self) -> Optional[Type[TSchema]]:
         """Return Pydantic schema for structured output if required"""
-        return None
+        return self.output_schema
 
     def _configure_llm(self) -> Runnable:
         """Configure LLM with structured output"""
@@ -62,26 +71,27 @@ class BaseLLMNode(ABC):
 
     def _invoke_llm(self, llm: Runnable, prompt: PromptValue) -> Any:
         """Invoke LLM with default temperature - can be overridden"""
-        output = llm.invoke(prompt, config={"configurable": {"temperature": 0.01}})
+        output = llm.invoke(
+            prompt, config={"configurable": {"temperature": self.temperature}}
+        )
         self.logger.debug(f"{output = }")
         return output
 
     def _process_output(self, output: Any) -> Any:
         """Common output processing with error handling"""
-        if self._get_output_schema():
+        output_schema = self._get_output_schema()
+        if output_schema:
             if output["parsing_error"]:
                 self.logger.warning(
                     f"LLM parsing error, using fallback: {output['parsing_error']}"
                 )
-                result = parse_output_with_thought(
-                    output["raw"], self._get_output_schema()
-                )
+                result = parse_output_with_thought(output["raw"], output_schema)
             else:
                 result = output["parsed"]
                 if isinstance(result, dict):
-                    result = self._get_output_schema()(**result)
+                    result = output_schema(**result)
                 else:
-                    if not isinstance(result, self._get_output_schema()):
+                    if not isinstance(result, output_schema):
                         self.logger.critical(f"Unexpected output type: {type(result)}")
                         result = self._get_default_error_result()
 
@@ -124,11 +134,11 @@ class BaseLLMNode(ABC):
         pass
 
     @abstractmethod
-    def _update_state(self, result: BaseModel, state: BaseModel) -> Dict[str, Any]:
+    def _update_state(self, result: TSchema, state: BaseModel) -> Dict[str, Any]:
         """Update and return state dictionary"""
         pass
 
     @abstractmethod
-    def _get_default_error_result(self) -> BaseModel:
+    def _get_default_error_result(self) -> TSchema:
         """Return default result when processing fails"""
         pass
