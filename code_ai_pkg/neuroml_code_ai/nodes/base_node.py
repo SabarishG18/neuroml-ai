@@ -15,6 +15,7 @@ from typing import Any
 from langchain_core.prompts import ChatPromptTemplate
 from neuroml_ai_utils.nodes import BaseLLMNode
 from neuroml_code_ai.llm import load_prompt
+from pydantic import BaseModel
 
 from neuroml_code_ai import prompts
 
@@ -26,27 +27,27 @@ class BaseCodeAINode(BaseLLMNode):
         self,
         logger: logging.Logger,
         model: Any,
-        system_prompt_template: str,
-        human_prompt_template: str,
         output_schema: BaseModel,
+        system_prompt_file: str,
+        human_prompt_file: str,
         memory: bool = False,
     ):
         """Initialize with memory support"""
         super().__init__(logger, model)
         # TODO: used later when we implement memory
         self.memory = memory
-        self.system_prompt_template = system_prompt_template
-        self.human_prompt_template = human_prompt_template
+        self.human_prompt_file = human_prompt_file
+        self.system_prompt_file = system_prompt_file
 
     def _get_system_prompt(self) -> str:
         """Add other required bits to system prompt, like memory"""
-        system_prompt = self._get_base_prompt(self.system_prompt_template)
+        system_prompt = self._get_base_prompt(self.system_prompt_file)
         self.logger(f"{system_prompt =}")
         return system_prompt
 
     def _get_human_prompt(self) -> str:
         """Add other required bits to system prompt, like memory"""
-        human_prompt = self._get_base_prompt(self.human_prompt_template)
+        human_prompt = self._get_base_prompt(self.human_prompt_file)
 
         if self.memory and hasattr(self, "_get_memory_addition"):
             memory_addition = self._get_memory_addition()
@@ -75,6 +76,5 @@ class BaseCodeAINode(BaseLLMNode):
     def _get_memory_addition(self) -> str:
         """Override this to add memory-specific content"""
         # from .llm import add_memory_to_prompt
-
         # This will be overridden by subclasses to provide proper parameters
         return ""

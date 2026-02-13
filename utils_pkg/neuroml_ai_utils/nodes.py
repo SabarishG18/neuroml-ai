@@ -46,12 +46,19 @@ class BaseLLMNode(ABC):
 
         return state_updates
 
+    def _get_output_schema(self):
+        """Return Pydantic schema for structured output if required"""
+        return None
+
     def _configure_llm(self) -> Runnable:
         """Configure LLM with structured output"""
         output_schema = self._get_output_schema()
-        return self.model_inst.with_structured_output(
-            output_schema, method="json_schema", include_raw=True
-        )
+        if output_schema:
+            return self.model_inst.with_structured_output(
+                output_schema, method="json_schema", include_raw=True
+            )
+        else:
+            return self.model_inst
 
     def _invoke_llm(self, llm: Runnable, prompt: PromptValue) -> Any:
         """Invoke LLM with default temperature - can be overridden"""
@@ -59,23 +66,30 @@ class BaseLLMNode(ABC):
         self.logger.debug(f"{output = }")
         return output
 
-    def _process_output(self, output: Dict[str, Any]) -> BaseModel:
+    def _process_output(self, output: Any) -> Any:
         """Common output processing with error handling"""
-        if output["parsing_error"]:
-            self.logger.warning(
-                f"LLM parsing error, using fallback: {output['parsing_error']}"
-            )
-            result = parse_output_with_thought(output["raw"], self._get_output_schema())
-        else:
-            result = output["parsed"]
-            if isinstance(result, dict):
-                result = self._get_output_schema()(**result)
+        if self._get_output_schema():
+            if output["parsing_error"]:
+                self.logger.warning(
+                    f"LLM parsing error, using fallback: {output['parsing_error']}"
+                )
+                result = parse_output_with_thought(
+                    output["raw"], self._get_output_schema()
+                )
             else:
-                if not isinstance(result, self._get_output_schema()):
-                    self.logger.critical(f"Unexpected output type: {type(result)}")
-                    result = self._get_default_error_result()
+                result = output["parsed"]
+                if isinstance(result, dict):
+                    result = self._get_output_schema()(**result)
+                else:
+                    if not isinstance(result, self._get_output_schema()):
+                        self.logger.critical(f"Unexpected output type: {type(result)}")
+                        result = self._get_default_error_result()
 
-        self.logger.debug(f"Processed output: {result}")
+            self.logger.debug(f"Processed output: {result}")
+        else:
+            result = output
+            self.logger.debug(f"No output schema. Output: {result}")
+
         return result
 
     def _invoke_prompt(
@@ -95,11 +109,6 @@ class BaseLLMNode(ABC):
     @abstractmethod
     def _get_system_prompt(self) -> str:
         """Return system prompt for this node"""
-        pass
-
-    @abstractmethod
-    def _get_output_schema(self):
-        """Return Pydantic schema for structured output"""
         pass
 
     @abstractmethod
