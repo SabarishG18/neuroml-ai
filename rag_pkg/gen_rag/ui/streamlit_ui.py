@@ -48,9 +48,13 @@ def runner():
             # response = st.write_stream(stream)
             with st.spinner("Working..."):
                 with httpx.Client(timeout=None) as client:
-                    response = client.post(f"{url}/query", params={"query": query})
-                    response_result = response.json().get("result")
-                    st.markdown(response_result)
+                    try:
+                        response = client.post(f"{url}/query", params={"query": query})
+                        response_result = response.json().get("result")
+                        st.markdown(response_result)
+                    except httpx.RequestError as e:
+                        st.error("An error occured. Please try again")
+                        st.error(str(e))
         st.session_state.history.append(
             {"role": "assistant", "content": response_result}
         )
