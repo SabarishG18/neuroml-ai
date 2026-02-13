@@ -7,7 +7,8 @@
 
 ## Inputs you will receive
 
-* `query`: raw user input
+* `query`: the user query
+* `context_summary`: summary of context so far, if available
 
 ---
 
@@ -31,9 +32,3 @@
 * If the query is ambiguous
   - produce the most conservative interpretation
 * Do not split into sub-goals
-
----
-
-## Previous context
-
-{context_summary}
