@@ -24,7 +24,7 @@ def runner(source: str):
     toc = f"{source}/_toc.yml"
     filelist = []
     url_base = "https://docs.neuroml.org"
-    url_map = {}
+    url_map = {"DEFAULT_URL": url_base}
     with open(toc, "r") as toc_f:
         for line in toc_f.readlines():
             if "file:" in line:
@@ -98,7 +98,8 @@ def runner(source: str):
                     continue
 
                 if not in_block and line.startswith("#"):
-                    url_map[line.strip()] = (
+                    header = line.replace("#", "", count=-1)
+                    url_map[header.strip()] = (
                         f"{url_base}/{srcfile.replace('.md', '.html')}"
                     )
 
