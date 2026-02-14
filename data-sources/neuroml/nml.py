@@ -56,17 +56,15 @@ class NML(object):
         # extract model name
         if self.embedding_model.lower().startswith("huggingface:"):
             # strip suffix/prefix
-            self.embedding_model = (
-                self.embedding_model.replace("huggingface:", "")
-                .replace(":cheapest", "")
-                .replace(":fastest", "")
-            )
+            self.embedding_model = self.embedding_model.replace("huggingface:", "")
             # strip collection name
             splits = self.embedding_model.split("/")
             self.embedding_model = "".join(splits[1:])
         elif self.embedding_model.lower().startswith("ollama:"):
             # strip prefix
             self.embedding_model = self.embedding_model.replace("ollama:", "")
+
+        self.embedding_model.replace(":cheapest", "").replace(":fastest", "")
 
     def create(self):
         """Create the vector store"""

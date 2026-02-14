@@ -10,7 +10,7 @@
                 },
                 {
                     "name": "nml-elife",
-                    "path": "nml-elife_bge-m3.db"
+                    "path": "/home/asinha/Documents/02_Code/00_mine/NeuroML/software/neuroml-ai/rag_pkg/gen_rag/data/vector-stores/nml-elife_bge-m3.db"
                 },
                 {
                     "name": "nml-schema-docs",

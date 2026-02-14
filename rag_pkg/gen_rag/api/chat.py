@@ -19,6 +19,7 @@ async def query(request: Request, query: str):
     try:
         result = await rag.run_graph_invoke(query)
     except Exception as e:
+        print(e)
         result = HTTPException(status_code=500, detail=str(e))
 
     return {"result": result}

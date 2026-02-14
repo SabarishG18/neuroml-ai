@@ -390,6 +390,10 @@ class RAG(object):
           "follow the tutorial"). Instead, restate the necessary information
           directly to the user in clear natural language.
         - Do not include your thinking in your response.
+        - Include a "References" section at the end of your answer.
+            - In this section, include a list of URLs of the referenced
+              documents from the provided cotenxt that you used to generate the
+              current answer. Do not repeat URLs.
 
         # Context (reference material not visible to the user, ordered from most relevant to least relevant):
 
@@ -436,6 +440,8 @@ class RAG(object):
         self.logger.debug(f"{reference_material =}")
 
         reference_material_text = self._serialize_reference(reference_material)
+        reference_list = ""
+        # reference_list = self._get_reference_list(reference_material)
         prompt = generate_answer_template.invoke(
             {"question": question, "reference_material": reference_material_text}
         )
@@ -444,13 +450,37 @@ class RAG(object):
             prompt, config={"configurable": {"temperature": 0.3}}
         )
         thought, answer = split_thought_and_output(output)
-        output.content = answer
+
+        output.content = answer + reference_list
         self.logger.debug(output.pretty_repr())
 
         messages = state.messages
         messages.append(output)
 
         return {"messages": messages, "reference_material": reference_material}
+
+    def _get_reference_list(self, reference_material: Dict[str, List[Tuple]]) -> str:
+        """Get a list of references from provided material
+
+        Currently unused.
+
+        :param reference_material:  Dict {cleaned query: list of tuples (doc, relevance score)}
+        :returns: str representation of reference list
+
+        """
+
+        reference_list: list[str] = []
+        for q, sorted_refs in reference_material.items():
+            for r, score in sorted_refs:
+                reference_list.append(r.metadata["url"])
+
+        references = "## References\n"
+        for ref in set(reference_list):
+            references += f"\n- {ref}"
+
+        self.logger.debug(f"{references =}")
+
+        return references
 
     def _serialize_reference(self, reference_material: Dict[str, List[Tuple]]) -> str:
         """serialize references into text for use in context
@@ -475,7 +505,11 @@ class RAG(object):
                 metadata_str = f"### Document {ctr}/{len(sorted_refs)}: " + " | ".join(
                     metadata
                 )
-                serialized += "\n" + f"{metadata_str}\n:{r.page_content}"
+                serialized += "\n" + f"{metadata_str}\n"
+                url = r.metadata.get("url", None)
+                if url:
+                    serialized += f"Reference URL: {url}\n"
+                serialized += r.page_content
                 ctr += 1
 
         reference_material_text = serialized.replace("{", "{{").replace("}", "}}")

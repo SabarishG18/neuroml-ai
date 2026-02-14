@@ -165,7 +165,9 @@ class Vector_Stores(object):
                     f"Store path made absolute relative to cwd: {store_path}"
                 )
 
-            assert store_path.is_dir()
+            if not store_path.is_dir():
+                self.logger.error(f"Could not find folder: {store_path}")
+                raise FileNotFoundError(f"Could not find folder: {store_path}")
 
             # check that it is a pre-existing DB
             store_db = store_path / Path("chroma.sqlite3")
