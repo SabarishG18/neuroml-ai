@@ -8,6 +8,7 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -22,6 +23,8 @@ def runner(source: str):
     """
     toc = f"{source}/_toc.yml"
     filelist = []
+    url_base = "https://docs.neuroml.org"
+    url_map = {}
     with open(toc, "r") as toc_f:
         for line in toc_f.readlines():
             if "file:" in line:
@@ -94,6 +97,11 @@ def runner(source: str):
                 if line.startswith(start_ignores):
                     continue
 
+                if not in_block and line.startswith("#"):
+                    url_map[line.strip()] = (
+                        f"{url_base}/{srcfile.replace('.md', '.html')}"
+                    )
+
                 # section heading
                 if line.startswith("(") and line.strip().endswith(")="):
                     section_ref = f"<{line[1:-3]}>"
@@ -141,6 +149,8 @@ def runner(source: str):
     with open("single-page-markdown-schema.md", "w") as out:
         print(schema_text, file=out)
 
+    with open("url-map.json", "w") as f:
+        json.dump(url_map, f)
     # print(refs)
 
 
