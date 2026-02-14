@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import Any, Type
 
 from langchain_core.prompts import ChatPromptTemplate
+from neuroml_ai_utils.llm import load_prompt
 from neuroml_ai_utils.nodes import BaseLLMNode
-from neuroml_code_ai.llm import load_prompt
 from pydantic import BaseModel
 
 from neuroml_code_ai import prompts
@@ -45,7 +45,7 @@ class BaseCodeAINode[TSchema: BaseModel](BaseLLMNode[TSchema]):
     def _get_system_prompt(self) -> str:
         """Add other required bits to system prompt, like memory"""
         system_prompt = self._get_base_prompt(self.system_prompt_file)
-        self.logger(f"{system_prompt =}")
+        self.logger.debug(f"{system_prompt =}")
         return system_prompt
 
     def _get_human_prompt(self) -> str:
@@ -74,6 +74,7 @@ class BaseCodeAINode[TSchema: BaseModel](BaseLLMNode[TSchema]):
         prompt_template = ChatPromptTemplate(
             [("system", system_prompt), ("human", human_prompt)]
         )
+        self.logger.debug(f"{prompt_template =}")
         return prompt_template
 
     def _get_memory_addition(self) -> str:

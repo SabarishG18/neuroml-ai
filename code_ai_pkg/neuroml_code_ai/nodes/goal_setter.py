@@ -31,7 +31,6 @@ class GoalSetterNode(BaseCodeAINode[GoalSchema]):
         memory,
     ):
         super().__init__(
-            self,
             logger,
             model,
             temperature,
@@ -41,19 +40,17 @@ class GoalSetterNode(BaseCodeAINode[GoalSchema]):
             memory,
         )
 
-    def _create_prompt_template(
-        self, system_prompt: str, human_prompt: str
-    ) -> ChatPromptTemplate:
-        """Create ChatPromptTemplate for this node"""
-        pass
-
     def _get_prompt_variables(self, state: CodeAIState) -> dict:
         """Format prompt with state-specific parameters"""
-        return {"query": state.query, "context_summary": ""}
+        variables = {"query": state.query, "context_summary": ""}
+        self.logger.debug(f"{variables =}")
+        return variables
 
     def _update_state(self, result: GoalSchema, state: BaseModel) -> Dict[str, Any]:
         """Update and return state dictionary"""
-        return {"goal": result, "message_for_user": result.goal}
+        state_update = {"goal": result, "message_for_user": result.goal}
+        self.logger.debug(state_update)
+        return state_update
 
     def _get_default_error_result(self) -> GoalSchema:
         """Return default result when processing fails"""

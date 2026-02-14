@@ -12,7 +12,8 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, Type, Union
 
-from langchain_core.prompts import ChatPromptTemplate, PromptValue
+from langchain_core.prompt_values import PromptValue
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel
 

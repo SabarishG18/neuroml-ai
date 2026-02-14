@@ -156,7 +156,7 @@ def setup_embedding(model_name_full, logger):
     return model_var
 
 
-def setup_llm(model_name_full, logger):
+def setup_llm(model_name_full: str, logger: logging.Logger):
     """Set up a chat model"""
     if model_name_full.lower().startswith("huggingface:"):
         _, model_name, provider = model_name_full.split(":")

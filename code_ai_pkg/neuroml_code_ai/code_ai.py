@@ -17,7 +17,6 @@ from textwrap import dedent
 from typing import Any, Optional
 
 from fastmcp import Client
-from fastmcp.client.client import CallToolResult
 
 # from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -33,7 +32,6 @@ from neuroml_ai_utils.logging import (
 )
 
 from neuroml_code_ai import prompts
-from neuroml_code_ai.nodes.base_node import BaseCodeAINode
 from neuroml_code_ai.nodes.goal_setter import GoalSetterNode
 
 from .schemas import CodeAIState, GoalSchema, PlanSchema, ToolCallSchema
@@ -59,7 +57,9 @@ class CodeAI(object):
         self.code_model = (
             "ollama:qwen2.5-coder:3b" if code_model is None else code_model
         )
-        self.reasoning_model = "ollama:qwen3:1.7b" if code_model is None else code_model
+        self.reasoning_model = (
+            "ollama:qwen3:1.7b" if reasoning_model is None else reasoning_model
+        )
         self.code_model_inst = None
         self.reasoning_model_inst = None
 
@@ -349,11 +349,11 @@ class CodeAI(object):
 
         self._goal_setter_node = GoalSetterNode(
             logger=self.logger,
-            model=self.reasoning_model,
+            model=self.reasoning_model_inst,
             temperature=0.01,
             output_schema=GoalSchema,
             system_prompt_file="goal",
-            human_prompt="goal_human",
+            human_prompt_file="goal_human",
             memory=False,
         )
         self.workflow.add_node("goal_setter", self._goal_setter_node.execute)
