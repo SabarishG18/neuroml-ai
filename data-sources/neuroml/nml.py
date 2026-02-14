@@ -8,6 +8,7 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
+import json
 import logging
 import mimetypes
 from glob import glob
@@ -20,20 +21,23 @@ from langchain_text_splitters import (
     MarkdownHeaderTextSplitter,
     RecursiveCharacterTextSplitter,
 )
-from neuroml_ai.rag.utils import setup_embedding
+from neuroml_ai_utils.llm import setup_embedding
+
+logging.basicConfig(level=logging.WARNING)
 
 
 class NML(object):
+    # limit to two header levels
     md_headers_to_split_on = [
         ("#", "Header 1"),
         ("##", "Header 2"),
-        ("###", "Header 3"),
-        ("####", "Header 4"),
+        # ("###", "Header 3"),
+        # ("####", "Header 4"),
     ]
 
     """NeuroML vector store generator"""
 
-    def __init__(self, embedding_model: str, logging_level: int = logging.INFO):
+    def __init__(self, embedding_model: str, logging_level: int = logging.DEBUG):
         """TODO: to be defined."""
         self.chunk_size = 600
         self.chunk_overlap = 60
@@ -42,9 +46,9 @@ class NML(object):
         my_path = Path(__file__).parent
         self.stores_sources_path = f"{my_path}/sources"
 
-        self.logger = logging.getLogger("NeuroML-AI")
+        self.logger = logging.getLogger("NeuroML-doc-embeddings")
         self.logger.setLevel(logging_level)
-        self.logger.propagate = False
+        self.logger.propagate = True
 
     def setup(self):
         """Setup embeddings"""
@@ -96,8 +100,19 @@ class NML(object):
                 client_settings=chroma_client_settings_text,
             )
 
-            info_files = glob(f"{src}/*", recursive=True)
+            info_files = glob(f"{src}/*.md", recursive=True)
+            url_maps = glob(f"{src}/*.json", recursive=True)
             self.logger.debug(f"Loaded {len(info_files)} files from {src}")
+            self.logger.debug(f"Loaded {len(url_maps)} url map files from {src}")
+
+            # only a single url map file is allowed here
+            assert len(url_maps) <= 1
+
+            if len(url_maps) == 1:
+                with open(url_maps[0], "r") as f:
+                    url_map_data = json.load(f)
+            else:
+                url_map_data = {}
 
             for info_file in info_files:
                 try:
@@ -108,7 +123,7 @@ class NML(object):
 
                 if file_type:
                     if "markdown" in file_type:
-                        self.add_md(store, info_file)
+                        self.add_md(store, info_file, url_map_data)
                     else:
                         self.logger.warning(
                             f"File {info_file} is of type {file_type} which is not currently supported. Skipping"
@@ -118,7 +133,7 @@ class NML(object):
                         f"Could not guess file type for file {info_file}. Skipping"
                     )
 
-    def add_md(self, store, file):
+    def add_md(self, store, file, url_map):
         """Add a markdown file to the vector store
 
         We add the file hash as extra metadata so that we can filter on it
@@ -160,13 +175,33 @@ class NML(object):
             )
             splits = text_splitter.split_documents(md_splits)
             for split in splits:
-                split.metadata.update(
-                    {
-                        "file_hash": file_hash,
-                        "file_name": file_path.name,
-                        "file_path": str(file_path),
-                    }
-                )
+                # get url
+                # header 1
+                url = None
+                if "Header 1" in split.metadata.keys():
+                    url = url_map.get(split.metadata["Header 1"], None)
+                # try header 2: more specific
+                if "Header 2" in split.metadata.keys():
+                    url = url_map.get(split.metadata["Header 2"], None)
+                # fall back to default url
+                if not url:
+                    url = url_map.get("DEFAULT_URL")
+
+                meta_update = {
+                    "file_hash": file_hash,
+                    "file_name": file_path.name,
+                    "file_path": str(file_path),
+                    "url": url,
+                }
+                self.logger.debug(f"{meta_update =}")
+
+                split.metadata.update(meta_update)
 
             self.logger.debug(f"Length of split docs: {len(splits)}")
             _ = store.add_documents(documents=splits)
+
+
+if __name__ == "__main__":
+    converter = NML(embedding_model="ollama:bge-m3:latest")
+    converter.setup()
+    converter.create()
