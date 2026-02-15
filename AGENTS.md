@@ -140,7 +140,7 @@ from neuroml_mcp.utils import register_all_tools
 - Primary configuration in `setup.cfg`
 - Build configuration in `pyproject.toml`
 - Use semantic versioning (currently 0.0.1)
-- Support Python 3.9-3.13
+- Support Python 3.12-3.13
 
 ### Environment Variables
 - Use environment variables for configurable values
@@ -213,7 +213,7 @@ from neuroml_mcp.utils import register_all_tools
 ```python
 def my_tool_function(context: Context, param1: str, param2: int) -> Dict[str, Any]:
     """Tool description with comprehensive docstring.
-    
+
     :param context: MCP context for the operation
     :param param1: Description of first parameter
     :param param2: Description of second parameter
