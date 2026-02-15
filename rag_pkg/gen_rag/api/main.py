@@ -12,6 +12,7 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+
 from gen_rag.api.chat import chat_router
 from gen_rag.api.health import health_router
 from gen_rag.rag import RAG
@@ -21,9 +22,9 @@ from gen_rag.rag import RAG
 async def lifespan(app: FastAPI):
     app.state.is_ready = False
 
-    chat_model = os.environ.get("NML_AI_CHAT_MODEL", "ollama:qwen3:1.7b")
+    chat_model = os.environ.get("GEN_RAG_CHAT_MODEL", "ollama:qwen3:1.7b")
     vs_config_file = os.environ.get(
-        "NML_AI_VS_CONFIG",
+        "GEN_RAG_VS_CONFIG",
         "/home/asinha/Documents/02_Code/00_mine/NeuroML/software/neuroml-ai/rag_pkg/vector-stores.json",
     )
 

@@ -30,12 +30,12 @@ fastapi dev gen_rag/api/main.py --port 8005
 
 The following environment variables need to be set:
 
-- `NML_AI_CHAT_MODEL`: the name of the chat model to use. See below.
-- `NML_AI_VS_CONFIG`: the path to the configuration file for the vector stores.
+- `GEN_RAG_CHAT_MODEL`: the name of the chat model to use. See below.
+- `GEN_RAG_VS_CONFIG`: the path to the configuration file for the vector stores.
 
 ### Supported models
 
-- local Ollama models: include the `ollama:` prefix. 
+- local Ollama models: include the `ollama:` prefix.
 - HuggingFace inference providers: include a `huggingface:` prefix. You must obtain a HuggingFace token and set it in the `HF_TOKEN` environment variable.
 - other models supported by LangChain: set their particular environment variables (see the LangChain docs for more information)
 

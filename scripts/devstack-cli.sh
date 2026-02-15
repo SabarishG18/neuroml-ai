@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # Copyright 2025 Ankur Sinha
-# Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com> 
+# Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 # File:  scripts/devstack.sh
 #
 # Script for testing the stack
 
 
-#export NML_AI_CHAT_MODEL="huggingface:Qwen/Qwen3-30B-A3B-Instruct-2507:cheapest"
-#export NML_AI_EMBEDDING_MODEL="huggingface:BAAI/bge-m3:cheapest"
+#export GEN_RAG_CHAT_MODEL="huggingface:Qwen/Qwen3-30B-A3B-Instruct-2507:cheapest"
+#export GEN_RAG_EMBEDDING_MODEL="huggingface:BAAI/bge-m3:cheapest"
 #
 uv pip install -e .[dev]
 

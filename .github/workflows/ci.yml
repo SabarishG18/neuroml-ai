@@ -67,7 +67,7 @@ jobs:
       run: |
         pushd rag_pkg && pytest -v && popd
       env:
-        NML_AI_VS_CONFIG: "vector-stores-tests.json"
+        GEN_RAG_VS_CONFIG: "vector-stores-tests.json"
 
     - name: Lint with ruff
       run: |

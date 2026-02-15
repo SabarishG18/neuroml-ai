@@ -32,5 +32,5 @@ fastapi dev neuroml_ai/api/main.py --port 8005
 
 The following environment variables need to be set:
 
-- `NML_AI_CHAT_MODEL`: the name of the chat model to use. See below.
-- `NML_AI_VS_CONFIG`: the path to the configuration file for the vector stores.
+- `GEN_RAG_CHAT_MODEL`: the name of the chat model to use. See below.
+- `GEN_RAG_VS_CONFIG`: the path to the configuration file for the vector stores.
