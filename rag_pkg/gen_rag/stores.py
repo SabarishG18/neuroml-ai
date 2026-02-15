@@ -130,7 +130,7 @@ class Vector_Stores(object):
 
     def load_all_stores(self):
         """Load all vector stores"""
-        for domain_name in self.domains():
+        for domain_name in self.domains:
             self.load(domain_name)
 
     @property

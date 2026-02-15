@@ -164,12 +164,17 @@ class RAG(object):
         messages = state.messages
         messages.append(HumanMessage(content=state.query))
 
-        domains = self.stores.domains
+        domain_info = self.stores.vs_config.domains
 
         domain_str = ""
 
-        for d in domains:
-            domain_str += f"\n- {d}: if the question is about {d}"
+        for d, info in domain_info:
+            desc = info.get("description", None)
+            if not desc:
+                desc = f"if the question is about {d}"
+            else:
+                desc = f"if the question is about {desc}"
+            domain_str += f"\n- {d}: {desc}"
 
         system_prompt = dedent("""
             You are an expert query classifier.
