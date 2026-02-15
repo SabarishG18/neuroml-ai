@@ -168,9 +168,9 @@ class RAG(object):
 
         domain_str = ""
 
-        for d, info in domain_info:
-            desc = info.get("description", None)
-            if not desc:
+        for d, info in domain_info.items():
+            desc = info.description
+            if not desc or len(desc) == 0:
                 desc = f"if the question is about {d}"
             else:
                 desc = f"if the question is about {desc}"

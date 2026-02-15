@@ -8,6 +8,8 @@ Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
+import traceback
+
 from fastapi import APIRouter, HTTPException, Request
 
 chat_router = APIRouter()
@@ -19,7 +21,7 @@ async def query(request: Request, query: str):
     try:
         result = await rag.run_graph_invoke(query)
     except Exception as e:
-        print(e)
-        result = HTTPException(status_code=500, detail=str(e))
+        detail = f"{e}\n{traceback.format_exc()}"
+        result = HTTPException(status_code=500, detail=detail)
 
     return {"result": result}
