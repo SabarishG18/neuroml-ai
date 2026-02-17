@@ -14,6 +14,15 @@ from fastapi import APIRouter, HTTPException, Request
 
 chat_router = APIRouter()
 
+import logging
+
+logging.basicConfig(
+    format="%(name)s (%(levelname)s) >>> %(message)s\n", level=logging.WARNING
+)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 @chat_router.post("/query")
 async def query(request: Request, query: str):
@@ -23,5 +32,7 @@ async def query(request: Request, query: str):
     except Exception as e:
         detail = f"{e}\n{traceback.format_exc()}"
         result = HTTPException(status_code=500, detail=detail)
+
+        logger.error(detail)
 
     return {"result": result}
