@@ -396,8 +396,8 @@ class RAG(object):
           directly to the user in clear natural language.
         - Do not include your thinking in your response.
         - Include a "References" section at the end of your answer.
-            - In this section, include a list of URLs of the referenced
-              documents from the provided cotenxt that you used to generate the
+            - In this section, quote the Reference URLs of the documents
+              from the provided context that you used to generate the
               current answer.
             - Do *not* repeat references/URLs in the list.
 
