@@ -407,13 +407,14 @@ class RAG(object):
 
         """)
 
-        if self.memory:
-            system_prompt += add_memory_to_prompt(
-                messages=state.messages,
-                context_summary=state.context_summary,
-                num_recent_messages=self.num_recent_messages,
-            )
-
+        # Do not add memory at this step: limit to provided context
+        # if self.memory:
+        #     system_prompt += add_memory_to_prompt(
+        #         messages=state.messages,
+        #         context_summary=state.context_summary,
+        #         num_recent_messages=self.num_recent_messages,
+        #     )
+        #
         generate_answer_template = ChatPromptTemplate(
             [
                 ("system", system_prompt),
@@ -589,11 +590,10 @@ class RAG(object):
             * 0.0 - 0.3: verbose
 
             Guidelines for 'next_step':
-            1. high coverage, confident, relevant, grounded, with acceptable
-            coherence and conciseness: return "continue".
+            1. high coverage, confident, relevant, grounded, with acceptable coherence and conciseness: return "continue".
             2. low coverage: return "modify_query".
-            3. high coverage,  low confidence: return "retrieve_more_info".
-            4. high coverage and confidence, low relevance, groundedness, coherence, or conciseness: return "rewrite_answer"
+            3. low confidence: return "retrieve_more_info".
+            4. high coverage and confidence, low relevance, low groundedness, low coherence, or low conciseness: return "rewrite_answer"
             5. all coverage, confidence, relevance and groundedness are low: return "undefined".
 
             Always return a brief summary.
