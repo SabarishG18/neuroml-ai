@@ -398,7 +398,8 @@ class RAG(object):
         - Include a "References" section at the end of your answer.
             - In this section, include a list of URLs of the referenced
               documents from the provided cotenxt that you used to generate the
-              current answer. Do not repeat URLs.
+              current answer.
+            - Do *not* repeat references/URLs in the list.
 
         # Context (reference material not visible to the user, ordered from most relevant to least relevant):
 
