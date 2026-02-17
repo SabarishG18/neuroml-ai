@@ -221,6 +221,10 @@ class Vector_Stores(object):
                 query, k=self.k, score_threshold=self.sim_thresh
             )
             self.logger.debug(f"{data =}")
+            if len(data) == 0:
+                self.logger.warning(
+                    f"No data retrieved. Check VS is correctly populated and that the collection name is correct ({store.name})"
+                )
             res.extend(data)
 
         return res
