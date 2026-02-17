@@ -132,7 +132,9 @@ class RAG(object):
             return {}
 
         prompt = get_history_summary_prompt(
-            conversation, self.logger, state.context_summary
+            conversation=conversation,
+            logger=self.logger,
+            current_summary=state.context_summary,
         )
         output = self.model.invoke(
             prompt, config={"configurable": {"temperature": 0.3}}
