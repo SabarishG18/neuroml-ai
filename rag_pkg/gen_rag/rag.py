@@ -662,7 +662,7 @@ class RAG(object):
             return "undefined"
 
     def _route_query_domain_node(self, state: RAGState) -> str:
-        """Route the query depending on LLM's result"""
+        """Route the query depending on LLM's result - RAG or general Q"""
         self.logger.debug(f"{state =}")
         query_domain = state.query_domain
 
