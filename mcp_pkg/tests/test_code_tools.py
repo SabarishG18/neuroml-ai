@@ -27,3 +27,15 @@ async def test_dummy_code_tool(mcp_client: Client[FastMCPTransport]):
         "dummy_code_tool", arguments={"astring": "Hello world"}
     )
     assert ret.structuredContent["result"] == "I got Hello world"
+
+
+@pytest.mark.asyncio
+async def test_run_hh_simulation_tool(mcp_client):
+    ret = await mcp_client.call_tool_mcp(
+        "run_hh_simulation_tool",
+        arguments={"current_injection": 0.1, "duration": 300.0}
+    )
+    import json
+    result = json.loads(ret.structuredContent["stdout"])
+    assert result["num_action_potentials"] > 0
+    assert result["firing_rate_hz"] > 0

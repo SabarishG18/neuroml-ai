@@ -81,7 +81,7 @@ async def run_lems_simulation(lems_file: str) -> Dict[str, Any]:
     - run_lems_simulation(lems_file="LEMS_example_simulation.xml")
 
     """
-    command = "pynml {lems_file}"
+    command = f"pynml {lems_file}"
     request = RunCommand(command=command.split())
     async with sbox(".") as f:
         result = await f.run(request)
