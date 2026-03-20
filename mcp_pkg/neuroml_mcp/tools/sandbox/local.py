@@ -10,9 +10,24 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 import asyncio
+import os
+import sys
 from functools import singledispatchmethod
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
+
+
+def _subprocess_env() -> dict:
+    """Build env dict for subprocesses, ensuring Java is on PATH.
+
+    On macOS with Homebrew, openjdk is keg-only so /opt/homebrew/opt/openjdk/bin
+    may not be on the default PATH.  jNeuroML (used by pyneuroml) requires Java.
+    """
+    env = os.environ.copy()
+    java_bin = "/opt/homebrew/opt/openjdk/bin"
+    if os.path.isdir(java_bin) and java_bin not in env.get("PATH", ""):
+        env["PATH"] = java_bin + ":" + env.get("PATH", "")
+    return env
 
 from neuroml_mcp.tools.sandbox.sandbox import (
     AsyncSandbox,
@@ -47,14 +62,16 @@ class LocalSandbox(AsyncSandbox):
 
     @run.register  # type: ignore
     async def _(self, request: RunPythonCode) -> CmdResult:
-        with NamedTemporaryFile(prefix="nml_ai", mode="w") as f:
+        with NamedTemporaryFile(prefix="nml_ai", suffix=".py", mode="w") as f:
             print(request.code, file=f)
+            f.flush()
 
             process = await asyncio.create_subprocess_exec(
-                "python",
+                sys.executable,
                 f.name,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                env=_subprocess_env(),
             )
 
             stdout, stderr = await process.communicate()
@@ -72,6 +89,7 @@ class LocalSandbox(AsyncSandbox):
             " ".join(request.command),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            env=_subprocess_env(),
         )
 
         stdout, stderr = await process.communicate()
