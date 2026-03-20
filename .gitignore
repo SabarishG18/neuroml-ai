@@ -64,3 +64,4 @@ target/
 .mypy_cache/
 
 data/scripts/nml-docs
+.DS_Store
