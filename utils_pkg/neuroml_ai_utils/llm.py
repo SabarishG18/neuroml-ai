@@ -129,7 +129,15 @@ def check_model_works(model, timeout=30, retries=5):
 def setup_embedding(model_name_full, logger):
     # need to use inference providers
     if model_name_full.lower().startswith("huggingface:"):
-        _, model_name, provider = model_name_full.split(":")
+        parts = model_name_full.split(":")
+        if len(parts) == 3:
+            _, model_name, provider = parts
+        elif len(parts) == 2:
+            _, model_name = parts
+            provider = "auto"
+        else:
+            model_name = model_name_full
+            provider = "auto"
         logger.debug(f"Using huggingface model: {model_name}")
 
         hf_token = os.environ.get("HF_TOKEN", None)
@@ -154,7 +162,15 @@ def setup_embedding(model_name_full, logger):
 def setup_llm(model_name_full, logger):
     """Set up a chat model"""
     if model_name_full.lower().startswith("huggingface:"):
-        _, model_name, provider = model_name_full.split(":")
+        parts = model_name_full.split(":")
+        if len(parts) == 3:
+            _, model_name, provider = parts
+        elif len(parts) == 2:
+            _, model_name = parts
+            provider = "auto"
+        else:
+            model_name = model_name_full
+            provider = "auto"
         logger.debug(f"Using huggingface model: {model_name}")
 
         hf_token = os.environ.get("HF_TOKEN", None)
@@ -165,25 +181,15 @@ def setup_llm(model_name_full, logger):
         llm = HuggingFaceEndpoint(
             repo_id=f"{model_name}",
             provider="auto",
-            max_new_tokens=32768,
+            max_new_tokens=4096,
             do_sample=False,
             repetition_penalty=1.03,
-            task="conversational",  # seems to be ignored, defaults to text-generation
+            task="conversational",
             huggingfacehub_api_token=hf_token,
         )
 
         model_var = ChatHuggingFace(llm=llm)
 
-        """
-
-        model_var = init_chat_model(
-            model_name,
-            model_provider="huggingface",
-            llm=llm,
-            configurable_fields=("temperature"),
-            backend="endpoint",
-        )
-        """
         assert model_var
 
         state, msg = check_model_works(model_var, timeout=10, retries=3)
