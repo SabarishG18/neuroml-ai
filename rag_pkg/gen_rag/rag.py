@@ -167,9 +167,14 @@ class RAG(object):
         domains = self.stores.domains
 
         domain_str = ""
-
         for d in domains:
-            domain_str += f"\n- {d}: if the question is about {d}"
+            config = self.stores.vs_config.domains.get(d)
+            description = getattr(config, 'description', d) if config else d
+            first_line = next(
+                (line.strip() for line in description.splitlines() if line.strip()),
+                d
+            )
+            domain_str += f"\n- {d}: {first_line}"
 
         system_prompt = dedent("""
             You are an expert query classifier.
@@ -261,7 +266,7 @@ class RAG(object):
         ## Core directives
 
         - Do not assume this question is related to any particular domain.
-        - Only provide information you are confident about. If you are unsuare, clearly say so.
+        - Only provide information you are confident about. If you are unsure, clearly say so.
         - Avoid inventing facts. If a fact is not known or uncertain, respond with "I was unable to find factual information about this query".
         - Keep answers clear, concise, and user-friendly.
         - Respond in a formal, academic style.
@@ -380,7 +385,7 @@ class RAG(object):
 
         - Limit yourself to facts from the provided context only, avoid using
           knowledge from your general training.
-        - Use concise, formal language appropriate for neurosience and
+        - Use concise, formal language appropriate for neuroscience and
           computational modelling.
         - Write the answer as a self contained explanation that does not assume
           access to the context.
@@ -544,7 +549,7 @@ class RAG(object):
             * 0.0 - 0.3: disorganised
 
             conciseness:
-            * 0.8 - 1.0: mimimal + efficient
+            * 0.8 - 1.0: minimal + efficient
             * 0.4 - 0.7: moderately concise
             * 0.0 - 0.3: verbose
 
