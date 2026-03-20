@@ -9,7 +9,7 @@ Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
 from neuroml_mcp.utils import register_tools
-from neuroml_mcp.tools import code_tools, hh_tools, wormbase_tools
+from neuroml_mcp.tools import code_tools, neuroml_sim_tools
 from textwrap import dedent
 from fastmcp import FastMCP
 from fastmcp_docs import FastMCPDocs
@@ -27,7 +27,7 @@ async def create_server():
         """
     )
     mcp = FastMCP("neuroml_MCP", instructions=usage, port=8542)
-    register_tools(mcp, [code_tools, hh_tools, wormbase_tools])
+    register_tools(mcp, [code_tools, neuroml_sim_tools])
 
     @mcp.custom_route("/health", methods=["GET"])
     async def health_check(request: Request) -> PlainTextResponse:
