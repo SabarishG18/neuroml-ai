@@ -2,12 +2,18 @@
 """
 Tools specific to Open Worm HH simulation
 
+Uses the well-tested Hodgkin-Huxley implementation from:
+https://github.com/openworm/hodgkin_huxley_tutorial/blob/master/Tutorial/Source/HodgkinHuxley.py
+
+This pure-Python/scipy implementation does NOT require the NEURON simulator.
+
 File: mcp_pkg/neuroml_mcp/tools/hh_tools.py
 
 Copyright 2025 Ankur Sinha
 Author: Ankur Sinha <sanjay DOT ankur AT gmail DOT com>
 """
 
+import json
 from dataclasses import asdict
 from textwrap import dedent
 from typing import Any, Dict
@@ -22,33 +28,24 @@ async def run_hh_simulation_tool(
     current_injection: float = 0.1,
     duration: float = 300.0,
     delay: float = 50.0,
-    soma_length: float = 20.0,
-    soma_diam: float = 20.0,
     temperature: float = 6.3,
 ) -> Dict[str, Any]:
-    """Run a Hodgkin-Huxley single compartment neuron simulation using NEURON.
+    """Run a Hodgkin-Huxley single compartment neuron simulation.
 
-    Use this tool to simulate a neuron and observe its electrical behaviour
-    such as action potentials and firing rate in response to current injection.
-    Results include summary statistics and a downsampled voltage trace over time.
-
-    This uses the standard Hodgkin-Huxley squid giant axon model as a proof of
-    concept. It is useful for demonstrating how membrane excitability changes
-    with different stimulation parameters.
+    Uses the standard Hodgkin-Huxley squid giant axon model (1952) implemented
+    with scipy's odeint, based on the well-tested openworm/hodgkin_huxley_tutorial.
+    Does NOT require the NEURON simulator.
 
     Inputs:
 
-    - current_injection (float, default 0.1): injected current amplitude in nA.
+    - current_injection (float, default 0.1): injected current amplitude in uA/cm^2.
       Increase to make the neuron fire more frequently.
-      Decrease below threshold (~0.05 nA) to observe subthreshold behaviour.
+      Decrease below threshold to observe subthreshold behaviour.
     - duration (float, default 300.0): total simulation duration in milliseconds.
     - delay (float, default 50.0): delay in milliseconds before current injection begins.
       Must be less than duration.
-    - soma_length (float, default 20.0): length of the soma compartment in microns.
-    - soma_diam (float, default 20.0): diameter of the soma compartment in microns.
     - temperature (float, default 6.3): simulation temperature in Celsius.
       The original Hodgkin-Huxley model was recorded at 6.3C.
-      Increasing temperature speeds up channel kinetics.
 
     Output:
 
@@ -59,10 +56,10 @@ async def run_hh_simulation_tool(
         - peak_voltage_mv (float): maximum membrane voltage reached
         - resting_voltage_mv (float): initial resting membrane potential
         - simulation_duration_ms (float): total simulation duration
-        - current_injection_na (float): injected current used
+        - current_injection (float): injected current used
         - temperature_c (float): temperature used
         - voltage_trace (dict): downsampled trace with keys t_ms and v_mv
-    - stderr (str): any errors from NEURON
+    - stderr (str): any errors
     - returncode (int): 0 if successful, non-zero if error occurred
     - data (dict): additional metadata
 
@@ -71,69 +68,150 @@ async def run_hh_simulation_tool(
     - Default simulation: run_hh_simulation_tool()
     - Strong stimulation: run_hh_simulation_tool(current_injection=0.5)
     - Subthreshold (no firing expected): run_hh_simulation_tool(current_injection=0.01)
-    - Compare firing rates: call twice with different current_injection values and compare firing_rate_hz
     - Long simulation: run_hh_simulation_tool(duration=1000.0)
     - Temperature effect: call twice with temperature=6.3 and temperature=25.0
     """
-
     code = dedent(f"""
 import json
-from neuron import h
 import numpy as np
+from scipy.integrate import odeint
 
-# setup temperature
-h.celsius = {temperature}
+# ── Hodgkin-Huxley model parameters ──────────────────────────────────
+# Based on: openworm/hodgkin_huxley_tutorial
+# Reference: Hodgkin & Huxley (1952) J Physiol 117:500-544
 
-# create soma compartment
-soma = h.Section(name='soma')
-soma.L = {soma_length}
-soma.diam = {soma_diam}
+C_m  = 1.0      # membrane capacitance (uF/cm^2)
+g_Na = 120.0    # max sodium conductance (mS/cm^2)
+g_K  = 36.0     # max potassium conductance (mS/cm^2)
+g_L  = 0.3      # leak conductance (mS/cm^2)
+E_Na = 50.0     # sodium reversal potential (mV)
+E_K  = -77.0    # potassium reversal potential (mV)
+E_L  = -54.387  # leak reversal potential (mV)
 
-# insert standard Hodgkin-Huxley mechanism (built into NEURON)
-soma.insert('hh')
+# Temperature correction factor (Q10)
+T = {temperature}
+phi = 3.0 ** ((T - 6.3) / 10.0)
 
-# current clamp stimulus
-stim = h.IClamp(soma(0.5))
-stim.delay = {delay}
-stim.dur = {duration - delay}
-stim.amp = {current_injection}
+# ── Gating variable kinetics (Hodgkin & Huxley 1952) ─────────────────
+def alpha_m(V):
+    return phi * 0.1 * (V + 40.0) / (1.0 - np.exp(-(V + 40.0) / 10.0))
 
-# recording vectors
-v_vec = h.Vector().record(soma(0.5)._ref_v)
-t_vec = h.Vector().record(h._ref_t)
+def beta_m(V):
+    return phi * 4.0 * np.exp(-(V + 65.0) / 18.0)
 
-# run simulation
-h.finitialize(-65)
-h.continuerun({duration})
+def alpha_h(V):
+    return phi * 0.07 * np.exp(-(V + 65.0) / 20.0)
 
-# convert to plain lists
-t = list(t_vec)
-v = list(v_vec)
+def beta_h(V):
+    return phi * 1.0 / (1.0 + np.exp(-(V + 35.0) / 10.0))
 
-# count action potentials by upward zero-crossings of membrane voltage
-# crossing 0mV going upward reliably identifies action potential peaks in HH
+def alpha_n(V):
+    return phi * 0.01 * (V + 55.0) / (1.0 - np.exp(-(V + 55.0) / 10.0))
+
+def beta_n(V):
+    return phi * 0.125 * np.exp(-(V + 65.0) / 80.0)
+
+# ── Ionic currents ───────────────────────────────────────────────────
+def I_Na(V, m, h):
+    return g_Na * m**3 * h * (V - E_Na)
+
+def I_K(V, n):
+    return g_K * n**4 * (V - E_K)
+
+def I_L(V):
+    return g_L * (V - E_L)
+
+# ── Injected current with delay ──────────────────────────────────────
+def I_inj(t):
+    if {delay} <= t <= {duration}:
+        return {current_injection}
+    return 0.0
+
+# ── ODE system ───────────────────────────────────────────────────────
+def dALLdt(X, t):
+    V, m, h, n = X
+    dVdt = (I_inj(t) - I_Na(V, m, h) - I_K(V, n) - I_L(V)) / C_m
+    dmdt = alpha_m(V) * (1.0 - m) - beta_m(V) * m
+    dhdt = alpha_h(V) * (1.0 - h) - beta_h(V) * h
+    dndt = alpha_n(V) * (1.0 - n) - beta_n(V) * n
+    return [dVdt, dmdt, dhdt, dndt]
+
+# ── Initial conditions at resting potential ──────────────────────────
+V0 = -65.0
+m0 = alpha_m(V0) / (alpha_m(V0) + beta_m(V0))
+h0 = alpha_h(V0) / (alpha_h(V0) + beta_h(V0))
+n0 = alpha_n(V0) / (alpha_n(V0) + beta_n(V0))
+
+# ── Run simulation ───────────────────────────────────────────────────
+t = np.arange(0.0, {duration}, 0.01)  # 0.01 ms timestep
+X = odeint(dALLdt, [V0, m0, h0, n0], t)
+V = X[:, 0]
+
+# ── Count action potentials (upward zero crossings) ──────────────────
 crossings = sum(
-    1 for i in range(1, len(v))
-    if v[i-1] < 0 and v[i] >= 0
+    1 for i in range(1, len(V))
+    if V[i-1] < 0 and V[i] >= 0
 )
 
 stimulus_duration_s = ({duration} - {delay}) / 1000.0
 firing_rate = crossings / stimulus_duration_s if stimulus_duration_s > 0 else 0
 
-# output as JSON to stdout for LLM to parse
-# voltage trace downsampled by factor of 10 to reduce token usage
+# ── Generate voltage trace plot ──────────────────────────────────────
+plot_base64 = ""
+plot_path = ""
+try:
+    import base64, tempfile
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.plot(t, V, color='#2563eb', linewidth=0.8)
+    ax.set_xlabel('Time (ms)')
+    ax.set_ylabel('Membrane Potential (mV)')
+    ax.set_title(
+        f'Hodgkin-Huxley Simulation  |  '
+        f'I = {current_injection} uA/cm^2, '
+        f'{{crossings}} APs, '
+        f'{{round(firing_rate, 1)}} Hz'
+    )
+    ax.axhline(y=0, color='grey', linestyle='--', linewidth=0.5, alpha=0.5)
+    ax.axvspan({delay}, {duration}, alpha=0.06, color='orange',
+               label=f'Stimulus ({current_injection} uA/cm^2)')
+    ax.legend(loc='upper right', fontsize=8)
+    ax.set_xlim(0, {duration})
+    fig.tight_layout()
+
+    plot_file = tempfile.NamedTemporaryFile(
+        suffix='.png', prefix='hh_trace_', delete=False, dir=tempfile.gettempdir()
+    )
+    plot_path = plot_file.name
+    plot_file.close()
+    fig.savefig(plot_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+
+    with open(plot_path, 'rb') as pf:
+        plot_base64 = base64.b64encode(pf.read()).decode('utf-8')
+except Exception as plot_err:
+    import sys
+    print(f"Warning: plot generation failed: {{plot_err}}", file=sys.stderr)
+
+# ── Downsample and output ────────────────────────────────────────────
+step = max(1, len(t) // 300)  # ~300 points for the trace
 print(json.dumps({{
     "firing_rate_hz": round(firing_rate, 2),
     "num_action_potentials": crossings,
-    "peak_voltage_mv": round(max(v), 2),
-    "resting_voltage_mv": round(v[0], 2),
+    "peak_voltage_mv": round(float(np.max(V)), 2),
+    "resting_voltage_mv": round(float(V[0]), 2),
     "simulation_duration_ms": {duration},
-    "current_injection_na": {current_injection},
+    "current_injection": {current_injection},
     "temperature_c": {temperature},
     "voltage_trace": {{
-        "t_ms": t[::10],
-        "v_mv": v[::10]
-    }}
+        "t_ms": [round(float(x), 2) for x in t[::step]],
+        "v_mv": [round(float(x), 2) for x in V[::step]]
+    }},
+    "plot_base64": plot_base64,
+    "plot_path": plot_path
 }}))
 """)
 
@@ -141,9 +219,3 @@ print(json.dumps({{
     async with sbox(".") as f:
         result = await f.run(request)
     return asdict(result)
-
-
-
-
-
-
