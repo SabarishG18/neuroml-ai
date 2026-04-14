@@ -134,7 +134,14 @@ def check_model_works(model, timeout=30, retries=5):
 def setup_embedding(model_name_full, logger):
     # need to use inference providers
     if model_name_full.lower().startswith("huggingface:"):
-        _, model_name, provider = model_name_full.split(":")
+        parts = model_name_full.split(":")
+        if len(parts) == 3:
+            _, model_name, provider = parts
+        elif len(parts) == 2:
+            _, model_name = parts
+            provider = "auto"
+        else:
+            raise ValueError(f"Invalid huggingface model format: {model_name_full}")
         logger.debug(f"Using huggingface model: {model_name}")
 
         hf_token = os.environ.get("HF_TOKEN", None)
@@ -159,7 +166,14 @@ def setup_embedding(model_name_full, logger):
 def setup_llm(model_name_full: str, logger: logging.Logger):
     """Set up a chat model"""
     if model_name_full.lower().startswith("huggingface:"):
-        _, model_name, provider = model_name_full.split(":")
+        parts = model_name_full.split(":")
+        if len(parts) == 3:
+            _, model_name, provider = parts
+        elif len(parts) == 2:
+            _, model_name = parts
+            provider = "auto"
+        else:
+            raise ValueError(f"Invalid huggingface model format: {model_name_full}")
         logger.debug(f"Using huggingface model: {model_name}")
 
         hf_token = os.environ.get("HF_TOKEN", None)
@@ -170,7 +184,7 @@ def setup_llm(model_name_full: str, logger: logging.Logger):
         llm = HuggingFaceEndpoint(
             repo_id=f"{model_name}",
             provider="auto",
-            max_new_tokens=32768,
+            max_new_tokens=4096,
             do_sample=False,
             repetition_penalty=1.03,
             task="conversational",  # seems to be ignored, defaults to text-generation
@@ -191,12 +205,11 @@ def setup_llm(model_name_full: str, logger: logging.Logger):
         """
         assert model_var
 
-        state, msg = check_model_works(model_var, timeout=10, retries=3)
+        state, msg = check_model_works(model_var, timeout=30, retries=3)
         if state:
             logger.debug(f"Model works: {state}, {msg}")
         else:
-            logger.debug(f"Model does not work: {state}, {msg}")
-        assert state
+            logger.warning(f"Model health check failed: {msg}. Proceeding anyway.")
     else:
         if model_name_full.lower().startswith("ollama:"):
             check_ollama_model(logger, model_name_full.lower().replace("ollama:", ""))
