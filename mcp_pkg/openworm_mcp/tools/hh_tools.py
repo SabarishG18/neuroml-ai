@@ -26,6 +26,13 @@ async def run_hh_simulation_tool(
     duration: float = 300.0,
     delay: float = 50.0,
     temperature: float = 6.3,
+    g_Na: float = 120.0,
+    g_K: float = 36.0,
+    g_L: float = 0.3,
+    E_Na: float = 50.0,
+    E_K: float = -77.0,
+    E_L: float = -54.387,
+    C_m: float = 1.0,
 ) -> Dict[str, Any]:
     """Run a Hodgkin-Huxley single compartment neuron simulation.
 
@@ -43,6 +50,18 @@ async def run_hh_simulation_tool(
       Must be less than duration.
     - temperature (float, default 6.3): simulation temperature in Celsius.
       The original Hodgkin-Huxley model was recorded at 6.3C.
+    - g_Na (float, default 120.0): max sodium conductance in mS/cm^2.
+      Hodgkin & Huxley (1952) measured 120.0 in squid giant axon.
+      Reduce to simulate sodium channel blockers (e.g. TTX).
+    - g_K (float, default 36.0): max potassium conductance in mS/cm^2.
+      Hodgkin & Huxley (1952) measured 36.0. Reduce to simulate
+      potassium channel blockers (e.g. TEA).
+    - g_L (float, default 0.3): leak conductance in mS/cm^2.
+    - E_Na (float, default 50.0): sodium reversal potential in mV.
+    - E_K (float, default -77.0): potassium reversal potential in mV.
+      Shift to simulate different extracellular potassium concentrations.
+    - E_L (float, default -54.387): leak reversal potential in mV.
+    - C_m (float, default 1.0): membrane capacitance in uF/cm^2.
 
     Output:
 
@@ -67,7 +86,15 @@ async def run_hh_simulation_tool(
     - Subthreshold (no firing expected): run_hh_simulation_tool(current_injection=0.01)
     - Long simulation: run_hh_simulation_tool(duration=1000.0)
     - Temperature effect: call twice with temperature=6.3 and temperature=25.0
+    - Sodium channel block (TTX): run_hh_simulation_tool(g_Na=0.0, current_injection=10.0)
+    - Potassium channel block (TEA): run_hh_simulation_tool(g_K=0.0, current_injection=10.0)
+    - High extracellular K+: run_hh_simulation_tool(E_K=-50.0)
     """
+    # Validate: duration must be long enough for current injection after delay.
+    # If not, auto-correct to: delay + stimulus + recovery (equal periods).
+    if duration <= delay:
+        duration = delay * 3  # delay + equal stimulus + equal recovery
+
     code = dedent(f"""
 import json
 import numpy as np
@@ -77,13 +104,13 @@ from scipy.integrate import odeint
 # Based on: openworm/hodgkin_huxley_tutorial
 # Reference: Hodgkin & Huxley (1952) J Physiol 117:500-544
 
-C_m  = 1.0      # membrane capacitance (uF/cm^2)
-g_Na = 120.0    # max sodium conductance (mS/cm^2)
-g_K  = 36.0     # max potassium conductance (mS/cm^2)
-g_L  = 0.3      # leak conductance (mS/cm^2)
-E_Na = 50.0     # sodium reversal potential (mV)
-E_K  = -77.0    # potassium reversal potential (mV)
-E_L  = -54.387  # leak reversal potential (mV)
+C_m  = {C_m}      # membrane capacitance (uF/cm^2)
+g_Na = {g_Na}    # max sodium conductance (mS/cm^2)
+g_K  = {g_K}     # max potassium conductance (mS/cm^2)
+g_L  = {g_L}      # leak conductance (mS/cm^2)
+E_Na = {E_Na}     # sodium reversal potential (mV)
+E_K  = {E_K}    # potassium reversal potential (mV)
+E_L  = {E_L}  # leak reversal potential (mV)
 
 # Temperature correction factor (Q10)
 T = {temperature}
